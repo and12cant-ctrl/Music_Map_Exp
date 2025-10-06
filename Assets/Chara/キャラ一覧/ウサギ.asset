@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4437a33203a14724d9726445059242ca, type: 3}
+  m_Name: "\u30A6\u30B5\u30AE"
+  m_EditorClassIdentifier: 
+  _jobName: "\u536F"
+  _level: 0
+  _maxHP: 60
+  _maxMP: 30
+  _maxSP: 25
+  _str: 10
+  _int: 12
+  _api: 18
+  _characterGraphic: {fileID: 0}
+  _skills: []
+  _magics: []
