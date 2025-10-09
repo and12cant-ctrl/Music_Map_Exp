@@ -8,6 +8,9 @@ public class CharacterRuntimeData
     public int currentHP;
     public int currentMP;
     public int currentSP;
+    public int currentMaxHP;
+    public int currentMaxMP;
+    public int currentMaxSP;
 
     public List<ActiveStatusEffect> activeEffects = new();
 
@@ -15,9 +18,16 @@ public class CharacterRuntimeData
     {
         this.baseData = baseData;
         charaName = baseData._jobName;
-        currentHP = baseData._maxHP;
-        currentMP = baseData._maxMP;
-        currentSP = baseData._maxSP;
+        #region ç≈ëÂíl
+        currentMaxHP = baseData._maxHP;
+        currentMaxMP = baseData._maxMP;
+        currentMaxSP = baseData._maxSP;
+        #endregion
+        #region åªç›íl
+        currentHP = currentMaxHP;
+        currentMP = currentMaxMP;
+        currentSP = currentMaxSP;
+        #endregion
         currentLv = baseData._level;
     }
 }

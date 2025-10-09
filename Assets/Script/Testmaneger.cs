@@ -4,8 +4,8 @@ public class TestManeger : MonoBehaviour
 {
 
     [SerializeField] GameManager gameManager;
-    [SerializeField] private BackgroundListSO BgReqListSO;
-    [SerializeField] private BackgroundListSO BgRandListSO;
+    [SerializeField] private BGCategoryListSO BgReqListSO;
+    [SerializeField] private BGCategoryListSO BgRandListSO;
     [SerializeField] private EventListSO EvReqLsitSO;
     [SerializeField] private EventListSO EvRandLsitSO;
     [SerializeField] private int MapGrid;

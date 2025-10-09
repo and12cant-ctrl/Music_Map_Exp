@@ -12,9 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48776213b1f2cc046aeaa955daf02058, type: 3}
   m_Name: "\u5E02\u8857\u5730"
   m_EditorClassIdentifier: 
-  categoryName: "\u5E02\u8857\u5730"
+  bgCategoryName: 
   previewColor: {r: 1, g: 0, b: 0, a: 0.39215687}
-  entries:
-  - id: 0
+  bgDatas:
+  - id: "\u663C"
     displayName: 
-    picture: {fileID: 0}
+    picture: {fileID: 21300000, guid: 3fa8af03e8ad0b541bc783d38616a99a, type: 3}
+  - id: "\u591C"
+    displayName: 
+    picture: {fileID: 21300000, guid: f06ac42075aabd04dbaa1d6e364e6512, type: 3}

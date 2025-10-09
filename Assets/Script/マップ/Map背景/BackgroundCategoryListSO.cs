@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 
 [CreateAssetMenu(menuName = "Map/Background List")]
-public class BackgroundListSO : ScriptableObject
+public class BGCategoryListSO : ScriptableObject
 {
     public List<BackgroundCategory> bGCategoryList = new List<BackgroundCategory>();
     public BackgroundData GetDataById(string id)

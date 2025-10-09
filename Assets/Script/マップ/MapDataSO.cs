@@ -32,7 +32,7 @@ public class MapDataSO : SerializedScriptableObject
     public EventListSO eventListSO;
 
     [InlineEditor]
-    public BackgroundListSO backgroundListSO;
+    public BGCategoryListSO backgroundListSO;
     [LabelText("選択開始座標")]
     public Vector2Int? selectionStart;
 
@@ -144,20 +144,7 @@ public class MapDataSO : SerializedScriptableObject
         return cell;
     }
 
-    [Button("選択範囲に背景IDを適用")]
-    #region 背景ID適用
-    private void ApplyBackgroundToSelection()
-    {
-        if (!selectionStart.HasValue || !selectionEnd.HasValue || string.IsNullOrEmpty(defaultBackgroundName))
-            return;
-
-        Vector2Int start = selectionStart.Value;
-        Vector2Int end = selectionEnd.Value;
-        ApplyBackground(start, end,defaultBackgroundName);
-
-    }
-
-    public void ApplyBackground(Vector2Int Start,Vector2Int End,string CategoryName)
+    public void ApplyBackground(Vector2Int Start,Vector2Int End,BackgroundCategory bgCate)
     {
         for (int y = Mathf.Min(Start.y, End.y); y <= Mathf.Max(Start.y, End.y); y++)
         {
@@ -165,7 +152,7 @@ public class MapDataSO : SerializedScriptableObject
             {
                 if (x >= 0 && x < width && y >= 0 && y < height)
                 {
-                    mapGrid[x, y].backgroundId = CategoryName;
+                    mapGrid[x, y].bgCategory = bgCate;
                 }
             }
         }
@@ -204,41 +191,6 @@ public class MapDataSO : SerializedScriptableObject
         mapGrid[x,y].EvData = ev;
     }
 
-    [Button("選択範囲をログに出力")]
-    #region ログ出力
-    private void DebugLogSelectedRange()
-    {
-        if (!selectionStart.HasValue || !selectionEnd.HasValue)
-        {
-            Debug.LogWarning("選択範囲が未指定です");
-            return;
-        }
-
-        Vector2Int start = selectionStart.Value;
-        Vector2Int end = selectionEnd.Value;
-
-        for (int y = Mathf.Min(start.y, end.y); y <= Mathf.Max(start.y, end.y); y++)
-        {
-            for (int x = Mathf.Min(start.x, end.x); x <= Mathf.Max(start.x, end.x); x++)
-            {
-                if (x >= 0 && x < width && y >= 0 && y < height)
-                {
-                    var cell = mapGrid[x, y];
-                    if (cell != null)
-                    {
-                        Debug.Log($"Cell ({x},{y}): BG = {cell.backgroundId}, EV = {cell.eventId},Coler = ");
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Cell ({x},{y}) は null です");
-                    }
-                }
-            }
-        }
-    }
-    #endregion
-
-    #endregion
     private IEnumerable<string> GetBackgroundIdDropdown()
     {
         if (backgroundListSO == null)return new[] { "<None>" };

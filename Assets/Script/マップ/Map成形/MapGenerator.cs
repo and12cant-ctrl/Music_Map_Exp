@@ -12,14 +12,14 @@ public class MapGenerator : MonoBehaviour
     int HeightCount;
     int totalBlocks;
     //int MapGrid = 5;
-    string BG;  //‚±‚ê‚ÉBackGroundListSO‚©‚çƒ‰ƒ“ƒ_ƒ€‚Écategory‚ð“ü‚ê‚é
+    BackgroundCategory BG;  //‚±‚ê‚ÉBackGroundListSO‚©‚çƒ‰ƒ“ƒ_ƒ€‚Écategory‚ð“ü‚ê‚é
     EventData EV;
     CreateEvent cre = new CreateEvent();
     System.Random rand = new System.Random();
     public void MapGenerate(
         MapDataSO questMap,
-        BackgroundListSO requiredBgList,
-        BackgroundListSO randamBgList,
+        BGCategoryListSO requiredBgList,
+        BGCategoryListSO randamBgList,
         EventListSO requiredEvList,
         EventListSO randamEvList,
         int MapGridInt
@@ -32,13 +32,13 @@ public class MapGenerator : MonoBehaviour
         #endregion
 
         #region ”wŒiƒ‰ƒ“ƒ_ƒ€‘}“ü
-        List<string> assignedBGs = requiredBgList.bGCategoryList.Select(cat => cat.bgCategoryName).ToList();
+        List<BackgroundCategory> assignedBGs = requiredBgList.bGCategoryList.ToList();
 
         List<BackgroundCategory> randomBGPool = randamBgList.bGCategoryList;
         while (assignedBGs.Count < totalBlocks)
         {
             var randomCat = randomBGPool[rand.Next(randomBGPool.Count)];
-            assignedBGs.Add(randomCat.bgCategoryName);
+            assignedBGs.Add(randomCat);
         }
 
         assignedBGs = assignedBGs.OrderBy(x => rand.Next()).ToList();

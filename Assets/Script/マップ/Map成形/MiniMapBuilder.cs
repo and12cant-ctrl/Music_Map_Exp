@@ -44,7 +44,7 @@ public class MiniMapBuilder : MonoBehaviour
         SetupMiniMapBorder();
         ShowWindow(gm.PlayerCell.x, gm.PlayerCell.y);
         Debug.Log($"PL‚ÌƒZƒ‹{gm.PlayerCell.x}{gm.PlayerCell.y}");
-        ShowFullMap(true);
+        ShowFullMap(false);
         gm.onPlayerIconSet += PlayerIconSet;
     }
 
@@ -175,8 +175,8 @@ public class MiniMapBuilder : MonoBehaviour
         miniMapImage.uvRect = new Rect(hLeft, vBottom, uw, vh);
 
         mMapIconRect.anchoredPosition = new Vector2
-            ((cX-sizeHarf)*-cellPx-borderThickness,
-            (cY-sizeHarf)*-cellPx-borderThickness);
+            (((cX-sizeHarf)*-cellPx) -((float)1.5),
+            (cY-sizeHarf)*-cellPx- ((float)1.5));
     }
     public void BatchUpdateCells((int mx, int my, Color32 c)[] changes)
     {

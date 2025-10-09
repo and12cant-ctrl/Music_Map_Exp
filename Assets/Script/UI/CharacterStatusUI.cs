@@ -23,8 +23,8 @@ public class CharacterStatusUI : MonoBehaviour
         if (_chara == null || _chara.runtime == null || _chara.runtime.baseData == null)
             return;
         _NameText.text = $"{_chara.runtime.charaName}";
-        _HPtext.text = $"{_chara.runtime.currentHP}/{_chara.runtime.baseData._maxHP}";
-        _MPtext.text = $"{_chara.runtime.currentMP}/{_chara.runtime.baseData._maxMP}";
+        _HPtext.text = $"{_chara.runtime.currentHP}/{_chara.runtime.currentMaxHP}";
+        _MPtext.text = $"{_chara.runtime.currentMP}/{_chara.runtime.currentMaxMP}";
         _SPtext.text = $"{_chara.runtime.currentSP}/{_chara.runtime.baseData._maxSP}";
         _Leveltext.text = $"Lv {_chara.runtime.currentLv}";
     }

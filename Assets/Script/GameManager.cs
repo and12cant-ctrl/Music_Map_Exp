@@ -16,8 +16,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Transform characterParent;
     [SerializeField] private int characterCount = 4;
     #region     ƒeƒXƒg
-    public BackgroundListSO BGReqListSO { get; set; }
-    public BackgroundListSO BGRandListSO {  get; set; }
+    public BGCategoryListSO BGReqListSO { get; set; }
+    public BGCategoryListSO BGRandListSO {  get; set; }
     public EventListSO EVReqLsitSO { get; set;}
     public EventListSO EVRandLsitSO {get; set;}
     public int MapGrid {  get; set; }
@@ -25,12 +25,13 @@ public class GameManager : MonoBehaviour
     private MapGenerator mapGenerator;
     private List<Character> _currentParty = new();
     private List<EventData> _eventDatas = new List<EventData>();
-    [SerializeField] private TestManeger Test;
     private MiniMapBuilder miniMapBuilder;
     private Vector2 moveInput;
-
     public event Action<Vector2Int> onPlayerIconSet;
-    private Vector2Int _playerCell = new Vector2Int(0,0);
+    private Vector2Int _playerCell = new Vector2Int(0, 0);
+
+    [SerializeField] private TestManeger Test;
+
     public Vector2Int PlayerCell
     {
         get => _playerCell;
@@ -42,10 +43,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void Awake()
-    {
-
-    }
     void Start()
     {
         mapGenerator = GetComponent<MapGenerator>();
