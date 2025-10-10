@@ -16,7 +16,7 @@ public class EventData
     public string id;           // 内部ID（例: "npc_villager_m"）
     public Sprite icon;         // オプション：アイコン
     public likeability likeLevel;
-    public mystery mystery;
+    public mystery mysteryLevel;
     public List<string> HakenPlayer;
 }
 public enum likeability

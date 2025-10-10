@@ -154,7 +154,7 @@ public class MapGenerator : MonoBehaviour
                 5 => likeability.High,
                 _ => likeability.Low
             };
-            Target.mystery = RandomReturn() switch
+            Target.mysteryLevel = RandomReturn() switch
             {
                 0 or 1 or 2 => mystery.Low,
                 3 or 4 => mystery.middle,

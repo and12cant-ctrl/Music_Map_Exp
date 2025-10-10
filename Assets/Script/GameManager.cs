@@ -23,12 +23,13 @@ public class GameManager : MonoBehaviour
     public int MapGrid {  get; set; }
     #endregion
     private MapGenerator mapGenerator;
-    private List<Character> _currentParty = new();
+    [HideInInspector] public List<Character> _currentParty = new();
     private List<EventData> _eventDatas = new List<EventData>();
     private MiniMapBuilder miniMapBuilder;
     private Vector2 moveInput;
     public event Action<Vector2Int> onPlayerIconSet;
     private Vector2Int _playerCell = new Vector2Int(0, 0);
+
 
     [SerializeField] private TestManeger Test;
 
@@ -70,9 +71,6 @@ public class GameManager : MonoBehaviour
     void Update()
     {
     }
-
-
-
 
     public void EndMission()
     {
