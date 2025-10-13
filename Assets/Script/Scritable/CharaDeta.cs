@@ -2,6 +2,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "NewCharacter", menuName = "RPG/Character Data")]
 public class CharaData : ScriptableObject
 {
+    #region ステータス
     public string _jobName;
     public int _level;
     public int _maxHP;
@@ -10,6 +11,9 @@ public class CharaData : ScriptableObject
     public int _str;
     public int _int;
     public int _api;
+    #endregion
+
+    public bool exit = true;
 
     public Sprite _characterGraphic;
 
