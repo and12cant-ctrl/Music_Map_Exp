@@ -11,6 +11,9 @@ public class CharacterRuntimeData
     public int currentMaxHP;
     public int currentMaxMP;
     public int currentMaxSP;
+    public int curAPI;
+    public int curStr;
+    public int curInt;
 
     public List<ActiveStatusEffect> activeEffects = new();
 

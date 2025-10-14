@@ -10,6 +10,7 @@ public class CharaData : ScriptableObject
     public int _str;
     public int _int;
     public int _api;
+    public bool exit = true;
 
     public Sprite _characterGraphic;
 

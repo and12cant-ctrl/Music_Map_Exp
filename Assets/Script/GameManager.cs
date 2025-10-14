@@ -38,8 +38,13 @@ public class GameManager : MonoBehaviour
         get => _playerCell;
         set
         {
-            if (_playerCell == value) return;
-            _playerCell = value;
+            int maxX = Mathf.Clamp(value.x,0,MapGrid);
+            int maxY = Mathf.Clamp(value.y, 0, MapGrid);
+
+            Vector2Int clamped = new Vector2Int(maxX,maxY);
+
+            if (_playerCell == clamped) return;
+            _playerCell = clamped;
             onPlayerIconSet?.Invoke(_playerCell);
         }
     }
@@ -90,18 +95,16 @@ public class GameManager : MonoBehaviour
         characterGenerator.ResetNameCounts(); // 漢数字リセット（新ミッション開始）
         for (int i = 0; i < characterCount; i++)
         {
-            CharacterRuntimeData runtime =
-                characterGenerator.GenerateRandomCharacter();
+            CharacterRuntimeData runtime = characterGenerator.GenerateRandomCharacter();
             if (runtime == null) continue;
 
-            // 1. プレハブを生成（ヒエラルキーに配置）
             GameObject go = Instantiate(characterPrefab, characterParent);
 
-            // 2. Character スクリプトを取得
             Character chara = go.GetComponent<Character>();
             if (chara != null)
             {
                 chara.runtime = runtime;
+                Debug.Log(chara.runtime.charaName);
                 _currentParty.Add(chara);
             }
 
