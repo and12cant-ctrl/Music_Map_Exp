@@ -28,15 +28,14 @@ public class HakenTab : MonoBehaviour
         
         for (int i = 0; i < gm._currentParty.Count; i++)
         {
-            var entry = gm._currentParty[i];
+            Character entry = gm._currentParty[i];
             GameObject pm = Instantiate(Pair,Parent);
             pm.name = $"Pair_ {i}";
-
-
-            var item = pm.GetComponent<PairItemBase>();
+            PairItemBase item = pm.GetComponent<PairItemBase>();
             if (item != null)
             {
-                Debug.Log(entry.runtime.charaName);
+                Debug.Log(gm._currentParty[i].runtime.charaName);
+
                 item.pl_Name.text = entry.runtime.charaName;
                 item.pl_API.text = $"{entry.runtime.curAPI}";
             }
