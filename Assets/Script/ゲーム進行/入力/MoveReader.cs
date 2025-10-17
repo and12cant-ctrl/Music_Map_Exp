@@ -27,6 +27,18 @@ public class MoveReader : MonoBehaviour
             int sy = (moveInput.y > 0f) ? 1 : -1;
             dir = new Vector2Int(0, sy);
         }
+        #region チェック
+        Vector2Int next = gm.PlayerCell + dir;
+
+        int width = gm.questMap.mapGrid.GetLength(0);
+        int height = gm.questMap.mapGrid.GetLength(1);
+        if (next.x < 0 || next.y < 0 || next.x >= width || next.y >= height)
+        {
+            // はみ出すなら移動しない
+            return;
+        }
+        #endregion
+
         StartCoroutine(WaitTime(dir));
     }
 
