@@ -4,16 +4,20 @@ public class CharacterRuntimeData
 {
     public CharaData baseData;
     public string charaName;
-    public int currentLv;
-    public int currentHP;
-    public int currentMP;
-    public int currentSP;
+    #region ステータス
     public int currentMaxHP;
     public int currentMaxMP;
     public int currentMaxSP;
+    public int currentHP;
+    public int currentMP;
+    public int currentSP;
     public int curAPI;
     public int curStr;
     public int curInt;
+    public int currentLv;
+    #endregion
+
+    public bool hakenCan = true;
 
     public List<ActiveStatusEffect> activeEffects = new();
 

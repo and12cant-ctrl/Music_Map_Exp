@@ -27,7 +27,7 @@ public class GameManager : MonoBehaviour
     private List<EventData> _eventDatas = new List<EventData>();
     private MiniMapBuilder miniMapBuilder;
     private Vector2 moveInput;
-    public event Action<Vector2Int> onPlayerIconSet;
+    public event Action<Vector2Int> OnPlayerIconSet;
     private Vector2Int _playerCell = new Vector2Int(0, 0);
     
     [SerializeField] private TestManeger Test;
@@ -44,7 +44,7 @@ public class GameManager : MonoBehaviour
 
             if (_playerCell == clamped) return;
             _playerCell = clamped;
-            onPlayerIconSet?.Invoke(_playerCell);
+            OnPlayerIconSet?.Invoke(_playerCell);
         }
     }
 
@@ -69,7 +69,7 @@ public class GameManager : MonoBehaviour
         GenerateParty();           // ƒLƒƒƒ‰‚ğ¶¬
         uiManager.AssignCharacters(_currentParty);  // UI‚ÉŠ„‚è“–‚Ä
         mapGenerator.MapGenerate(questMap,BGReqListSO,BGRandListSO,EVReqLsitSO,EVRandLsitSO,MapGrid);
-        onPlayerIconSet?.Invoke(PlayerCell);
+        OnPlayerIconSet?.Invoke(PlayerCell);
         miniMapBuilder.SetupMap();
     }
     void Update()
@@ -106,7 +106,7 @@ public class GameManager : MonoBehaviour
                 chara.runtime = runtime;
 
                 _currentParty.Add(chara);
-                Debug.Log($"{chara.runtime.charaName}+{_currentParty[i].runtime.charaName}");
+              
                 
             }
 
