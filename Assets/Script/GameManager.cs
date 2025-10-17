@@ -27,10 +27,9 @@ public class GameManager : MonoBehaviour
     private List<EventData> _eventDatas = new List<EventData>();
     private MiniMapBuilder miniMapBuilder;
     private Vector2 moveInput;
-    public event Action<Vector2Int> onPlayerIconSet;
+    public event Action<Vector2Int> OnPlayerIconSet;
     private Vector2Int _playerCell = new Vector2Int(0, 0);
-
-
+    
     [SerializeField] private TestManeger Test;
 
     public Vector2Int PlayerCell
@@ -38,14 +37,14 @@ public class GameManager : MonoBehaviour
         get => _playerCell;
         set
         {
-            int maxX = Mathf.Clamp(value.x,0,MapGrid);
-            int maxY = Mathf.Clamp(value.y, 0, MapGrid);
+            int maxX = Mathf.Clamp(value.x,0,MapGrid*3);
+            int maxY = Mathf.Clamp(value.y, 0, MapGrid*3);
 
             Vector2Int clamped = new Vector2Int(maxX,maxY);
 
             if (_playerCell == clamped) return;
             _playerCell = clamped;
-            onPlayerIconSet?.Invoke(_playerCell);
+            OnPlayerIconSet?.Invoke(_playerCell);
         }
     }
 
@@ -67,10 +66,10 @@ public class GameManager : MonoBehaviour
           $"EVRandLsitSO={EVRandLsitSO != null}");
         #endregion
 
-        GenerateCharacters();           // キャラを生成
+        GenerateParty();           // キャラを生成
         uiManager.AssignCharacters(_currentParty);  // UIに割り当て
         mapGenerator.MapGenerate(questMap,BGReqListSO,BGRandListSO,EVReqLsitSO,EVRandLsitSO,MapGrid);
-        onPlayerIconSet?.Invoke(PlayerCell);
+        OnPlayerIconSet?.Invoke(PlayerCell);
         miniMapBuilder.SetupMap();
     }
     void Update()
@@ -89,13 +88,14 @@ public class GameManager : MonoBehaviour
     {
         if (_currentParty.Count > 0) EndMission();
     }
-    private void GenerateCharacters()
+    private void GenerateParty()
     {
         _currentParty.Clear();
         characterGenerator.ResetNameCounts(); // 漢数字リセット（新ミッション開始）
+        CharacterRuntimeData runtime ;
         for (int i = 0; i < characterCount; i++)
         {
-            CharacterRuntimeData runtime = characterGenerator.GenerateRandomCharacter();
+            runtime = characterGenerator.GenerateRandomCharacter();
             if (runtime == null) continue;
 
             GameObject go = Instantiate(characterPrefab, characterParent);
@@ -104,8 +104,10 @@ public class GameManager : MonoBehaviour
             if (chara != null)
             {
                 chara.runtime = runtime;
-                Debug.Log(chara.runtime.charaName);
+
                 _currentParty.Add(chara);
+              
+                
             }
 
             #region Nullチェック

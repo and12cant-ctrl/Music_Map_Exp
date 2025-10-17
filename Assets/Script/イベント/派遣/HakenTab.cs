@@ -1,5 +1,9 @@
+using System.Collections.Generic;
+using System.Drawing;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class HakenTab : MonoBehaviour
 {
@@ -8,43 +12,84 @@ public class HakenTab : MonoBehaviour
     [SerializeField] private TMP_Text mystery_Lank;
     [SerializeField] private GameObject Pair;
     [SerializeField] private RectTransform Parent;
+    [SerializeField] private GameObject Tab;
+    [SerializeField] private GameObject boord; 
     private GameManager gm;
+    private Button buttonObj;
+    private bool tabIn = false;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         gm = gameObject.GetComponentInParent<GameManager>();
-        gm.onPlayerIconSet += HakenExe;
+        buttonObj = Tab.GetComponent<Button>();
+        gm.OnPlayerIconSet += HakenTabView;
+        gm.OnPlayerIconSet += HakenTabOut;
+    }
+    private void Update()
+    {
+        
     }
 
+    void HakenBoard(MapCell pl_Int)
+    {
+        evName.text = pl_Int.EvData.id;
+        like_Lank.text = $"{pl_Int.EvData.likeLevel}";
+        mystery_Lank.text = $"{pl_Int.EvData.mysteryLevel}";
 
-    void HakenExe(Vector2Int PL)
+        for (int i = Parent.childCount - 1; i >= 0; i--) Destroy(Parent.GetChild(i).gameObject);
+
+        #region キャラ生成
+        for (int i = 0; i < gm._currentParty.Count; i++)
+        {
+            int index = i;
+            Character entry = gm._currentParty[i];
+            if (!entry.runtime.hakenCan) return;
+            GameObject pm = Instantiate(Pair, Parent);
+            pm.name = $"Pair_ {i}";
+            var item = pm.GetComponent<PairItemBase>();
+            var rt = pm.GetComponent<RectTransform>();
+
+            if (item != null) Debug.Log("PairItemBaseがnull");
+            item.pl_Name.text = entry.runtime.charaName;
+            item.pl_API.text = $"{entry.runtime.curAPI}";
+            item.hakenButton.onClick.AddListener(() =>
+            {
+                TogglePlayerState(index);
+            });
+            rt.anchoredPosition = new Vector2(5, (i * 23));
+        }
+        #endregion
+    }
+
+    void HakenTabView(Vector2Int PL)
     {
         MapCell PL2Int = gm.questMap.mapGrid[PL.x, PL.y];
         if (PL2Int == null||PL2Int.EvData == null) return;
-        evName.text = PL2Int.EvData.id;
-        like_Lank.text = $"{PL2Int.EvData.likeLevel}";
-        mystery_Lank.text = $"{PL2Int.EvData.mysteryLevel}";
-        for (int i = Parent.childCount - 1; i >= 0; i--)Destroy(Parent.GetChild(i).gameObject);
-        
-        for (int i = 0; i < gm._currentParty.Count; i++)
+        Tab.SetActive(true);
+        tabIn=(true);
+        buttonObj.onClick.AddListener(() =>
         {
-            var entry = gm._currentParty[i];
-            GameObject pm = Instantiate(Pair,Parent);
-            pm.name = $"Pair_ {i}";
-
-
-            var item = pm.GetComponent<PairItemBase>();
-            if (item != null)
-            {
-                Debug.Log(entry.runtime.charaName);
-                item.pl_Name.text = entry.runtime.charaName;
-                item.pl_API.text = $"{entry.runtime.curAPI}";
-            }
-            var rt = pm.GetComponent<RectTransform>();
-            if (rt != null)
-            {
-                rt.anchoredPosition = new Vector2(5,  (i * 23));
-            }
+            Debug.Log("１11111");
+            boord.SetActive(true);
+            Debug.Log("222222");
+            HakenBoard(PL2Int);
+        });  
+    }
+    void TogglePlayerState(int ind)
+    {
+        Debug.Log(gm._currentParty[ind].runtime.hakenCan);
+        gm._currentParty[ind].runtime.hakenCan = false;
+        //ここに派遣のイベント処理を入れる
+        boord.SetActive(false);
+        Tab.SetActive(false);
+    }
+    void HakenTabOut(Vector2Int PL)
+    {
+        MapCell PL2Int = gm.questMap.mapGrid[PL.x, PL.y];
+        if (tabIn = true && PL2Int.EvData == null) 
+        {
+            Tab.SetActive(false);
         }
     }
+
 }

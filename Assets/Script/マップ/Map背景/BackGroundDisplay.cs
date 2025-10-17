@@ -10,7 +10,7 @@ public class BackGroundDisplay : MonoBehaviour
     void Start()
     {
         gm = gameObject.GetComponentInParent<GameManager>();
-        gm.onPlayerIconSet += BackGroundUpdate;
+        gm.OnPlayerIconSet += BackGroundUpdate;
     }
 
     public void BackGroundUpdate(Vector2Int PL)

@@ -45,7 +45,7 @@ public class MiniMapBuilder : MonoBehaviour
         ShowWindow(gm.PlayerCell.x, gm.PlayerCell.y);
         Debug.Log($"PLÇÃÉZÉã{gm.PlayerCell.x}{gm.PlayerCell.y}");
         ShowFullMap(false);
-        gm.onPlayerIconSet += PlayerIconSet;
+        gm.OnPlayerIconSet += PlayerIconSet;
     }
 
     #region mapê∂ê¨

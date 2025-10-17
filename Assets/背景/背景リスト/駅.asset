@@ -11,11 +11,13 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48776213b1f2cc046aeaa955daf02058, type: 3}
   m_Name: "\u99C5"
-  m_EditorClassIdentifier: Assembly-CSharp::BackgroundCategory
+  m_EditorClassIdentifier: 
   bgCategoryName: 
-  previewColor: {r: 0, g: 0, b: 0, a: 0}
+  previewColor: {r: 0.4431219, g: 1, b: 0, a: 0.39215687}
   bgDatas:
   - id: "\u663C"
+    displayName: 
     picture: {fileID: 21300000, guid: 84140b85ae316e743bcfbcc3b18751ea, type: 3}
   - id: "\u591C"
+    displayName: 
     picture: {fileID: 21300000, guid: 4b3602cce93c1944cbecd9df22bd7504, type: 3}
