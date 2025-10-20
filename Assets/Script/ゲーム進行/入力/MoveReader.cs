@@ -46,7 +46,6 @@ public class MoveReader : MonoBehaviour
     {
         canMove = false;
         gm.PlayerCell += move;
-        Debug.Log(gm.PlayerCell);
         yield return new WaitForSeconds(0.5f);
         canMove = true;
     }

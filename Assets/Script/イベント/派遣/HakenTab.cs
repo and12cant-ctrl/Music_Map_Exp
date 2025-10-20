@@ -22,6 +22,7 @@ public class HakenTab : MonoBehaviour
     {
         gm = gameObject.GetComponentInParent<GameManager>();
         buttonObj = Tab.GetComponent<Button>();
+        Debug.Log($"buttonObj={buttonObj}");
         gm.OnPlayerIconSet += HakenTabView;
         gm.OnPlayerIconSet += HakenTabOut;
     }
@@ -30,6 +31,22 @@ public class HakenTab : MonoBehaviour
         
     }
 
+
+
+    void HakenTabView(Vector2Int PL)
+    {
+        MapCell PL2Int = gm.questMap.mapGrid[PL.x, PL.y];
+        if (PL2Int == null||PL2Int.EvData == null) return;
+        Tab.SetActive(true);
+        tabIn=(true);
+        buttonObj.onClick.RemoveAllListeners();
+        buttonObj.onClick.AddListener(() =>
+        {
+            Debug.Log("Baka");
+            boord.SetActive(true);
+            HakenBoard(PL2Int);
+        });  
+    }
     void HakenBoard(MapCell pl_Int)
     {
         evName.text = pl_Int.EvData.id;
@@ -49,31 +66,17 @@ public class HakenTab : MonoBehaviour
             var item = pm.GetComponent<PairItemBase>();
             var rt = pm.GetComponent<RectTransform>();
 
-            if (item != null) Debug.Log("PairItemBase‚ªnull");
+            if (item == null) Debug.Log("PairItemBase‚ªnull");
             item.pl_Name.text = entry.runtime.charaName;
             item.pl_API.text = $"{entry.runtime.curAPI}";
             item.hakenButton.onClick.AddListener(() =>
             {
+                Debug.Log("unko");
                 TogglePlayerState(index);
             });
             rt.anchoredPosition = new Vector2(5, (i * 23));
         }
         #endregion
-    }
-
-    void HakenTabView(Vector2Int PL)
-    {
-        MapCell PL2Int = gm.questMap.mapGrid[PL.x, PL.y];
-        if (PL2Int == null||PL2Int.EvData == null) return;
-        Tab.SetActive(true);
-        tabIn=(true);
-        buttonObj.onClick.AddListener(() =>
-        {
-            Debug.Log("‚P11111");
-            boord.SetActive(true);
-            Debug.Log("222222");
-            HakenBoard(PL2Int);
-        });  
     }
     void TogglePlayerState(int ind)
     {
@@ -83,12 +86,14 @@ public class HakenTab : MonoBehaviour
         boord.SetActive(false);
         Tab.SetActive(false);
     }
+
     void HakenTabOut(Vector2Int PL)
     {
         MapCell PL2Int = gm.questMap.mapGrid[PL.x, PL.y];
-        if (tabIn = true && PL2Int.EvData == null) 
+        if (tabIn == true && PL2Int.EvData == null) 
         {
             Tab.SetActive(false);
+            boord.SetActive(false);
         }
     }
 

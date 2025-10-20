@@ -12,9 +12,16 @@ public class CharaData : ScriptableObject
     public int _int;
     public int _api;
     public bool exit = true;
+    #endregion
 
     public Sprite _characterGraphic;
 
     public SkillData[] _skills;
     public MagicData[] _magics;
+    public instrument instr ;
+}
+
+public enum instrument
+{
+    
 }

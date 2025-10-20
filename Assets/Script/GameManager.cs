@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SocialPlatforms.Impl;
 
 [DefaultExecutionOrder(-100)]
 public class GameManager : MonoBehaviour
@@ -28,25 +29,28 @@ public class GameManager : MonoBehaviour
     private MiniMapBuilder miniMapBuilder;
     private Vector2 moveInput;
     public event Action<Vector2Int> OnPlayerIconSet;
-    private Vector2Int _playerCell = new Vector2Int(0, 0);
     
     [SerializeField] private TestManeger Test;
 
+    #region PlayerCell
+    private Vector2Int _playerCell = new Vector2Int(0, 0);
     public Vector2Int PlayerCell
     {
         get => _playerCell;
         set
         {
-            int maxX = Mathf.Clamp(value.x,0,MapGrid*3);
-            int maxY = Mathf.Clamp(value.y, 0, MapGrid*3);
+            int maxX = Mathf.Clamp(value.x, 0, MapGrid * 3);
+            int maxY = Mathf.Clamp(value.y, 0, MapGrid * 3);
 
-            Vector2Int clamped = new Vector2Int(maxX,maxY);
+            Vector2Int clamped = new Vector2Int(maxX, maxY);
 
             if (_playerCell == clamped) return;
             _playerCell = clamped;
             OnPlayerIconSet?.Invoke(_playerCell);
         }
     }
+    #endregion
+
 
     void Start()
     {
