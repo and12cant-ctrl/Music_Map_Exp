@@ -14,6 +14,7 @@ public static class GenerateScores
         string pyExe = Path.Combine(toolRoot, ".venv", "Scripts", "python.exe");
         string script = Path.Combine(toolRoot, "src", "make_score.py");
 
+        #region NULLチェック
         if (!File.Exists(pyExe))
         {
             EditorUtility.DisplayDialog("Music21", $"python.exe が見つかりません:\n{pyExe}\n先に仮想環境を作ってください。", "OK");
@@ -24,6 +25,7 @@ public static class GenerateScores
             EditorUtility.DisplayDialog("Music21", $"スクリプトが見つかりません:\n{script}", "OK");
             return;
         }
+        #endregion
 
         var psi = new ProcessStartInfo
         {
