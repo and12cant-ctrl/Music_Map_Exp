@@ -35,7 +35,8 @@ public class MusicXmlEditorCaller : MonoBehaviour
     [ContextMenu("Run Edit (write edited_score.xml")]
     public void RunEdit()
     {
-        var cmd = new EditCommand
+        #region JSON文字列に変換し、標準出力へ
+        var cmd = new EditCommand   
         {
             inputXml = inputXml,
             outputXml = outputXml,
@@ -45,33 +46,38 @@ public class MusicXmlEditorCaller : MonoBehaviour
             insertAtMesure = insertAtMesure
         };
         string json = JsonUtility.ToJson(cmd);
+        #endregion
 
+        #region Pythonプロセス起動
         var psi = new ProcessStartInfo
         {
             FileName = pythonPath,
             Arguments = $"\"{scriptPath}\"",
             WorkingDirectory = Path.GetDirectoryName(scriptPath),
             UseShellExecute = false,
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
+            RedirectStandardInput = true,   //Unity=>Python
+            RedirectStandardOutput = true,  //Python=>Unity
             RedirectStandardError = true,
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8,
             CreateNoWindow = true,
         };
+        #endregion
+
 
         try
         {
+            #region JSONを送信し、出力を受け取る
             using var p = Process.Start(psi);
             using (var sw = new StreamWriter(p.StandardInput.BaseStream, new UTF8Encoding(false)))
             {
-                sw.Write(json);
+                sw.Write(json);     //Unity=>Pythonへ送信
             }
 
-            string stdout = p.StandardOutput.ReadToEnd();
-            string stderr = p.StandardError.ReadToEnd();
+            string stdout = p.StandardOutput.ReadToEnd();     //Python=>Unity
+            string stderr = p.StandardError.ReadToEnd();      //エラーキャッチ
             p.WaitForExit();
-
+            #endregion
             UnityEngine.Debug.Log($"[Python STDOUT]\n{stdout}");
             if (!string.IsNullOrWhiteSpace(stderr))
                 UnityEngine.Debug.LogWarning($"[Python STDERR]\n{stderr}");
