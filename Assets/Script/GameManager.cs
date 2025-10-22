@@ -60,14 +60,14 @@ public class GameManager : MonoBehaviour
         Test.AtachManeger();
         questMap.EnsureGrid();
         #region nullTest
-        Debug.Log($"questMap={questMap != null}, " +
-          $"uiManager={uiManager != null}, " +
-          $"mapGenerator={(mapGenerator != null)}" +
-          $"questmap={questMap != null}" +
-          $"BGReqListSO={BGReqListSO != null}" +
-          $"BGRandListSO={BGRandListSO != null}" +
-          $"EVReqLsitSO={EVReqLsitSO != null}" +
-          $"EVRandLsitSO={EVRandLsitSO != null}");
+        //Debug.Log($"questMap={questMap != null}, " +
+        //  $"uiManager={uiManager != null}, " +
+        //  $"mapGenerator={(mapGenerator != null)}" +
+        //  $"questmap={questMap != null}" +
+        //  $"BGReqListSO={BGReqListSO != null}" +
+        //  $"BGRandListSO={BGRandListSO != null}" +
+        //  $"EVReqLsitSO={EVReqLsitSO != null}" +
+        //  $"EVRandLsitSO={EVRandLsitSO != null}");
         #endregion
 
         GenerateParty();           // ÉLÉÉÉâÇê∂ê¨

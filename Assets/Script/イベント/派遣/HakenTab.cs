@@ -22,7 +22,6 @@ public class HakenTab : MonoBehaviour
     {
         gm = gameObject.GetComponentInParent<GameManager>();
         buttonObj = Tab.GetComponent<Button>();
-        Debug.Log($"buttonObj={buttonObj}");
         gm.OnPlayerIconSet += HakenTabView;
         gm.OnPlayerIconSet += HakenTabOut;
     }

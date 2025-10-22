@@ -34,6 +34,12 @@ def main():
         "output": out_xml,
         "notesAdded": len(pitches)
     }))
+    
+    #MusicXMLを一度だけMIDIに変換
+    xml_path = sys.argv[1]
+    out_mid = sys.argv[2]
+    s = converter.perse(xml_path)
+    s.write('midi',fp=out_mid)
 
 if __name__ == "__main__":
     main()

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sirenix.Serialization;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -16,34 +17,29 @@ public class EditCommand
 }
 public class MusicXmlEditorCaller : MonoBehaviour
 {
-    [Header("Paths")]
-    [Tooltip("仮想環境のpython.exeへのフルパス")]
-    public string pythonPath = @"G:\Unity\Product\Music_Map_Exp\Tools_music21\.venc\Scripts\python.exe";
-    [Tooltip("edit_score_json.pyのフルパス")]
-    public string scriptPath = @"G:Unity\Product\Music_Map_Exp\Tools\music21\edit_dcore_json.py";
-
-    [Header("Files")]
-    public string inputXml = @"G:\Unity\Product\Music_Map_Exp\Scores\empty_score.xml";
-    public string outputXml = @"G:\Unity\Product\Music_Map_Exp\Scores\edited_score.xml";
-
-    [Header("Melody")]
-    public string[] addPitches = new[] { "C4", "D4", "E4", "F4" };
-    public float quarterLength = 1;
-    public string partName = "Melody";
-    public int insertAtMesure = 1;
-
-    [ContextMenu("Run Edit (write edited_score.xml")]
-    public void RunEdit()
+    private string basePath;
+    void Awake()
     {
+        basePath = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+        Run();
+    }
+
+    public void Run() {
+
+        string pythonPath = Path.Combine(basePath, "Tools/music21/.venv/Scripts/python.exe");
+        string scriptPath = Path.Combine(basePath, "Tools/music21/edit_dcore_json.py");
+        string inputXml = Path.Combine(basePath, "StreamingAssets/Scores/empty_score.xml");
+        string outputXml = Path.Combine(basePath, "StreamingAssets/Scores/edited_score.xml");
+
         #region JSON文字列に変換し、標準出力へ
         var cmd = new EditCommand   
         {
             inputXml = inputXml,
             outputXml = outputXml,
-            addPitches = addPitches,
-            quarterLength = quarterLength,
-            partName = partName,
-            insertAtMesure = insertAtMesure
+            addPitches = new[] { "C4", "D4", "E4", "F4" },
+            quarterLength = 1,
+            partName ="Melody",
+            insertAtMesure = 1
         };
         string json = JsonUtility.ToJson(cmd);
         #endregion
@@ -63,8 +59,6 @@ public class MusicXmlEditorCaller : MonoBehaviour
             CreateNoWindow = true,
         };
         #endregion
-
-
         try
         {
             #region JSONを送信し、出力を受け取る
@@ -92,5 +86,4 @@ public class MusicXmlEditorCaller : MonoBehaviour
             UnityEngine.Debug.LogError(ex);
         }
     }
-
 }
