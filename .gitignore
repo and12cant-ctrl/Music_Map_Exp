@@ -15,3 +15,7 @@ MemoryCaptures/
 .DS_Store
 Thumbs.db
 .vs/
+Tools/micromamba/mamba_root/**
+Tools/micromamba/envs/**
+Tools/micromamba/pkgs/**
+Tools/micromamba/**/cache/**
