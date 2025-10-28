@@ -19,3 +19,7 @@ Tools/micromamba/mamba_root/**
 Tools/micromamba/envs/**
 Tools/micromamba/pkgs/**
 Tools/micromamba/**/cache/**
+!Tools/micromamba/env.yaml
+!Tools/micromamba/micromamba.exe
+!Tools/micromamba/bootstrap.bat
+!Tools/micromamba/README_micromamba.txt
