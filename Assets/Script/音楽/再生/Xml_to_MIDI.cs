@@ -6,13 +6,17 @@ using UnityEngine;
 
 public class Xml_to_MIDI : MonoBehaviour
 {
- 
+    [HideInInspector]
     public string venvPythonPath = @"Tools\music21\.venv\Scripts\python.exe";
-    public string scriptPath = @"Tools\music21\convert_xml_to_midi.py";
+
+    public string micromambaExe = @"Tools\micromamba\micromamba.exe";
+    public string mambaRootDir = @"Tools\micromamba\mamba_root";
+    public string envName = "unitypy";
 
     public string scriptP = @"Tools\music21\test.py";
     public string scriptargs = "adwadwa ";
 
+    public string scriptPath = @"Tools\music21\convert_xml_to_midi.py";
     public string inputXml = @"StreamingAssets/Scores/edited_score.xml";
     public string outputMid = @"StreamingAssets/Scores/edited_score.mid";
 
@@ -21,33 +25,36 @@ public class Xml_to_MIDI : MonoBehaviour
 
     public int waitTimeoutMs = 30000;
 
-    [ContextMenu("RunTest")]
+    string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+    [ContextMenu("XML => MIDI(micromamba)")]
     public void RunVeny()
     {
-        string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+        #region NullTest
+        string exeAbs = Path.Combine(projectRoot,micromambaExe);
+        string rootAbs = Path.Combine(projectRoot,mambaRootDir);
+        string scriptAbs = Path.Combine(projectRoot,scriptP);
+        string inAbs = Path.Combine(projectRoot, inputXml);
+        string outAbs = Path.Combine(projectRoot , outputMid);
 
-        string absPy = Path.GetFullPath(Path.Combine(projectRoot, venvPythonPath.Replace('\\', '/')));
-        string absScr = Path.GetFullPath(Path.Combine(projectRoot, scriptP.Replace('\\', '/')));
+        if (!File.Exists(exeAbs)) {UnityEngine.Debug.LogError($"[convert] micromamba.exe が見つかりません: {exeAbs}"); return; }
+        if (!Directory.Exists(rootAbs)) { UnityEngine.Debug.LogError($"[convert] mamba_root が見つかりません。先にブートストラップしてください: {rootAbs}"); return; }
+        if (!File.Exists(scriptAbs)) { UnityEngine.Debug.LogError($"[convert] スクリプトが見つかりません: {scriptAbs}"); return; }
+        if (!File.Exists(inAbs)) { UnityEngine.Debug.LogError($"[convert] 入力XMLが見つかりません: {inAbs}"); return; }
 
-        if (!File.Exists(absPy))
-        {
-            UnityEngine.Debug.LogError($"[venv] python.exe が見つかりません: {absPy}");
-            return;
-        }
-        if (!File.Exists(absScr))
-        {
-            UnityEngine. Debug.LogError($"[venv] スクリプトが見つかりません: {absScr}");
-            return;
-        }
+        #endregion
 
-        string exe = venvPythonPath;
-        string args = $"\"{scriptP}\"{scriptargs}".Trim();
+        #region micromambaに渡す文字列を構築
+        var argsBuilder = new StringBuilder();
+        argsBuilder.Append($"run -r \"{rootAbs}\" -n {envName} python \"{scriptAbs}\" \"{inAbs}\"");
+        if (!string.IsNullOrWhiteSpace(outAbs)) argsBuilder.Append($" \"{outAbs}\"");
+        string args = argsBuilder.ToString();
+        #endregion
 
         var psi = new ProcessStartInfo
         {
-            FileName = exe,
+            FileName = exeAbs,
             Arguments = args,
-            WorkingDirectory = projectRoot, // ★相対解決の基準を固定
+            WorkingDirectory = projectRoot,
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -60,14 +67,15 @@ public class Xml_to_MIDI : MonoBehaviour
         {
             using var p = Process.Start(psi);
 
-            p.Start();
-            p.WaitForExit();
             string stdOut = p.StandardOutput.ReadToEnd();
             string stdErr = p.StandardError.ReadToEnd();
-            if (p == null) UnityEngine.Debug.LogError("venvプロセス失敗");
+            if (p == null) { UnityEngine.Debug.LogError("[convert] プロセス起動に失敗"); return; }
+            
             bool exited;
             if (waitTimeoutMs > 0)
+            {
                 exited = p.WaitForExit(waitTimeoutMs);
+            }
             else
             {
                 p.WaitForExit();
@@ -77,13 +85,23 @@ public class Xml_to_MIDI : MonoBehaviour
             if (!exited)
             {
                 try { p.Kill(); } catch { }
-                UnityEngine.Debug.LogError("[venv] タイムアウトしました。");
+                UnityEngine.Debug.LogError($"[convert] 失敗 (ExitCode={p.ExitCode})\n--- STDERR ---\n{stdErr}\n--- STDOUT ---\n{stdOut}");
                 return;
             }
+
             if (p.ExitCode != 0)
-                UnityEngine.Debug.Log($"[venv]失敗:\n{stdErr}\n{stdOut}");
+                UnityEngine.Debug.Log($"[convert]失敗:\n{stdErr}\n{stdOut}");
+
+            string expectedOut = outAbs;
+            if (string.IsNullOrWhiteSpace(expectedOut))
+            {
+                var inferred = Path.ChangeExtension(inAbs, ".mid");
+                expectedOut = inferred;
+            }
+            if (File.Exists(expectedOut))
+                UnityEngine.Debug.Log($"[convert] 出力を確認: {expectedOut}");
             else
-                UnityEngine.Debug.Log($"成功:\n{stdOut}");
+                UnityEngine.Debug.LogWarning($"[convert] ExitCode=0 ですが出力MIDIが見つかりません: {expectedOut}");
         }
         catch (Exception e)
         {
