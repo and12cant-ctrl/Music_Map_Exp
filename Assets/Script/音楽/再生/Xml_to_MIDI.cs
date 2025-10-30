@@ -7,16 +7,15 @@ using UnityEngine;
 public class Xml_to_MIDI : MonoBehaviour
 {
     [HideInInspector]
-    public string venvPythonPath = @"Tools\music21\.venv\Scripts\python.exe";
-
-    public string micromambaExe = @"Tools\micromamba\micromamba.exe";
-    public string mambaRootDir = @"Tools\micromamba\mamba_root";
+    string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+    public string micromambaExe = @"Tools/micromamba/micromamba.exe";
+    public string mambaRootDir = @"Tools/micromamba/mamba_root";
     public string envName = "unitypy";
 
-    public string scriptP = @"Tools\music21\test.py";
+    //public string scriptP = @"Tools\music21\test.py";
     public string scriptargs = "adwadwa ";
 
-    public string scriptPath = @"Tools\music21\convert_xml_to_midi.py";
+    public string scriptPath = @"ScriptsPy/convert_xml_to_midi.py";
     public string inputXml = @"StreamingAssets/Scores/edited_score.xml";
     public string outputMid = @"StreamingAssets/Scores/edited_score.mid";
 
@@ -25,16 +24,16 @@ public class Xml_to_MIDI : MonoBehaviour
 
     public int waitTimeoutMs = 30000;
 
-    string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+
     [ContextMenu("XML => MIDI(micromamba)")]
     public void RunVeny()
     {
         #region NullTest
-        string exeAbs = Path.Combine(projectRoot,micromambaExe);
-        string rootAbs = Path.Combine(projectRoot,mambaRootDir);
-        string scriptAbs = Path.Combine(projectRoot,scriptP);
-        string inAbs = Path.Combine(projectRoot, inputXml);
-        string outAbs = Path.Combine(projectRoot , outputMid);
+        string exeAbs =Path.GetFullPath(Path.Combine(projectRoot,micromambaExe));
+        string rootAbs =Path.GetFullPath( Path.Combine(projectRoot,mambaRootDir));
+        string scriptAbs = Path.GetFullPath(Path.Combine(projectRoot,scriptPath));
+        string inAbs = Path.GetFullPath(Path.Combine(projectRoot, inputXml));
+        string outAbs = Path.GetFullPath(Path.Combine(projectRoot , outputMid));
 
         if (!File.Exists(exeAbs)) {UnityEngine.Debug.LogError($"[convert] micromamba.exe が見つかりません: {exeAbs}"); return; }
         if (!Directory.Exists(rootAbs)) { UnityEngine.Debug.LogError($"[convert] mamba_root が見つかりません。先にブートストラップしてください: {rootAbs}"); return; }

@@ -4,11 +4,12 @@ using Melanchall.DryWetMidi.Interaction;
 using System;
 using System.Linq;
 using UnityEngine;
+using System.IO;
 
 public class MidiPlayer : MonoBehaviour
 {
 
-    public string midFileName = "score.mid";
+    public string midFileName = "StreamingAssets/scores/edited_score.mid";
 
     public float startSeconds = 0f;
     public float volume = 1f;
@@ -26,8 +27,9 @@ public class MidiPlayer : MonoBehaviour
     {
 
         #region         Midiì«Ç›çûÇ›
-        string path = System.IO.Path.Combine(Application.streamingAssetsPath, midFileName);
-        if (!System.IO.File.Exists(path))
+        string path =Path.GetFullPath(Path.Combine((Directory.GetParent(Application.dataPath).FullName), midFileName));
+        Debug.Log(path);
+        if (!File. Exists(path))
         {
             Debug.LogError($"MIDI Ç™å©Ç¬Ç©ÇËÇ‹ÇπÇÒ: {path}");
             return;
