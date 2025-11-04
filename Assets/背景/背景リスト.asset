@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bGCategoryList:
   - {fileID: 11400000, guid: 34ec5c80b5b1638468650aadb4bea848, type: 2}
+  - {fileID: 11400000, guid: 7b67dfa5bc1da4c468edecc17b821691, type: 2}

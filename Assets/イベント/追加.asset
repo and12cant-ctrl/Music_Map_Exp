@@ -9,10 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eae9255dca23e9d4ba3bb397f2ad48c2, type: 3}
-  m_Name: "\u30A4\u30D9\u30F3\u30C8\u30EA\u30B9\u30C8"
-  m_EditorClassIdentifier: 
+  m_Script: {fileID: 11500000, guid: f3a6b024b7884ae42b40cb0f43b42373, type: 3}
+  m_Name: "\u8FFD\u52A0"
+  m_EditorClassIdentifier: Assembly-CSharp::EventListSO
   evCategoryList:
-  - {fileID: 11400000, guid: 3f918d97cd2bf9c46acffddcdcdf03e1, type: 2}
+  - {fileID: 11400000, guid: c72936b6cd183d6448ed48eb55097a44, type: 2}
   - {fileID: 11400000, guid: 8bedbeaa4f7c6974096a3a7934cc24ea, type: 2}
   - {fileID: 11400000, guid: 64c349e7ab4654744b7999097bc41910, type: 2}
+  - {fileID: 11400000, guid: bd824b81f3408824fbc6cd7399ee7437, type: 2}

@@ -37,8 +37,10 @@ public class MapGenerator : MonoBehaviour
         List<BackgroundCategory> randomBGPool = randamBgList.bGCategoryList;
         while (assignedBGs.Count < totalBlocks)
         {
+            Debug.Log(assignedBGs);
             var randomCat = randomBGPool[rand.Next(randomBGPool.Count)];
             assignedBGs.Add(randomCat);
+
         }
 
         assignedBGs = assignedBGs.OrderBy(x => rand.Next()).ToList();
@@ -65,7 +67,7 @@ public class MapGenerator : MonoBehaviour
         foreach (var cat in requiredEvList.evCategoryList)
         {
             string nameId = naming.GetNextNameID(cat.evCategoryName);
-            MainEv.Add(cre.CreateEv(cat,nameId));//kokomade
+            MainEv.Add(cre.CreateEv(cat,nameId));
         }
 
         var randomEVPool = randamEvList.evCategoryList;

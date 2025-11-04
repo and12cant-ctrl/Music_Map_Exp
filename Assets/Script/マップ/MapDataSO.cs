@@ -151,12 +151,7 @@ public class MapDataSO : SerializedScriptableObject
 
         Vector2Int start = selectionStart.Value;
         Vector2Int end = selectionEnd.Value;
-        ApplyBackground(start, end,defaultBackgroundName);
-
-    }
-
-    public void ApplyBackground(Vector2Int Start,Vector2Int End,string CategoryName)
-    {
+  
         for (int y = Mathf.Min(Start.y, End.y); y <= Mathf.Max(Start.y, End.y); y++)
         {
             for (int x = Mathf.Min(Start.x, End.x); x <= Mathf.Max(Start.x, End.x); x++)
@@ -236,7 +231,6 @@ public class MapDataSO : SerializedScriptableObject
     }
     #endregion
 
-    #endregion
     private IEnumerable<string> GetBackgroundIdDropdown()
     {
         if (backgroundListSO == null)return new[] { "<None>" };

@@ -31,8 +31,6 @@ public class GameManager : MonoBehaviour
     private Vector2 moveInput;
     public event Action<Vector2Int> OnPlayerIconSet;
 
-    [SerializeField] private TestManeger Test;
-
     #region PlayerCell
     private Vector2Int _playerCell = new Vector2Int(0, 0);
     public Vector2Int PlayerCell
