@@ -26,10 +26,11 @@ public class GameManager : MonoBehaviour
     private MapGenerator mapGenerator;
     [HideInInspector] public List<Character> _currentParty = new();
     private List<EventData> _eventDatas = new List<EventData>();
+    [SerializeField] private TestManeger Test;
     private MiniMapBuilder miniMapBuilder;
     private Vector2 moveInput;
     public event Action<Vector2Int> OnPlayerIconSet;
-    
+
     [SerializeField] private TestManeger Test;
 
     #region PlayerCell
@@ -51,7 +52,10 @@ public class GameManager : MonoBehaviour
     }
     #endregion
 
+    private void Awake()
+    {
 
+    }
     void Start()
     {
         mapGenerator = GetComponent<MapGenerator>();
@@ -80,6 +84,9 @@ public class GameManager : MonoBehaviour
     {
     }
 
+
+
+
     public void EndMission()
     {
         foreach (var c in _currentParty) Destroy(c.gameObject);
@@ -102,8 +109,10 @@ public class GameManager : MonoBehaviour
             runtime = characterGenerator.GenerateRandomCharacter();
             if (runtime == null) continue;
 
+            // 1. プレハブを生成（ヒエラルキーに配置）
             GameObject go = Instantiate(characterPrefab, characterParent);
 
+            // 2. Character スクリプトを取得
             Character chara = go.GetComponent<Character>();
             if (chara != null)
             {
