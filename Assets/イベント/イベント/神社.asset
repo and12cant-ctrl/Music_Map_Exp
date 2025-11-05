@@ -9,14 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67499ef543e644d4bbcb04c9a9ac576c, type: 3}
+  m_Script: {fileID: 11500000, guid: 48ad77953941f7548aebf838c24f5d91, type: 3}
   m_Name: "\u795E\u793E"
-  m_EditorClassIdentifier: 
-  evCategoryName: "\u795E\u793E"
-  catIcon: {fileID: 21300000, guid: a10539f879f9a8140a7403a480fc99b3, type: 3}
-  evDatas:
-  - id: "\u7B2C\u4E00\u795E\u793E"
-    icon: {fileID: 21300000, guid: a10539f879f9a8140a7403a480fc99b3, type: 3}
-    likeLevel: 1
-    mystery: 1
-    HakenPlayer: []
+  m_EditorClassIdentifier: Assembly-CSharp::EventCategory
+  evCategoryName: 
+  catIcon: {fileID: 0}
+  evDatas: []

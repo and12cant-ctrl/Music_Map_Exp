@@ -47,6 +47,7 @@ public class CharacterGenerator : ScriptableObject
         #endregion
 
         runtime.charaName = newName;
+        runtime.currentHP = newMaxHP;
 
         return runtime;
     }

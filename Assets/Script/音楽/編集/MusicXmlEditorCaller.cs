@@ -30,8 +30,8 @@ public class MusicXmlEditorCaller : MonoBehaviour
 
         string pythonPath = Path.Combine(basePath, "Tools/music21/.venv/Scripts/python.exe");
         string scriptPath = Path.Combine(basePath, "Tools/music21/edit_dcore_json.py");
-        string inputXml = Path.Combine(basePath, "StreamingAssets/Scores/empty_score.xml");
-        string outputXml = Path.Combine(basePath, "StreamingAssets/Scores/edited_score.xml");
+        string inputXml = Path.Combine(basePath, "Assets/StreamingAssets/Scores/empty_score.xml");
+        string outputXml = Path.Combine(basePath, "Assets/StreamingAssets/Scores/edited_score.xml");
 
         #region JSON文字列に変換し、標準出力へ
         var cmd = new EditCommand   

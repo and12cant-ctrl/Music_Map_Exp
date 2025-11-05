@@ -15,9 +15,10 @@ public class BackGroundDisplay : MonoBehaviour
 
     public void BackGroundUpdate(Vector2Int PL)
     {
-        if (BackGround == null) Debug.Log("BackGround‚ªvnull");
+
         string Time = "’‹";
         MapCell ia = gm.questMap.mapGrid[PL.x, PL.y];
+        if (ia.bgCategory == null) Debug.Log("BackGround‚ªnull");
         BackGround.sprite = ia.bgCategory.GetSpriteById(Time);
     }
 }
