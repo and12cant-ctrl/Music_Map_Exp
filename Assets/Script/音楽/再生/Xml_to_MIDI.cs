@@ -16,8 +16,8 @@ public class Xml_to_MIDI : MonoBehaviour
     public string scriptargs = "adwadwa ";
 
     public string scriptPath = @"ScriptsPy/convert_xml_to_midi.py";
-    public string inputXml = @"StreamingAssets/Scores/edited_score.xml";
-    public string outputMid = @"StreamingAssets/Scores/edited_score.mid";
+    public string inputXml = @"Assets/StreamingAssets/Scores/edited_score.xml";
+    public string outputMid = @"Assets/StreamingAssets/Scores/edited_score.mid";
 
     public bool projectRelativeForIO = true;  // 入出力 path をプロジェクト相対で解決
     public bool logPaths = true;
@@ -43,6 +43,7 @@ public class Xml_to_MIDI : MonoBehaviour
         #endregion
 
         #region micromambaに渡す文字列を構築
+
         var argsBuilder = new StringBuilder();
         argsBuilder.Append($"run -r \"{rootAbs}\" -n {envName} python \"{scriptAbs}\" \"{inAbs}\"");
         if (!string.IsNullOrWhiteSpace(outAbs)) argsBuilder.Append($" \"{outAbs}\"");

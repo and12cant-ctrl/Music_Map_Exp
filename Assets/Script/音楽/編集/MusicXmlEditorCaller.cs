@@ -15,6 +15,7 @@ public class EditCommand
     public string partName = "Melody";
     public int insertAtMesure = 1; //拡張用
 }
+
 public class MusicXmlEditorCaller : MonoBehaviour
 {
     private string basePath;
@@ -23,6 +24,7 @@ public class MusicXmlEditorCaller : MonoBehaviour
         basePath = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
         Run();
     }
+    [ContextMenu("XML => MIDI(micromamba)")]
 
     public void Run() {
 
@@ -36,7 +38,7 @@ public class MusicXmlEditorCaller : MonoBehaviour
         {
             inputXml = inputXml,
             outputXml = outputXml,
-            addPitches = new[] { "C4", "D4", "E4", "F4" },
+            addPitches = new[] { "G4", "A5", "B5", "C5" },
             quarterLength = 1,
             partName ="Melody",
             insertAtMesure = 1

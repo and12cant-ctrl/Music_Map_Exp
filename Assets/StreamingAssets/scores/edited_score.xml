@@ -40,21 +40,24 @@
                 </pitch>
                 <duration>10080</duration>
                 <type>quarter</type>
-
+            </note>
+            <note>
                 <pitch>
                     <step>D</step>
                     <octave>4</octave>
                 </pitch>
                 <duration>10080</duration>
                 <type>quarter</type>
-
+            </note>
+            <note>
                 <pitch>
                     <step>E</step>
                     <octave>4</octave>
                 </pitch>
                 <duration>10080</duration>
                 <type>quarter</type>
-
+            </note>
+            <note>
                 <pitch>
                     <step>F</step>
                     <octave>4</octave>
