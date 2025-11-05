@@ -113,8 +113,6 @@ public class GameManager : MonoBehaviour
                 chara.runtime = runtime;
 
                 _currentParty.Add(chara);
-              
-                
             }
 
             #region Nullチェック

@@ -14,12 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _jobName: "\u536F"
   _level: 0
-  _maxHP: 60
-  _maxMP: 30
-  _maxSP: 25
-  _str: 10
-  _int: 12
-  _api: 18
+  _defoMaxHP: 40
+  _defoMaxMP: 30
+  _defoMaxSP: 30
+  _defoStr: 8
+  _defoInt: 12
+  _defoApi: 15
+  exit: 1
   _characterGraphic: {fileID: 0}
   _skills: []
   _magics: []
+  instr: 0

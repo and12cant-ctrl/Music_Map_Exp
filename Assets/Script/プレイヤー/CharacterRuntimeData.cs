@@ -26,9 +26,9 @@ public class CharacterRuntimeData
         this.baseData = baseData;
         charaName = baseData._jobName;
         #region ç≈ëÂíl
-        currentMaxHP = baseData._maxHP;
-        currentMaxMP = baseData._maxMP;
-        currentMaxSP = baseData._maxSP;
+        currentMaxHP = baseData._defoMaxHP;
+        currentMaxMP = baseData._defoMaxMP;
+        currentMaxSP = baseData._defoMaxSP;
         #endregion
         #region åªç›íl
         currentHP = currentMaxHP;

@@ -14,12 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _jobName: "\u9F20"
   _level: 0
-  _maxHP: 50
-  _maxMP: 50
-  _maxSP: 20
-  _str: 8
-  _int: 15
-  _api: 10
+  _defoMaxHP: 35
+  _defoMaxMP: 50
+  _defoMaxSP: 10
+  _defoStr: 5
+  _defoInt: 14
+  _defoApi: 6
+  exit: 1
   _characterGraphic: {fileID: 21300000, guid: d735bf70fbb48234a86980a6868fea99, type: 3}
   _skills: []
   _magics: []
+  instr: 0

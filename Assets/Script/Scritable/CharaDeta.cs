@@ -5,12 +5,12 @@ public class CharaData : ScriptableObject
     #region ステータス
     public string _jobName;
     public int _level;
-    public int _maxHP;
-    public int _maxMP;
-    public int _maxSP;
-    public int _str;
-    public int _int;
-    public int _api;
+    public int _defoMaxHP;
+    public int _defoMaxMP;
+    public int _defoMaxSP;
+    public int _defoStr;
+    public int _defoInt;
+    public int _defoApi;
     public bool exit = true;
     #endregion
 

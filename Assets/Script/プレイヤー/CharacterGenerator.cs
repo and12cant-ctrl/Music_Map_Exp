@@ -38,9 +38,10 @@ public class CharacterGenerator : ScriptableObject
 
         #region 4.ステータス補正
         int hpOffset = Random.Range(-10, 11);
-        int newMaxHP = Mathf.Max(1, baseData._maxHP + hpOffset);
+        Debug.Log(baseData._defoMaxHP);
+        int newMaxHP = Mathf.Max(1, baseData._defoMaxHP + hpOffset);
         int newST = Random.Range(-2, 2);
-        int newMaxAPI = Mathf.Max(1,baseData._api+newST);
+        int newMaxAPI = Mathf.Max(1,baseData._defoApi+newST);
         runtime.currentMaxHP = newMaxHP;
         runtime.currentHP = runtime.currentMaxHP;
         runtime.curAPI = newMaxAPI;

@@ -159,7 +159,6 @@ public class MapDataSO : SerializedScriptableObject
                 if (x >= 0 && x < width && y >= 0 && y < height)
                 {
                     mapGrid[x, y].bgCategory = bgCate;
-                    Debug.Log(mapGrid[x, y].bgCategory);
                 }
             }
         }
