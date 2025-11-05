@@ -40,7 +40,6 @@ public class MapGenerator : MonoBehaviour
             Debug.Log(assignedBGs);
             var randomCat = randomBGPool[rand.Next(randomBGPool.Count)];
             assignedBGs.Add(randomCat);
-
         }
 
         assignedBGs = assignedBGs.OrderBy(x => rand.Next()).ToList();
@@ -93,7 +92,6 @@ public class MapGenerator : MonoBehaviour
                 EV = assigenList[index];
 
                 index++;
-
                 EventRandom(i * MapGridInt, j * MapGridInt, MapGridInt, MapGridInt, EV,questMap);
                 questMap.ApplyBackground(Spos, Epos, BG);
             }

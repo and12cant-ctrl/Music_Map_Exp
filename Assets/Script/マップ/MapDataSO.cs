@@ -146,7 +146,7 @@ public class MapDataSO : SerializedScriptableObject
 
     public void ApplyBackground(Vector2Int Start,Vector2Int End,BackgroundCategory bgCate)
     {
-        if (!selectionStart.HasValue || !selectionEnd.HasValue || string.IsNullOrEmpty(defaultBackgroundName))
+        if (!selectionStart.HasValue || !selectionEnd.HasValue )
             return;
 
         Vector2Int start = selectionStart.Value;
@@ -159,6 +159,7 @@ public class MapDataSO : SerializedScriptableObject
                 if (x >= 0 && x < width && y >= 0 && y < height)
                 {
                     mapGrid[x, y].bgCategory = bgCate;
+                    Debug.Log(mapGrid[x, y].bgCategory);
                 }
             }
         }

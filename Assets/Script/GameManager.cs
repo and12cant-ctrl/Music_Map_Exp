@@ -81,10 +81,6 @@ public class GameManager : MonoBehaviour
     void Update()
     {
     }
-
-
-
-
     public void EndMission()
     {
         foreach (var c in _currentParty) Destroy(c.gameObject);

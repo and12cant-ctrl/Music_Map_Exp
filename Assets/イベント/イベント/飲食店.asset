@@ -13,5 +13,15 @@ MonoBehaviour:
   m_Name: "\u98F2\u98DF\u5E97"
   m_EditorClassIdentifier: Assembly-CSharp::EventCategory
   evCategoryName: 
-  catIcon: {fileID: 0}
-  evDatas: []
+  catIcon: {fileID: 21300000, guid: 8b6eed74e4d18ff43b8fb4f79db72cd6, type: 3}
+  evDatas:
+  - id: "\u5357"
+    icon: {fileID: 21300000, guid: 8b6eed74e4d18ff43b8fb4f79db72cd6, type: 3}
+    likeLevel: 1
+    mysteryLevel: 1
+    HakenPlayer: []
+  - id: "\u7B2C\u4E09"
+    icon: {fileID: 21300000, guid: 8b6eed74e4d18ff43b8fb4f79db72cd6, type: 3}
+    likeLevel: 0
+    mysteryLevel: 0
+    HakenPlayer: []
