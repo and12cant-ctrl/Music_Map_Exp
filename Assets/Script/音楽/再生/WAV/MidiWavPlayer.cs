@@ -9,8 +9,8 @@ using UnityEngine.Networking;
 public class MidiWavPlayer : MonoBehaviour
 {
     [Header("入力ファイル（StreamingAssets配下/絶対パスも可）")]
-    public string midiPath = "Scores/edited_score.mid";
-    public string soundFontPath = "SoundFonts/A320U.sf2";
+    public string midiPath = "edited_score.mid";
+    public string soundFontPath = "A320U.sf2";
 
     [Header("出力キャッシュ（StreamingAssets/Cache 下に出力）")]
     public string outputWavName = "current_render.wav";
