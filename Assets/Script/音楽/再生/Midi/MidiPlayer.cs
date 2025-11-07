@@ -9,7 +9,7 @@ using System.IO;
 public class MidiPlayer : MonoBehaviour
 {
 
-    public string midFileName = "Assets/StreamingAssets/scores/edited_score.mid";
+    public string midFileName = "Assets/StreamingAssets/scores/edited_score";
 
     public float startSeconds = 0f;
     public float volume = 1f;
