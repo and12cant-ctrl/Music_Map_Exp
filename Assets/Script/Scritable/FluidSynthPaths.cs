@@ -4,6 +4,7 @@ using UnityEngine;
 public static class FluidSynthPaths
 {
     // プロジェクトルート … Assets の1つ上
+    //ターン開始時、鐘の音を鳴らす。ドクターWhoのtoyMakerのスパイスガールズの冒頭みたく
     public static string ProjectRoot =>
         Directory.GetParent(Application.dataPath)!.FullName;
 

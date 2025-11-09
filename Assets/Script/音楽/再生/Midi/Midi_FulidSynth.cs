@@ -15,6 +15,7 @@ public class Midi_FulidSynth : MonoBehaviour
 
     public string midi = "edited_score";
     public string MidiFile => Path.Combine(FluidSynthPaths.ScoresDir,midi);
+    public string Pyscripts => Path.Combine(FluidSynthPaths.scriptPy,"pt.py");
 
     private Process _proc;
     private Coroutine _loopWatcher;
@@ -36,48 +37,29 @@ public class Midi_FulidSynth : MonoBehaviour
     {
         Stop(); // 二重起動防止
 
-        var args = $"-i -a {audioDriver} -g {gain} \"{FluidSynthPaths.SoundFontFile}\" \"{MidiFile}\"";
+        var args = $"run -r \"{FluidSynthPaths.micromambaExe}\" -n unitypy python \"{Pyscripts}\" --root \"{FluidSynthPaths.ProjectRoot}\"";
         var psi = new ProcessStartInfo
         {
-            FileName =FluidSynthPaths.FluidSynthExe,
+            FileName = FluidSynthPaths.micromambaExe,
             Arguments = args,
+            WorkingDirectory = FluidSynthPaths.ProjectRoot,
             UseShellExecute = false,
-            CreateNoWindow = true,
+            RedirectStandardOutput = true,
             RedirectStandardError = true,
-            RedirectStandardOutput = true
+            CreateNoWindow = true
         };
 
-        try
-        {
-            _proc = new Process { StartInfo = psi, EnableRaisingEvents = true };
-            _proc.OutputDataReceived += (_, e) =>
-            {
-                if (!string.IsNullOrEmpty(e.Data)) UnityEngine.Debug.Log($"[fluidsynth] {e.Data}");
-            };
-            _proc.ErrorDataReceived += (_, e) =>
-            {
-                if (!string.IsNullOrEmpty(e.Data)) UnityEngine.Debug.LogWarning($"[fluidsynth] {e.Data}");
-            };
-            if (_proc.Start())
-            {
-                _proc.BeginOutputReadLine();
-                _proc.BeginErrorReadLine();
-                if (loop)
-                {
-                    _loopWatcher = StartCoroutine(WatchAndLoop());
-                }
-            }
-            else
-            {
-                UnityEngine.Debug.LogError("Failed to start fluidsynth process.");
-            }
-            
-            _proc.Start();
+        psi.EnvironmentVariables["PROJECT_ROOT"] = FluidSynthPaths.ProjectRoot;
+        psi.EnvironmentVariables["MIDI_FILENAME"] = MidiFile;
 
-        }catch(Exception ex)
-        {
-            UnityEngine.Debug.LogError($"error fluidsynth{ex}");
-        }
+        var proc = Process.Start(psi);
+        string stdout = proc.StandardOutput.ReadToEnd();
+        string stderr = proc.StandardError.ReadToEnd();
+        proc.WaitForExit();
+
+        UnityEngine.Debug.Log($"[Python STDOUT]\n{stdout}");
+        if (!string.IsNullOrEmpty(stderr))
+            UnityEngine.Debug.LogWarning($"[Python STDERR]\n{stderr}");
     }
 
     public void Stop()
