@@ -29,9 +29,6 @@ public class HakenTab : MonoBehaviour
     {
         
     }
-
-
-
     void HakenTabView(Vector2Int PL)
     {
         MapCell PL2Int = gm.questMap.mapGrid[PL.x, PL.y];

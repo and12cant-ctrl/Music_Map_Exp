@@ -10,7 +10,7 @@ public class MidiWavPlayer : MonoBehaviour
 {
     [Header("入力ファイル（StreamingAssets配下/絶対パスも可）")]
     public string midiPath = "edited_score.mid";
-    public string soundFontPath = "A320U.sf2";
+    public string soundFontPath = "Arachno.sf2";
 
     [Header("出力キャッシュ（StreamingAssets/Cache 下に出力）")]
     public string outputWavName = "current_render.wav";

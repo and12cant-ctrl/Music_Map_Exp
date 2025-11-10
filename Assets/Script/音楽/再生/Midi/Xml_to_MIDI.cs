@@ -7,12 +7,11 @@ using UnityEngine;
 public class Xml_to_MIDI : MonoBehaviour
 {
     [HideInInspector]
-    string projectRoot = Directory.GetParent(Application.dataPath).FullName;
-    public string micromambaExe = @"Tools/micromamba/micromamba.exe";
-    public string mambaRootDir = @"Tools/micromamba/mamba_root";
+    string projectRoot = FluidSynthPaths.ProjectRoot;
+    public string micromambaExe = FluidSynthPaths.micromambaExe;
+    public string mambaRootDir = FluidSynthPaths.micromambaroot;
     public string envName = "unitypy";
 
-    //public string scriptP = @"Tools\music21\test.py";
     public string scriptargs = "adwadwa ";
 
     public string scriptPath = @"ScriptsPy/convert_xml_to_midi.py";

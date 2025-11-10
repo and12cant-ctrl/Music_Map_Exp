@@ -37,7 +37,6 @@ public class MapGenerator : MonoBehaviour
         List<BackgroundCategory> randomBGPool = randamBgList.bGCategoryList;
         while (assignedBGs.Count < totalBlocks)
         {
-            Debug.Log(assignedBGs);
             var randomCat = randomBGPool[rand.Next(randomBGPool.Count)];
             assignedBGs.Add(randomCat);
         }
