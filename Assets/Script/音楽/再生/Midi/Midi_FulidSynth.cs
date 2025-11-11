@@ -4,6 +4,7 @@ using System.IO;
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using System.Threading.Tasks;
 
 public class Midi_FulidSynth : MonoBehaviour
 {
@@ -15,11 +16,12 @@ public class Midi_FulidSynth : MonoBehaviour
 
     public string midi = "edited_score.mid";
     public string MidiFile => Path.Combine(FluidSynthPaths.ScoresDir,midi);
-    public string Pyscripts => Path.Combine(FluidSynthPaths.scriptPy,"pt.py");
+    public string Pyscripts => Path.Combine(FluidSynthPaths.scriptPy,"midi_fluidsynth.py");
 
     private Process _proc;
     private Coroutine _loopWatcher;
-    public Button ButtonA;
+    public Button playButton;
+    private bool _isRunning;
     private void Start()
     {
         tton();
@@ -27,38 +29,69 @@ public class Midi_FulidSynth : MonoBehaviour
 
     public void tton()
     {
-        ButtonA.onClick.AddListener(() =>
+        playButton.onClick.AddListener(() =>
         {
             Play();
         });
     }
-    public void Play()
+    public async void Play()
     {
-        Stop(); // 二重起動防止
-
-        var args = $"run -r \"{FluidSynthPaths.micromambaroot}\" -n unitypy python \"{Pyscripts}\" --root \"{FluidSynthPaths.ProjectRoot}\"";
-        var psi = new ProcessStartInfo
+        if (_isRunning) return;
+        _isRunning = true;
+        try
         {
-            FileName = FluidSynthPaths.micromambaExe,
-            Arguments = args,
-            WorkingDirectory = FluidSynthPaths.ProjectRoot,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true
-        };
 
-        psi.EnvironmentVariables["PROJECT_ROOT"] = FluidSynthPaths.ProjectRoot;
-        psi.EnvironmentVariables["MIDI_FILENAME"] = MidiFile;
+            var args = $"run -r \"{FluidSynthPaths.micromambaroot}\" -n unitypy python \"{Pyscripts}\" --root \"{FluidSynthPaths.ProjectRoot}\"";
+            var psi = new ProcessStartInfo
+            {
+                FileName = FluidSynthPaths.micromambaExe,
+                Arguments = args,
+                WorkingDirectory = FluidSynthPaths.ProjectRoot,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
 
-        var proc = Process.Start(psi);
-        string stdout = proc.StandardOutput.ReadToEnd();
-        string stderr = proc.StandardError.ReadToEnd();
-        proc.WaitForExit();
+            psi.EnvironmentVariables["PROJECT_ROOT"] = FluidSynthPaths.ProjectRoot;
+            psi.EnvironmentVariables["MIDI_FILENAME"] = MidiFile;
 
-        UnityEngine.Debug.Log($"[Python STDOUT]\n{stdout}");
-        if (!string.IsNullOrEmpty(stderr))
-            UnityEngine.Debug.LogWarning($"[Python STDERR]\n{stderr}");
+            var proc = new Process();
+            proc.StartInfo = psi;
+            proc.EnableRaisingEvents = true;
+
+            #region 結果出力
+            proc.OutputDataReceived += (s, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                    UnityEngine.Debug.Log($"[PYTHON OUT] {e.Data}");
+            };
+            proc.ErrorDataReceived += (s, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                    UnityEngine.Debug.LogWarning($"[PYTHON ERR] {e.Data}");
+            };
+
+            proc.Exited += (s, e) =>
+            {
+                UnityEngine.Debug.Log($"[PYTHON EXIT] code={proc.ExitCode}");
+                proc.Dispose();
+            };
+
+            #endregion
+
+            proc.Start();
+            proc.BeginOutputReadLine();
+            proc.BeginErrorReadLine();
+            await Task.Run(() => proc.WaitForExit());
+            //UnityEngine.Debug.Log($"[PY EXIT] code={proc.ExitCode}");
+
+        }
+        finally
+        {
+            _isRunning = false;       
+            playButton.interactable = true;
+        }
     }
 
     public void Stop()

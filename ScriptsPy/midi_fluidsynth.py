@@ -29,27 +29,18 @@ def main():
     sf2 = os.path.normpath(sf2)
     mid = os.path.normpath(mid)
 
-    with open(p, "rb") as f:
-        sig = f.read(4)
-    print(sig)  # b'RIFF' が正解
-    print(f"[INFO] Root : {root}")
-    print(f"[INFO] MIDI : {mid}")
-    print(f"[INFO] SF2  : {sf2}")
-    print(f"[INFO] EXE  : {exe}")
-
-        # 仮想環境からでもこの相対パスでOK
-#  root = os.path.dirname(os.path.dirname(__file__))
-#   exe = os.path.join(root, "Tools", "fluidsynth", "fluidsynth.exe")
-#    sf2 = os.path.join(root, "Tools", "fluidsynth", "soundfont.sf2")
-#    mid = os.path.join(root, "StreamingAssets", "scores", "edited_score.mid")
+#    print(f"[INFO] Root : {root}")
+#    print(f"[INFO] MIDI : {mid}")
+#    print(f"[INFO] SF2  : {sf2}")
+#    print(f"[INFO] EXE  : {exe}")
     
     for label, path in [("FluidSynth", exe), ("SoundFont", sf2), ("MIDI", mid)]:
             if not os.path.exists(path):
                 print(f"[ERROR] {label} not found: {path}", file=sys.stderr)
                 sys.exit(1)
 
-    cmd = [exe, "-i","-a","wasapi","-m","none","-o", f"synth.default-soundfont={sf2}",  mid]
-    print("[RUN]", " ".join(f'"{x}"' if " " in x else x for x in cmd))
+    cmd = [exe, "-i","-n","-a","dsound","-o", f"synth.default-soundfont={sf2}",  mid]
+ #   print("[RUN]", " ".join(f'"{x}"' if " " in x else x for x in cmd))
     subprocess.run(cmd, cwd=root)
 
 if __name__ == "__main__":

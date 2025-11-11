@@ -19,6 +19,7 @@ Tools/micromamba/mamba_root/**
 Tools/micromamba/envs/**
 Tools/micromamba/pkgs/**
 Tools/micromamba/**/cache/**
+Tools/fluidsynth/SoundFonts/Arachno.sf2
 !Tools/micromamba/env.yaml
 !Tools/micromamba/micromamba.exe
 !Tools/micromamba/bootstrap.bat
