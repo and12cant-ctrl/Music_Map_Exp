@@ -23,8 +23,5 @@ public class TestManeger : MonoBehaviour
             $"{gameManager.EVRandLsitSO}," +
             $"{gameManager.MapGrid}");
     }
-    private void Start()
-    {
-        
-    }
+
 }
