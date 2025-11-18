@@ -28,8 +28,8 @@ public class MusicXmlEditorCaller : MonoBehaviour
 
     public void Run() {
 
-        string pythonPath = Path.Combine(basePath, "Tools/music21/.venv/Scripts/python.exe");
-        string scriptPath = Path.Combine(basePath, "Tools/music21/edit_dcore_json.py");
+        string pythonPath = Path.Combine(FluidSynthPaths.ToolsDir, "music21/.venv/Scripts/python.exe");
+        string scriptPath = Path.Combine(FluidSynthPaths.scriptPy, "convert_xml_to_midi.py");
         string inputXml = Path.Combine(basePath, "Assets/StreamingAssets/Scores/empty_score.xml");
         string outputXml = Path.Combine(basePath, "Assets/StreamingAssets/Scores/edited_score.xml");
 

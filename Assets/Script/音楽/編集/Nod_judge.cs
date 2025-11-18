@@ -15,7 +15,7 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
     private int scale = 20;
     private string number = "1";
     private Part part = Part.A;
-    private int time = 1;
+    private float time = 0.5f;
 
     public void OnPointerClick(PointerEventData eventData)
     {
@@ -30,14 +30,14 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 staffRect, eventData.position, cam, out Vector2 localPoint))
         {
-            // 必要なら Rect 内にクランプ
+
             Vector2 half = staffRect.rect.size * 0.5f;
             Vector2 clamped = new Vector2(
                 Mathf.Clamp(localPoint.x, -half.x, half.x),
                 Mathf.Clamp(localPoint.y, -half.y, half.y)
             );
 
-            // アンカーポジションとして使える
+
             Vector2 anchoredPos = clamped; // staffRect直下に子を置くならこのまま使える
             #region     正規化
             // 正規化座標（0～1）も作っておくと便利（ビート/音高スナップに使う）

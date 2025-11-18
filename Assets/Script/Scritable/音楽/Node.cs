@@ -4,11 +4,15 @@ public class Node
 {
     public int _scale;
     public int _beats;
-    public int _time;
+    public float _duration;
+
     public Part _Part;
+    public string pitch;
+    public float starttime;
 }
 
 public enum Part
 {
     A, B, C,D
 }
+
