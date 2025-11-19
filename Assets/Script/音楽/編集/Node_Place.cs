@@ -15,9 +15,8 @@ public class Node_Place : MonoBehaviour
         // 1) ‚·‚Å‚É“¯‚¶ (X,Y) ‚ª‘¶İ‚µ‚Ä‚¢‚È‚¢‚©H
         foreach (var node in _nodes)
         {
-            if (node._Part == part && node._pitch == pitch && node._startBar == start && node._bar == bars &&
-                (bars >= node._startBar && bars <= node._startBar + node._duration))
-                
+            if (node._Part == part && node._pitch == pitch && 
+               Mathf.Max(node._startBar,start)<Mathf.Min(node._startBar+node._duration,start+time))
             {
                 return false;
             }

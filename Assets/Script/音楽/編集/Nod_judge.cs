@@ -16,18 +16,17 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
     private int scale = 20;             //音階の下から上までの数
     private string nameNumber = "1";    //音符の名付け
     private Part part = Part.A;         //パート名
-    private float nodeLength = 0.5f;    //選択した音符の拍数（現在八分音符）
+    public float nodeLength = 2;    //選択した音符の拍数（現在八分音符）
     private int measure = 1;            //現在小節数
     public float bar = 4;               //最大小節数
     public string[] Gcode = { "G", "A", "B", "C", "D", "E", "F" };
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        double[] Nodes = Enumerable.Range(0,(int)((2*beat)+1)).Select(i =>(double)i*nodeLength*(1/beat)).ToArray();
-        double[] Scales = Enumerable.Range(0, scale).Select(i => (double)i * 1 / scale).ToArray();
+        double[] Nodes = Enumerable.Range(0,(int)((2*beat))).Select(i =>(double)i*nodeLength*(1/beat)).ToArray();
+        double[] Scales = Enumerable.Range(0, scale).Select(i => (double)i / scale).ToArray();
         // Canvasの種類に応じてカメラを選ぶ
         Camera cam = null;
-
         if (canvas.renderMode == RenderMode.ScreenSpaceCamera || canvas.renderMode == RenderMode.WorldSpace)
             cam = uiCamera != null ? uiCamera : canvas.worldCamera;
 
@@ -42,27 +41,25 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
                 Mathf.Clamp(localPoint.y, -half.y, half.y)
             );
 
-
-            Vector2 anchoredPos = clamped; // staffRect直下に子を置くならこのまま使える
             #region     正規化
+            Vector2 anchoredPos = clamped; // staffRect直下に子を置くならこのまま使える
             // 正規化座標（0～1）も作っておくと便利（ビート/音高スナップに使う）
             float nx = Mathf.InverseLerp(-half.x, half.x, anchoredPos.x); // 横方向（時間）
             float ny = Mathf.InverseLerp(-half.y, half.y, anchoredPos.y); // 縦方向（音高）
             //Debug.Log($"Normalized: ({nx:F3}, {ny:F3})");
 
-            // ここで「スナップ処理」や「音符生成」を呼ぶ
 
             float snappedX = Normalize(Nodes, nx);
             float snappedY = Normalize(Scales, ny);
-            //Debug.Log($"snappedX,Y{snappedX} {snappedY}");
+   //         Debug.Log($"snappedX,Y{snappedX} {snappedY}");
             if (snappedX >= 1) return;
 
             #region 変換
-            int ScaleX = (int)(snappedX * 100);
-            int BeatY= (int)(snappedY * 100);
+            int ScaleX = Mathf.RoundToInt(snappedX * 100);
+            int BeatY= Mathf.RoundToInt(snappedY * 100);
             Debug.Log($"ScaleX{ScaleX} ,BeatY{BeatY}");
 
-            string num = $"{((BeatY/4) / Gcode.Length) }{Gcode[(BeatY / 5 ) % Gcode.Length]}";
+            string num = $"{(((BeatY /5)+6) / Gcode.Length)+3 }{Gcode[(BeatY / 5 ) % Gcode.Length]}";
             float start =(snappedX * Mathf.Clamp(measure - 1,1,measure-1) * bar*2)%bar;
             int truebars =(int)(measure+ (snappedX * Mathf.Clamp(measure - 1, 1, measure - 1) * bar * 2) / bar);
             Debug.Log($"num [{num}]& start[{start}] &[{truebars}]");
