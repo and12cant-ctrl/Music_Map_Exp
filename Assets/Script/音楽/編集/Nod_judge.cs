@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -11,18 +12,22 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
     [SerializeField] private Camera uiCamera;         // Screen Space - Camera / World Space のときに使用
     [SerializeField] private RectTransform NodePrehab;
     [SerializeField] private Node_Place NodeCheak;
-    public int beat = 8;
-    private int scale = 20;
-    private string number = "1";
-    private Part part = Part.A;
-    private float time = 0.5f;
+    public float beat = 4.0f;           //小節の拍数
+    private int scale = 20;             //音階の下から上までの数
+    private string nameNumber = "1";    //音符の名付け
+    private Part part = Part.A;         //パート名
+    private float nodeLength = 0.5f;    //選択した音符の拍数（現在八分音符）
+    private int measure = 1;            //現在小節数
+    public float bar = 4;               //最大小節数
+    public string[] Gcode = { "G", "A", "B", "C", "D", "E", "F" };
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        double[] Nodes = Enumerable.Range(0,beat+1).Select(i =>(double)i*1/beat).ToArray();
-        double[] Scales = Enumerable.Range(0, scale+1).Select(i => (double)i * 1 / scale).ToArray();
+        double[] Nodes = Enumerable.Range(0,(int)((2*beat)+1)).Select(i =>(double)i*nodeLength*(1/beat)).ToArray();
+        double[] Scales = Enumerable.Range(0, scale).Select(i => (double)i * 1 / scale).ToArray();
         // Canvasの種類に応じてカメラを選ぶ
         Camera cam = null;
+
         if (canvas.renderMode == RenderMode.ScreenSpaceCamera || canvas.renderMode == RenderMode.WorldSpace)
             cam = uiCamera != null ? uiCamera : canvas.worldCamera;
 
@@ -55,18 +60,24 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
             #region 変換
             int ScaleX = (int)(snappedX * 100);
             int BeatY= (int)(snappedY * 100);
-            Debug.Log($"ScaleX{ScaleX} ,BratY{BeatY}");
-            #endregion
-            if (!NodeCheak.PlaceNode(ScaleX, BeatY,time, part)) return;
+            Debug.Log($"ScaleX{ScaleX} ,BeatY{BeatY}");
 
-            Debug.Log(staffRect.rect.height);
+            string num = $"{((BeatY/4) / Gcode.Length) }{Gcode[(BeatY / 5 ) % Gcode.Length]}";
+            float start =(snappedX * Mathf.Clamp(measure - 1,1,measure-1) * bar*2)%bar;
+            int truebars =(int)(measure+ (snappedX * Mathf.Clamp(measure - 1, 1, measure - 1) * bar * 2) / bar);
+            Debug.Log($"num [{num}]& start[{start}] &[{truebars}]");
+
+            #endregion
+            if (!NodeCheak.PlaceNode(nodeLength,part,num,start,truebars)) return;
+
+            //Debug.Log(staffRect.rect.height);
             float ansX = Mathf.Lerp(0, staffRect.rect.width, snappedX); //割合で×して返す
             float ansY = Mathf.Lerp(0, staffRect.rect.height, snappedY);
 
             Vector2 Nodesfgs = new Vector2(ansX, ansY);
             #endregion
 
-            PlaceNodeat(Nodesfgs,number);
+            PlaceNodeat(Nodesfgs,nameNumber);
         } 
     }
     public void PlaceNodeat (Vector2 anchore,string name)
@@ -74,7 +85,7 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
         RectTransform note = Instantiate(NodePrehab, staffRect);
         note.anchoredPosition = anchore;
         note.name = name;
-        Debug.Log($"note.anchore{note.anchoredPosition}");
+        //Debug.Log($"note.anchore{note.anchoredPosition}");
     }
 
     public void xml(float x,float y)

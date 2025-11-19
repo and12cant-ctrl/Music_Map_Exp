@@ -9,13 +9,15 @@ public class Node_Place : MonoBehaviour
     // 同じY(_scale)に置ける最大数
     private const int MaxPerY = 3;
 
-    public bool CanPlace(int scale, int beats,float time,Part part)
+    public bool CanPlace(Part part, string pitch, float start, int bars,float time)
     {
-        Debug.Log($"{scale},{beats}");
+        //Debug.Log($"{scale},{beats}");
         // 1) すでに同じ (X,Y) が存在していないか？
         foreach (var node in _nodes)
         {
-            if (node._scale == scale && node._beats == beats)
+            if (node._Part == part && node._pitch == pitch && node._startBar == start && node._bar == bars &&
+                (bars >= node._startBar && bars <= node._startBar + node._duration))
+                
             {
                 return false;
             }
@@ -25,7 +27,7 @@ public class Node_Place : MonoBehaviour
         int countSameY = 0;
         foreach (var node in _nodes)
         {
-            if (node._scale == scale)
+            if (node._startBar == start && node._bar == bars)
             {
                 countSameY++;
             }
@@ -43,19 +45,20 @@ public class Node_Place : MonoBehaviour
     /// 置けるなら Node を作って登録する
     /// （※ ScriptableObject を動的生成する例）
     /// </summary>
-    public bool PlaceNode(int scaleN, int beatsN, float time, Part part)
+    public bool PlaceNode(float time, Part part,string pitch,float start,int bars)
     {
-        if (!CanPlace(scaleN, beatsN,time,part))
+        if (!CanPlace(part, pitch, start, bars,time))
         {
-            Debug.LogWarning($"この位置には置けません: scale={scaleN}, beats={beatsN}");
+            Debug.LogWarning($"この位置には置けません: {bars}小節、{start+1}拍、{pitch}");
             return false;
         }
 
         var node = new Node();
-        node._scale = scaleN;
-        node._beats = beatsN;
         node._duration = time;
         node._Part = part;
+        node._pitch = pitch;
+        node._startBar = start;
+        node._bar = bars;
 
         _nodes.Add(node);
         return true;
