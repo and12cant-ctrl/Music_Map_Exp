@@ -22,16 +22,20 @@ public class Midi_FulidSynth : MonoBehaviour
     private Coroutine _loopWatcher;
     public Button playButton;
     private bool _isRunning;
+    private MusicXmlEditorCaller xmlChenge;
     private void Start()
     {
+        xmlChenge = GetComponent<MusicXmlEditorCaller>();
         tton();
+
     }
 
     public void tton()
     {
         playButton.onClick.AddListener(() =>
         {
-            Play();
+            xmlChenge.Run();
+            //Play();
         });
     }
     public async void Play()

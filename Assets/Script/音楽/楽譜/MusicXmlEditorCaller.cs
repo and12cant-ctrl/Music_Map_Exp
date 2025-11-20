@@ -10,38 +10,46 @@ public class EditCommand
 {
     public string inputXml;
     public string outputXml;
-    public string[] addPitches;
-    public float quarterLength = 1;//四分音符
     public string partName = "Melody";
-    public int insertAtMesure = 1; //拡張用
+    public Node[] notes;
 }
 
 public class MusicXmlEditorCaller : MonoBehaviour
 {
+    [SerializeField] private Node_Place nodes;
     private string basePath;
     void Awake()
     {
-        basePath = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
         Run();
     }
     [ContextMenu("XML => MIDI(micromamba)")]
 
     public void Run() {
+        #region MyRegion
+        var sb = new StringBuilder();
+        foreach (var node in nodes._nodes)
+        {
+            sb.Append(node._pitch.ToString());
+        }
+        string ans = sb.ToString();
+        UnityEngine.Debug.Log(ans);
+        #endregion
 
         string pythonPath = Path.Combine(FluidSynthPaths.ToolsDir, "music21/.venv/Scripts/python.exe");
-        string scriptPath = Path.Combine(FluidSynthPaths.scriptPy, "convert_xml_to_midi.py");
-        string inputXml = Path.Combine(basePath, "Assets/StreamingAssets/Scores/empty_score.xml");
-        string outputXml = Path.Combine(basePath, "Assets/StreamingAssets/Scores/edited_score.xml");
+        string scriptPath = Path.Combine(FluidSynthPaths.scriptPy, "edit_score_json.py");
+        string inputXml = Path.Combine(FluidSynthPaths.ScoresDir, "empty_score.xml");
+        string outputXml = Path.Combine(FluidSynthPaths.ScoresDir, "edited_score.xml");
 
+       UnityEngine.Debug.Log("[DEBUG pythonPath] = " + pythonPath);
+        UnityEngine.Debug.Log("[DEBUG scriptPath] = " + scriptPath);
         #region JSON文字列に変換し、標準出力へ
-        var cmd = new EditCommand   
+        var cmd = new EditCommand
         {
             inputXml = inputXml,
             outputXml = outputXml,
-            addPitches = new[] { "G4", "A5", "B5", "C5" },
-            quarterLength = 1,
-            partName ="Melody",
-            insertAtMesure = 1
+
+            partName = "Melody",
+            notes = nodes._nodes.ToArray()
         };
         string json = JsonUtility.ToJson(cmd);
         #endregion
@@ -68,6 +76,12 @@ public class MusicXmlEditorCaller : MonoBehaviour
             using (var sw = new StreamWriter(p.StandardInput.BaseStream, new UTF8Encoding(false)))
             {
                 sw.Write(json);     //Unity=>Pythonへ送信
+            }
+            //using var p = Process.Start(psi);
+            if (p == null)
+            {
+                UnityEngine.Debug.LogError("Process.Start が null を返しました。pythonPath / scriptPath を確認してください。");
+                return;
             }
 
             string stdout = p.StandardOutput.ReadToEnd();     //Python=>Unity

@@ -9,7 +9,7 @@ public class Node_Place : MonoBehaviour
     // 同じY(_scale)に置ける最大数
     private const int MaxPerY = 3;
 
-    public bool CanPlace(Part part, string pitch, float start, int bars,float time)
+    public bool CanPlace(float time, Part part, string pitch, float start, int bars)
     {
         //Debug.Log($"{scale},{beats}");
         // 1) すでに同じ (X,Y) が存在していないか？
@@ -46,7 +46,7 @@ public class Node_Place : MonoBehaviour
     /// </summary>
     public bool PlaceNode(float time, Part part,string pitch,float start,int bars)
     {
-        if (!CanPlace(part, pitch, start, bars,time))
+        if (!CanPlace( time,part, pitch, start, bars))
         {
             Debug.LogWarning($"この位置には置けません: {bars}小節、{start+1}拍、{pitch}");
             return false;

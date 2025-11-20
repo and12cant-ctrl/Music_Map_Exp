@@ -12,6 +12,7 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
     [SerializeField] private Camera uiCamera;         // Screen Space - Camera / World Space のときに使用
     [SerializeField] private RectTransform NodePrehab;
     [SerializeField] private Node_Place NodeCheak;
+    [SerializeField] private EditMode editMode = EditMode.Place;
     public float beat = 4.0f;           //小節の拍数
     private int scale = 20;             //音階の下から上までの数
     private string nameNumber = "1";    //音符の名付け
@@ -29,7 +30,7 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
         Camera cam = null;
         if (canvas.renderMode == RenderMode.ScreenSpaceCamera || canvas.renderMode == RenderMode.WorldSpace)
             cam = uiCamera != null ? uiCamera : canvas.worldCamera;
-
+        Vector2 NodesFin = new Vector2();
         // 画面座標（スクリーン）→ RectTransformローカル座標 に変換
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 staffRect, eventData.position, cam, out Vector2 localPoint))
@@ -51,18 +52,18 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
 
             float snappedX = Normalize(Nodes, nx);
             float snappedY = Normalize(Scales, ny);
-   //         Debug.Log($"snappedX,Y{snappedX} {snappedY}");
+            //Debug.Log($"snappedX,Y{snappedX} {snappedY}");
             if (snappedX >= 1) return;
 
             #region 変換
             int ScaleX = Mathf.RoundToInt(snappedX * 100);
             int BeatY= Mathf.RoundToInt(snappedY * 100);
-            Debug.Log($"ScaleX{ScaleX} ,BeatY{BeatY}");
+            //Debug.Log($"ScaleX{ScaleX} ,BeatY{BeatY}");
 
             string num = $"{(((BeatY /5)+6) / Gcode.Length)+3 }{Gcode[(BeatY / 5 ) % Gcode.Length]}";
             float start =(snappedX * Mathf.Clamp(measure - 1,1,measure-1) * bar*2)%bar;
             int truebars =(int)(measure+ (snappedX * Mathf.Clamp(measure - 1, 1, measure - 1) * bar * 2) / bar);
-            Debug.Log($"num [{num}]& start[{start}] &[{truebars}]");
+            //Debug.Log($"num [{num}]& start[{start}] &[{truebars}]");
 
             #endregion
             if (!NodeCheak.PlaceNode(nodeLength,part,num,start,truebars)) return;
@@ -71,11 +72,16 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
             float ansX = Mathf.Lerp(0, staffRect.rect.width, snappedX); //割合で×して返す
             float ansY = Mathf.Lerp(0, staffRect.rect.height, snappedY);
 
-            Vector2 Nodesfgs = new Vector2(ansX, ansY);
+            NodesFin = new Vector2(ansX, ansY);
             #endregion
-
-            PlaceNodeat(Nodesfgs,nameNumber);
-        } 
+        }
+        switch (editMode)
+        {
+            case EditMode.Place:
+                PlaceNodeat(NodesFin, nameNumber);
+                break;
+        }
+        //PlaceNodeat(NodesFin, nameNumber);
     }
     public void PlaceNodeat (Vector2 anchore,string name)
     {
@@ -112,5 +118,9 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
             }
         }
         return closest;
+    }
+    public enum EditMode
+    {
+        Place,Delete,Change
     }
 }
