@@ -20,7 +20,7 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
     public float nodeLength = 2;    //‘I‘ğ‚µ‚½‰¹•„‚Ì””iŒ»İ”ª•ª‰¹•„j
     private int measure = 1;            //Œ»İ¬ß”
     public float bar = 4;               //Å‘å¬ß”
-    public string[] Gcode = { "G", "A", "B", "C", "D", "E", "F" };
+    private string[] Gcode = { "G", "A", "B", "C", "D", "E", "F" };
 
     public void OnPointerClick(PointerEventData eventData)
     {
@@ -60,7 +60,7 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
             int BeatY= Mathf.RoundToInt(snappedY * 100);
             //Debug.Log($"ScaleX{ScaleX} ,BeatY{BeatY}");
 
-            string num = $"{(((BeatY /5)+6) / Gcode.Length)+3 }{Gcode[(BeatY / 5 ) % Gcode.Length]}";
+            string num = $"{Gcode[(BeatY / 5 ) % Gcode.Length]}{(((BeatY / 5) + 6) / Gcode.Length) + 3}";
             float start =(snappedX * Mathf.Clamp(measure - 1,1,measure-1) * bar*2)%bar;
             int truebars =(int)(measure+ (snappedX * Mathf.Clamp(measure - 1, 1, measure - 1) * bar * 2) / bar);
             //Debug.Log($"num [{num}]& start[{start}] &[{truebars}]");

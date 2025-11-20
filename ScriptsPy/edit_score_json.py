@@ -5,7 +5,7 @@ from pathlib import Path
 print("PYTHON_START", file=sys.stdout, flush=True)
 def eprint (*args,**kwargs):
     "エラー出力"
-    print(*args,flie=sys.stderr,**kwargs)
+    print(*args,file=sys.stderr,**kwargs)
 
 def read_json_from_stdin():
     "標準出力で送られたjsonを読む"
@@ -14,26 +14,25 @@ def read_json_from_stdin():
         eprint("[edit_score_json] 標準入力(JSON)が空です。Unity 側の送信を確認してください。")
         sys.exit(1)
 
-        try:
-            cmd =json.loads(data)
-        except json.JSONDecodeError as e:
-            eprint(f"[edit_score_json] JSON デコードに失敗しました: {e}")
-            sys.exit(1)
-        return cmd
+    try:
+        cmd =json.loads(data)
+    except json.JSONDecodeError as e:
+        eprint(f"[edit_score_json] JSON デコードに失敗しました: {e}")
+        sys.exit(1)
+    return cmd
 
 def main():
     "Json受け取り"
-    cmd = read_json_from_stdin
-    eprint("unko")
+    cmd = read_json_from_stdin()
     try:
-        input_xml = Path(cmd["inputxml"])
+        input_xml = Path(cmd["inputXml"])
         output_xml = Path(cmd["outputXml"])
     except KeyError as e:
         eprint(f"[edit_score_json] 必須フィールドが不足しています: {e}")
         sys.exit(1)
 
     part_name = cmd.get("partName", "Melody")
-    notes     = cmd.get("notes",[])
+    nodes     = cmd.get("nodes",[])
 
     input_xml = input_xml.expanduser().resolve()
     output_xml = output_xml.expanduser().resolve()
@@ -59,7 +58,7 @@ def main():
         sys.exit(1)
 
     # 3) パートを探す（partName 一致、なければ先頭パート）
-  
+
     try:
         parts = score.parts
     except Exception:
@@ -82,7 +81,7 @@ def main():
     from collections import defaultdict
     measure_cache = defaultdict(lambda: None)
 
-    for ninfo in notes:
+    for ninfo in nodes:
         try:
             pitch       =ninfo["_pitch"]
             duration    =float(ninfo["_duration"])
@@ -94,11 +93,11 @@ def main():
         # 小節番号は 1 始まりで想定
         if bar_number < 1:
             bar_number = 1
-        
+
         # 小節を取得 or 作成
         if measure_cache[bar_number] is None:
             try:
-                m-stream = target_part.measures(bar_number,bar_number)
+                m-stream == target_part.measures(bar_number,bar_number)
                 if m_stream is None or len(m-stream) == 0:
                     m = stream.Measure(number=bar_number)
                     target_part.append(m)
@@ -126,7 +125,7 @@ def main():
 
     # 5) 出力 XML として保存
     try:
-        score.write("musicxml", fp=str(output_xml))
+        score.write("musicXml", fp=str(output_xml))
     except Exception as e:
         eprint(f"[edit_score_json] MusicXML の書き出しに失敗しました: {output_xml}\n{e}")
         sys.exit(1)
@@ -136,7 +135,7 @@ def main():
     print(f"[edit_score_json] input : {input_xml}")
     print(f"[edit_score_json] output: {output_xml}")
     print(f"[edit_score_json] part  : {part_name}")
-    print(f"[edit_score\json] notes:{len(notes)}")
+    print(f"[edit_score_json] nodes:{len(nodes)}")
 
     sys.exit(0)
 

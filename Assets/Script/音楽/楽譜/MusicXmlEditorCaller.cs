@@ -11,7 +11,7 @@ public class EditCommand
     public string inputXml;
     public string outputXml;
     public string partName = "Melody";
-    public Node[] notes;
+    public Node[] nodes;
 }
 
 public class MusicXmlEditorCaller : MonoBehaviour
@@ -20,7 +20,7 @@ public class MusicXmlEditorCaller : MonoBehaviour
     private string basePath;
     void Awake()
     {
-        Run();
+        //Run();
     }
     [ContextMenu("XML => MIDI(micromamba)")]
 
@@ -35,21 +35,20 @@ public class MusicXmlEditorCaller : MonoBehaviour
         UnityEngine.Debug.Log(ans);
         #endregion
 
-        string pythonPath = Path.Combine(FluidSynthPaths.ToolsDir, "music21/.venv/Scripts/python.exe");
+        string pythonPath = Path.Combine(FluidSynthPaths.micromambaroot, "envs/unitypy/python.exe");
         string scriptPath = Path.Combine(FluidSynthPaths.scriptPy, "edit_score_json.py");
         string inputXml = Path.Combine(FluidSynthPaths.ScoresDir, "empty_score.xml");
         string outputXml = Path.Combine(FluidSynthPaths.ScoresDir, "edited_score.xml");
 
-       UnityEngine.Debug.Log("[DEBUG pythonPath] = " + pythonPath);
-        UnityEngine.Debug.Log("[DEBUG scriptPath] = " + scriptPath);
+       //UnityEngine.Debug.Log("[DEBUG pythonPath] = " + pythonPath);
+       // UnityEngine.Debug.Log("[DEBUG scriptPath] = " + scriptPath);
         #region JSON文字列に変換し、標準出力へ
         var cmd = new EditCommand
         {
             inputXml = inputXml,
             outputXml = outputXml,
-
             partName = "Melody",
-            notes = nodes._nodes.ToArray()
+            nodes = nodes._nodes.ToArray()
         };
         string json = JsonUtility.ToJson(cmd);
         #endregion

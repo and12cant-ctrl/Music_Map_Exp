@@ -35,7 +35,7 @@ public class Midi_FulidSynth : MonoBehaviour
         playButton.onClick.AddListener(() =>
         {
             xmlChenge.Run();
-            //Play();
+            Play();
         });
     }
     public async void Play()
