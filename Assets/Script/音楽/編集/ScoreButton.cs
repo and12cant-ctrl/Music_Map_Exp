@@ -3,18 +3,23 @@ using UnityEngine.UI;
 
 public class ScoreButton : MonoBehaviour
 {
-    [SerializeField] private Button NodeButton;
+    [SerializeField] private GameObject NodeButton;
     [SerializeField] private Button PartButton;
-    [SerializeField] private Button HarfButton;
-    [SerializeField] private Button BeatButton;
+    [SerializeField] private GameObject TabPrehab;
+    public Nod_judge nodeJudge;
     
     void Start()
     {
-        
+        nodeJudge = GetComponent<Nod_judge>();
+
     }
 
     void Update()
     {
         
+    }
+    private void et()
+    {
+
     }
 }

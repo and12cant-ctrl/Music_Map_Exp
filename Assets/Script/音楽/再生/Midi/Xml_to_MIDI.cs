@@ -14,9 +14,9 @@ public class Xml_to_MIDI : MonoBehaviour
 
     public string scriptargs = "adwadwa ";
 
-    public string scriptPath = @"ScriptsPy/convert_xml_to_midi.py";
-    public string inputXml = @"Assets/StreamingAssets/Scores/edited_score.xml";
-    public string outputMid = @"Assets/StreamingAssets/Scores/edited_score.mid";
+    public string scriptPath = Path.Combine(FluidSynthPaths.scriptPy,"convert_xml_to_midi.py");
+    public string inputXml =Path.Combine( FluidSynthPaths.ScoresDir,"edited_score.xml");
+    public string outputMid = Path.Combine(FluidSynthPaths.ScoresDir,"edited_score.mid");
 
     public bool projectRelativeForIO = true;  // 入出力 path をプロジェクト相対で解決
     public bool logPaths = true;

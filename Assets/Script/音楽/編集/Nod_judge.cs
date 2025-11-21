@@ -12,7 +12,7 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
     [SerializeField] private Camera uiCamera;         // Screen Space - Camera / World Space ‚Ì‚Æ‚«‚Ég—p
     [SerializeField] private RectTransform NodePrehab;
     [SerializeField] private Node_Place NodeCheak;
-    [SerializeField] private EditMode editMode = EditMode.Place;
+    [SerializeField] public EditMode editMode = EditMode.Place;
     public float beat = 4.0f;           //¬ß‚Ì””
     private int scale = 20;             //‰¹ŠK‚Ì‰º‚©‚çã‚Ü‚Å‚Ì”
     private string nameNumber = "1";    //‰¹•„‚Ì–¼•t‚¯

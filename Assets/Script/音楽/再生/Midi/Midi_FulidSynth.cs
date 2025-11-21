@@ -23,9 +23,11 @@ public class Midi_FulidSynth : MonoBehaviour
     public Button playButton;
     private bool _isRunning;
     private MusicXmlEditorCaller xmlChenge;
+    private Xml_to_MIDI midiChenge;
     private void Start()
     {
         xmlChenge = GetComponent<MusicXmlEditorCaller>();
+        midiChenge = GetComponent<Xml_to_MIDI>();
         tton();
 
     }
@@ -35,6 +37,7 @@ public class Midi_FulidSynth : MonoBehaviour
         playButton.onClick.AddListener(() =>
         {
             xmlChenge.Run();
+            midiChenge.RunVeny();
             Play();
         });
     }
