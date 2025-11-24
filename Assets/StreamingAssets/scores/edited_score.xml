@@ -5,7 +5,7 @@
   <identification>
     <creator type="composer">Music21</creator>
     <encoding>
-      <encoding-date>2025-11-21</encoding-date>
+      <encoding-date>2025-11-24</encoding-date>
       <software>music21 v.9.9.1</software>
     </encoding>
   </identification>
@@ -42,14 +42,9 @@
     </measure>
     <!--======================== Measure 1.0 =========================-->
     <measure implicit="no" number="1.0">
-      <note print-object="no" print-spacing="yes">
-        <rest />
-        <duration>10080</duration>
-        <type>quarter</type>
-      </note>
       <note>
         <pitch>
-          <step>E</step>
+          <step>G</step>
           <octave>4</octave>
         </pitch>
         <duration>10080</duration>
@@ -68,9 +63,22 @@
         <duration>10080</duration>
         <type>quarter</type>
       </note>
+      <note print-object="no" print-spacing="yes">
+        <rest />
+        <duration>10080</duration>
+        <type>quarter</type>
+      </note>
     </measure>
     <!--======================== Measure 2.0 =========================-->
     <measure implicit="no" number="2.0">
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>10080</duration>
+        <type>quarter</type>
+      </note>
       <note print-object="no" print-spacing="yes">
         <rest />
         <duration>10080</duration>
@@ -78,16 +86,8 @@
       </note>
       <note>
         <pitch>
-          <step>G</step>
-          <octave>5</octave>
-        </pitch>
-        <duration>10080</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>G</step>
-          <octave>4</octave>
+          <step>C</step>
+          <octave>6</octave>
         </pitch>
         <duration>10080</duration>
         <type>quarter</type>

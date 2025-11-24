@@ -2,7 +2,6 @@ import sys
 import json
 from pathlib import Path
 
-print("PYTHON_START", file=sys.stdout, flush=True)
 def eprint (*args,**kwargs):
     "エラー出力"
     print(*args,file=sys.stderr,**kwargs)
@@ -33,7 +32,8 @@ def main():
 
     part_name = cmd.get("partName", "Melody")
     nodes     = cmd.get("nodes",[])
-
+    instrument_name = cmd.get("instrument",None)
+    # パスを正規化
     input_xml = input_xml.expanduser().resolve()
     output_xml = output_xml.expanduser().resolve()
 
@@ -46,7 +46,7 @@ def main():
 
     # 2) music21 で XML 読み込み
     try:
-        from music21 import converter, note, stream
+        from music21 import converter, note, stream,instrument
     except ImportError as e:
         eprint(f"[edit_score_json] music21 のインポートに失敗しました。環境を確認してください。\n{e}")
         sys.exit(1)
@@ -60,7 +60,7 @@ def main():
     # 3) パートを探す（partName 一致、なければ先頭パート）
 
     try:
-        parts = score.parts
+        parts = list(score.parts)
     except Exception:
         # parts 属性がない場合は score 自体をパートとして扱う
         parts = [score]
@@ -74,13 +74,28 @@ def main():
             break
 
     if target_part is None:
-        # 見つからなかった場合は先頭パートを使用
-        target_part = parts[0] if len(parts) > 0 else score
-        eprint(f"[edit_score_json] partName='{part_name}' が見つからなかったため、先頭パートを使用します。")
+        new_part = stream.Part()
+        new_part.id=str(part_name)
+        new_part.partName = str(part_name)
 
+        if instrument_name is not None:
+            try:
+                inst_class = getattr(instrument,instrument_name)
+                new_part.insert(0,inst_class())
+            except AttributeError:
+                # 楽器名が music21 に存在しない場合のエラー
+                eprint(f"[edit_score_json] 楽器 '{instrument_name}' は music21 に存在しません。Piano をセットします。")
+        else:
+            new_part.insert(0, instrument.Piano())
+        new_part.insert(0, instrument.Piano())
+        score.insert(len(parts),new_part)
+        target_part = new_part
+        eprint(f"[edit_score_json] partName='{part_name}' が見つからなかったため、新規パートを作成しました。")
+
+    # --- 小節キャッシュ（bar_number → Measure オブジェクト） ---
     from collections import defaultdict
     measure_cache = defaultdict(lambda: None)
-
+    # --- ノード情報から Note を生成してパートに追加 ---
     for ninfo in nodes:
         try:
             pitch       =ninfo["_pitch"]
@@ -97,7 +112,7 @@ def main():
         # 小節を取得 or 作成
         if measure_cache[bar_number] is None:
             try:
-                m-stream == target_part.measures(bar_number,bar_number)
+                m_stream == target_part.measures(bar_number,bar_number)
                 if m_stream is None or len(m-stream) == 0:
                     m = stream.Measure(number=bar_number)
                     target_part.append(m)
@@ -113,7 +128,7 @@ def main():
         # Note作成
         try:
             n = note.Note(pitch)
-        except Exceptionas as e:
+        except Exception as e:
             eprint(f"[edit_score_json] pitch='{pitch}' のNote生成に失敗。スキップします。\n{e}")
             continue
 

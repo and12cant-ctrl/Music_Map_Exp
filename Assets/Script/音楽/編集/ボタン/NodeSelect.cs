@@ -3,27 +3,23 @@ using UnityEngine.UI;
 
 public class NodeSelect : MonoBehaviour
 {
-    [SerializeField]private Nod_judge Edi_Score;
-    [SerializeField] private Button GeneNode;
-    [SerializeField] private Button DeleNode;
+    [SerializeField] private Node_judge Edi_Score;
+    [SerializeField] private Button btnGene;
+    [SerializeField] private Button btnDel;
     void Start()
     {
-        GeneNode.onClick.AddListener(() =>
+        btnGene.onClick.AddListener(() =>
         {
-            Nodesele();
+            Nodesele(Node_judge.EditMode.Place);
         });
-        DeleNode.onClick.AddListener(() =>
+        btnDel.onClick.AddListener(() =>
         {
-            NodeDele();
+            Nodesele(Node_judge.EditMode.Place);
         });
     }
-     void Nodesele()
+    void Nodesele(Node_judge.EditMode mode)
     {
-        Edi_Score.editMode = Nod_judge.EditMode.Place;
-    }
-    void NodeDele()
-    {
-        Edi_Score.editMode = Nod_judge.EditMode.Delete;
+        Edi_Score.editMode = mode;
     }
 
 }

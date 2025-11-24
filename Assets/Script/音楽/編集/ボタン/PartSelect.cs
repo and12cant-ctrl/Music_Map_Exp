@@ -3,27 +3,24 @@ using UnityEngine.UI;
 
 public class PartSelect : MonoBehaviour
 {
-    [SerializeField] private Nod_judge Edi_Score;
-    [SerializeField] private Button GeneNode;
-    [SerializeField] private Button DeleNode;
+    [SerializeField] private Node_judge Edi_Score;
+    [SerializeField] private Node nmode;
+    [SerializeField] private Button btnGene;
+    [SerializeField] private Button btnDel;
     void Start()
     {
-        GeneNode.onClick.AddListener(() =>
+        btnGene.onClick.AddListener(() =>
         {
-            Nodesele();
+
         });
-        DeleNode.onClick.AddListener(() =>
+        btnDel.onClick.AddListener(() =>
         {
-            NodeDele();
+
         });
     }
-    void Nodesele()
+    void Nodesele(Part part)
     {
-        Edi_Score.editMode = Nod_judge.EditMode.Place;
-    }
-    void NodeDele()
-    {
-        Edi_Score.editMode = Nod_judge.EditMode.Delete;
+        
     }
 
 }

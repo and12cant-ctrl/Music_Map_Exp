@@ -10,7 +10,8 @@ public class EditCommand
 {
     public string inputXml;
     public string outputXml;
-    public string partName = "Melody";
+    public string partName ;
+    public string instrument;
     public Node[] nodes;
 }
 
@@ -32,14 +33,14 @@ public class MusicXmlEditorCaller : MonoBehaviour
             sb.Append(node._pitch.ToString());
         }
         string ans = sb.ToString();
-        UnityEngine.Debug.Log(ans);
+        //UnityEngine.Debug.Log(ans);
         #endregion
 
         string pythonPath = Path.Combine(FluidSynthPaths.micromambaroot, "envs/unitypy/python.exe");
         string scriptPath = Path.Combine(FluidSynthPaths.scriptPy, "edit_score_json.py");
         string inputXml = Path.Combine(FluidSynthPaths.ScoresDir, "empty_score.xml");
         string outputXml = Path.Combine(FluidSynthPaths.ScoresDir, "edited_score.xml");
-
+        string partName = Part.A.ToString();
        //UnityEngine.Debug.Log("[DEBUG pythonPath] = " + pythonPath);
        // UnityEngine.Debug.Log("[DEBUG scriptPath] = " + scriptPath);
         #region JSON文字列に変換し、標準出力へ
@@ -47,7 +48,7 @@ public class MusicXmlEditorCaller : MonoBehaviour
         {
             inputXml = inputXml,
             outputXml = outputXml,
-            partName = "Melody",
+            partName = partName,
             nodes = nodes._nodes.ToArray()
         };
         string json = JsonUtility.ToJson(cmd);

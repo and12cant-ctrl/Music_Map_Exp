@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 
-public class Nod_judge : MonoBehaviour,IPointerClickHandler
+public class Node_judge : MonoBehaviour,IPointerClickHandler
 {
     [SerializeField] private RectTransform staffRect; // クリック対象のエリア（五線譜など）
     [SerializeField] private Canvas canvas;           // 所属Canvas
@@ -17,9 +17,10 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
     private int scale = 20;             //音階の下から上までの数
     private string nameNumber = "1";    //音符の名付け
     private Part part = Part.A;         //パート名
-    public float nodeLength = 2;    //選択した音符の拍数（現在八分音符）
+    public float nodeLength = 2;        //選択した音符の拍数（現在八分音符）
     private int measure = 1;            //現在小節数
     public float bar = 4;               //最大小節数
+    public harfNode hafeN =harfNode.None;
     private string[] Gcode = { "G", "A", "B", "C", "D", "E", "F" };
 
     public void OnPointerClick(PointerEventData eventData)
@@ -59,8 +60,11 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
             int ScaleX = Mathf.RoundToInt(snappedX * 100);
             int BeatY= Mathf.RoundToInt(snappedY * 100);
             //Debug.Log($"ScaleX{ScaleX} ,BeatY{BeatY}");
+            string hafeNodes =
+                hafeN == harfNode.Shape ? "#" :
+                hafeN == harfNode.Flat ? "♭" : "";
 
-            string num = $"{Gcode[(BeatY / 5 ) % Gcode.Length]}{(((BeatY / 5) + 6) / Gcode.Length) + 3}";
+            string num = $"{Gcode[(BeatY / 5 ) % Gcode.Length]}{hafeNodes}{(((BeatY / 5) + 6) / Gcode.Length) + 3}";
             float start =(snappedX * Mathf.Clamp(measure - 1,1,measure-1) * bar*2)%bar;
             int truebars =(int)(measure+ (snappedX * Mathf.Clamp(measure - 1, 1, measure - 1) * bar * 2) / bar);
             //Debug.Log($"num [{num}]& start[{start}] &[{truebars}]");
@@ -122,5 +126,9 @@ public class Nod_judge : MonoBehaviour,IPointerClickHandler
     public enum EditMode
     {
         Place,Delete,Change
+    }
+    public enum harfNode
+    {
+        Shape,Flat,None
     }
 }
