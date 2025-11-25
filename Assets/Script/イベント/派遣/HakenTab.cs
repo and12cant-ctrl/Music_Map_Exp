@@ -38,7 +38,6 @@ public class HakenTab : MonoBehaviour
         buttonObj.onClick.RemoveAllListeners();
         buttonObj.onClick.AddListener(() =>
         {
-            Debug.Log("Baka");
             boord.SetActive(true);
             HakenBoard(PL2Int);
         });  
@@ -67,7 +66,6 @@ public class HakenTab : MonoBehaviour
             item.pl_API.text = $"{entry.runtime.curAPI}";
             item.hakenButton.onClick.AddListener(() =>
             {
-                Debug.Log("unko");
                 TogglePlayerState(index);
             });
             rt.anchoredPosition = new Vector2(5, (i * 23));
@@ -76,7 +74,6 @@ public class HakenTab : MonoBehaviour
     }
     void TogglePlayerState(int ind)
     {
-        Debug.Log(gm._currentParty[ind].runtime.hakenCan);
         gm._currentParty[ind].runtime.hakenCan = false;
         //‚±‚±‚É”hŒ­‚ÌƒCƒxƒ“ƒgˆ—‚ğ“ü‚ê‚é
         boord.SetActive(false);

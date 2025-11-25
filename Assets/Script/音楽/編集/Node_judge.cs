@@ -16,7 +16,7 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
     public float beat = 4.0f;           //小節の拍数
     private int scale = 20;             //音階の下から上までの数
     private string nameNumber = "1";    //音符の名付け
-    private Part part = Part.A;         //パート名
+    public Part part = Part.A;         //パート名
     public float nodeLength = 2;        //選択した音符の拍数（現在八分音符）
     private int measure = 1;            //現在小節数
     public float bar = 4;               //最大小節数

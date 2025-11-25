@@ -15,7 +15,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private UIManager uiManager;
     [SerializeField] private GameObject characterPrefab;
     [SerializeField] private Transform characterParent;
-    [SerializeField] private int characterCount = 4;
+    [SerializeField] public int characterCount = 4;
     #region     ƒeƒXƒg
     public BGCategoryListSO BGReqListSO { get; set; }
     public BGCategoryListSO BGRandListSO {  get; set; }
