@@ -5,7 +5,7 @@
   <identification>
     <creator type="composer">Music21</creator>
     <encoding>
-      <encoding-date>2025-11-24</encoding-date>
+      <encoding-date>2025-11-26</encoding-date>
       <software>music21 v.9.9.1</software>
     </encoding>
   </identification>
@@ -18,6 +18,18 @@
   <part-list>
     <score-part id="P8f0431057206e7b52bc81e32d618e87d">
       <part-name />
+    </score-part>
+    <score-part id="P71666d0c0e61cef640fb2fe805c0f6e4">
+      <part-name>A</part-name>
+      <part-abbreviation>Pno</part-abbreviation>
+      <score-instrument id="Id310ca386b56e483a471406295b82a7c">
+        <instrument-name>Piano</instrument-name>
+        <instrument-abbreviation>Pno</instrument-abbreviation>
+      </score-instrument>
+      <midi-instrument id="Id310ca386b56e483a471406295b82a7c">
+        <midi-channel>2</midi-channel>
+        <midi-program>1</midi-program>
+      </midi-instrument>
     </score-part>
   </part-list>
   <!--=========================== Part 1 ===========================-->
@@ -40,16 +52,30 @@
         <duration>40320</duration>
       </note>
     </measure>
-    <!--======================== Measure 1.0 =========================-->
-    <measure implicit="no" number="1.0">
+  </part>
+  <!--=========================== Part 2 ===========================-->
+  <part id="P71666d0c0e61cef640fb2fe805c0f6e4">
+    <!--========================= Measure 1 ==========================-->
+    <measure implicit="no" number="1">
+      <attributes>
+        <divisions>10080</divisions>
+      </attributes>
       <note>
         <pitch>
-          <step>G</step>
+          <step>E</step>
           <octave>4</octave>
         </pitch>
         <duration>10080</duration>
         <type>quarter</type>
       </note>
+      <note>
+        <pitch>
+          <step>B</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>10080</duration>
+        <type>quarter</type>
+      </note>
       <note print-object="no" print-spacing="yes">
         <rest />
         <duration>10080</duration>
@@ -57,24 +83,19 @@
       </note>
       <note>
         <pitch>
-          <step>A</step>
-          <octave>6</octave>
+          <step>D</step>
+          <octave>5</octave>
         </pitch>
-        <duration>10080</duration>
-        <type>quarter</type>
-      </note>
-      <note print-object="no" print-spacing="yes">
-        <rest />
         <duration>10080</duration>
         <type>quarter</type>
       </note>
     </measure>
-    <!--======================== Measure 2.0 =========================-->
-    <measure implicit="no" number="2.0">
+    <!--========================= Measure 2 ==========================-->
+    <measure implicit="no" number="2">
       <note>
         <pitch>
-          <step>D</step>
-          <octave>4</octave>
+          <step>F</step>
+          <octave>5</octave>
         </pitch>
         <duration>10080</duration>
         <type>quarter</type>
@@ -86,14 +107,9 @@
       </note>
       <note>
         <pitch>
-          <step>C</step>
-          <octave>6</octave>
+          <step>B</step>
+          <octave>5</octave>
         </pitch>
-        <duration>10080</duration>
-        <type>quarter</type>
-      </note>
-      <note print-object="no" print-spacing="yes">
-        <rest />
         <duration>10080</duration>
         <type>quarter</type>
       </note>
