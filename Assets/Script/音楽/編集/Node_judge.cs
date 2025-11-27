@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -17,7 +16,7 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
     private int scale = 20;             //音階の下から上までの数
     private string nameNumber = "1";    //音符の名付け
     public Part part = Part.A;         //パート名
-    public float nodeLength = 2;        //選択した音符の拍数（現在八分音符）
+    public float nodeLength = 0.5f;        //選択した音符の拍数（現在八分音符）
     private int measure = 1;            //現在小節数
     public float bar = 4;               //最大小節数
     public harfNode hafeN =harfNode.None;
@@ -67,7 +66,7 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
             string num = $"{Gcode[(BeatY / 5 ) % Gcode.Length]}{hafeNodes}{(((BeatY / 5) + 6) / Gcode.Length) + 3}";
             float start =(snappedX * Mathf.Clamp(measure - 1,1,measure-1) * bar*2)%bar;
             int truebars =(int)(measure+ (snappedX * Mathf.Clamp(measure - 1, 1, measure - 1) * bar * 2) / bar);
-            //Debug.Log($"num [{num}]& start[{start}] &[{truebars}]");
+            Debug.Log($"num [{num}]& start[{start}] &[{truebars}]");
 
             #endregion
             if (!NodeCheak.PlaceNode(nodeLength,part,num,start,truebars)) return;
@@ -130,5 +129,9 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
     public enum harfNode
     {
         Shape,Flat,None
+    }
+    public enum nodelengths
+    {
+
     }
 }
