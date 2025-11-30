@@ -7,7 +7,7 @@ public class PartBoxUI : MonoBehaviour
     [SerializeField] private Button _button;
     [SerializeField] private TextMeshProUGUI _text;
     [SerializeField] private GameObject GameObject;
-
+    private PartSelect select;
     private Part _part;
     public void Init(PartSelect Sel, Part part)
     {
@@ -19,6 +19,7 @@ public class PartBoxUI : MonoBehaviour
         {
 
             Sel.Nodesele(part);
+            Sel.UnClicer();
         });
 
     }

@@ -1,7 +1,7 @@
 import sys
 import json
 from pathlib import Path
-from music21 import stream 
+from music21 import stream
 
 def eprint (*args,**kwargs):
     "エラー出力"
@@ -46,111 +46,37 @@ def get_or_create_measure(target_part,bar_number: int,measure_cache):
         target_part.append(m)
 
     measure_cache[bar_number] = m
-    return m 
+    return m
 
-def get_bar_length_quarter(target_part, default: float = 4.0) -> float:
-    """
-    拍子記号 (TimeSignature) から 1 小節の長さを quarterLength で取得。
-    例: 4/4 → 4.0, 3/4 → 3.0。
-    拍子が見つからない場合は default (4.0) を返す。
-    """
-    # class 名での検索なので import は不要
-    ts = target_part.recurse().getElementsByClass("TimeSignature").first()
-    if ts is not None:
-        return ts.barDuration.quarterLength
-    return default
+def checkVoice(voice:str,measure:stream.Measure,
+        voice_stream: dict[tuple[str, str],stream.Voice]):
+    key = (id(measure),voice)
 
-def insert_note_across_measures(
+    Voi = voice_stream.get(key)
+    if Voi is not None:
+        return Voi
+    Voi = stream.Voice()
+    Voi.id = voice
+    measure.insert(0,Voi)
+    voice_stream[key] = Voi
+    #ここにpartにvoiceを追加する処理を入れたい
+    return Voi
+
+def PlaceNode(
     target_part,
     measure_cache,
     start_bar_number: int,
     start_offset: float,
     duration: float,
-    pitch: str,
-):
-    """
-    単音 Note 用。
-    start_bar_number 小節目の start_offset から duration 分の長さの音を入れる。
-    duration が小節長を超える場合は、小節をまたぐように分割して配置する。
-    """
+    pitch:str,
+    voice_3:str,
+    voice_stream):
     from music21 import note  # ローカル import
+    measure = get_or_create_measure(target_part,start_bar_number, measure_cache)
+    V =checkVoice(voice_3,measure,voice_stream)
 
-    bar_len = get_bar_length_quarter(target_part)  # 例: 4.0
-    remaining = duration
-    current_bar = max(1, int(start_bar_number))
-    offset_in_bar = max(0.0, float(start_offset))
-
-    while remaining > 0:
-        m = get_or_create_measure(target_part, current_bar, measure_cache)
-
-        space_in_bar = bar_len - offset_in_bar
-        if space_in_bar <= 0:
-            # この小節はもう埋まっている → 次の小節へ
-            current_bar += 1
-            offset_in_bar = 0.0
-            continue
-
-        this_dur = min(remaining, space_in_bar)
-
-        try:
-            n = note.Note(pitch)
-        except Exception as e:
-            eprint(f"[edit_score_json] pitch='{pitch}' の Note 生成に失敗。スキップします。\n{e}")
-            return
-
-        n.quarterLength = this_dur
-        m.insert(offset_in_bar, n)
-
-        remaining -= this_dur
-        current_bar += 1
-        offset_in_bar = 0.0
-
-def insert_chord_across_measures(
-    target_part,
-    measure_cache,
-    start_bar_number: int,
-    start_offset: float,
-    duration: float,
-    pitches,
-):
-    """
-    和音 Chord 用。
-    pitches は ["C4", "E4", "G4"] のような pitch 文字列リストを想定。
-    duration が小節長を超える場合は、小節をまたぐように分割して配置する。
-    """
-    from music21 import chord  # ローカル import
-
-    if not pitches:
-        return
-
-    bar_len = get_bar_length_quarter(target_part)
-    remaining = duration
-    current_bar = max(1, int(start_bar_number))
-    offset_in_bar = max(0.0, float(start_offset))
-
-    while remaining > 0:
-        m = get_or_create_measure(target_part, current_bar, measure_cache)
-
-        space_in_bar = bar_len - offset_in_bar
-        if space_in_bar <= 0:
-            current_bar += 1
-            offset_in_bar = 0.0
-            continue
-
-        this_dur = min(remaining, space_in_bar)
-
-        try:
-            c = chord.Chord(pitches)
-        except Exception as e:
-            eprint(f"[edit_score_json] pitches='{pitches}' の Chord 生成に失敗。スキップします。\n{e}")
-            return
-
-        c.quarterLength = this_dur
-        m.insert(offset_in_bar, c)
-
-        remaining -= this_dur
-        current_bar += 1
-        offset_in_bar = 0.0
+    n = (note.Note(pitch,quarterLength = duration))
+    measure.insert(start_offset,n)
 
 
 def main():
@@ -163,7 +89,7 @@ def main():
         eprint(f"[edit_score_json] 必須フィールドが不足しています: {e}")
         sys.exit(1)
 
-    part_name = cmd.get("partName", "Melody")
+    part_name = cmd.get("partName", "A")
     nodes     = cmd.get("nodes",[])
     instrument_name = cmd.get("instrument",None)
     # パスを正規化
@@ -210,24 +136,27 @@ def main():
         new_part = stream.Part()
         new_part.id=str(part_name)
         new_part.partName = str(part_name)
+        inst = None
 
-        if instrument_name is not None:
-            try:
-                inst_class = getattr(instrument,instrument_name)
-                new_part.insert(0,inst_class())
-            except AttributeError:
-                # 楽器名が music21 に存在しない場合のエラー
+        if instrument_name :
+            inst_class = getattr(instrument,instrument_name,None)
+            if inst_class is None:
                 eprint(f"[edit_score_json] 楽器 '{instrument_name}' は music21 に存在しません。Piano をセットします。")
+                inst = instrument.Piano()
+            else:
+                inst = inst_class()
         else:
-            new_part.insert(0, instrument.Piano())
-        new_part.insert(0, instrument.Piano())
+            inst = instrument.Piano()
+#        new_part.insert(0, instrument.Piano())
+        new_part.insert(0,inst)
         score.insert(len(parts),new_part)
         target_part = new_part
         eprint(f"[edit_score_json] partName='{part_name}' が見つからなかったため、新規パートを作成しました。")
 
     # --- 小節キャッシュ（bar_number → Measure オブジェクト） ---
-    from collections import defaultdict
-    measure_cache = defaultdict(lambda: None)
+    measure_cache: dict[int, stream.Measure] = {}
+    voice_stream : dict[tuple[int,str],stream.Voice] = {}
+    #measure_cache = defaultdict(lambda: None)
     # --- ノード情報から Note を生成してパートに追加 ---
     for ninfo in nodes:
         try:
@@ -235,40 +164,31 @@ def main():
             duration    =float(ninfo["_duration"])
             start_bar   =float(ninfo["_startBar"])
             bar_number  =float(ninfo["_bar"])
-            harmony     =bool(ninfo["_harmony"])
+            part        =str(ninfo["_Part"])
+            voice       =str(ninfo["_voice"])
         except KeyError as e:
             eprint(f"[edit_score_json] Nodeの必須フィールドが不足しています: {e}")
             continue
-
-        pitches = ninfo.get("_pitches", None)
         # 小節番号は 1 始まりで想定
         if bar_number < 1:
             bar_number = 1
         bar_number_int = int(bar_number)
         # 小節を取得 or 作成
-        if pitches is not None:
-            # pitches は ["C4","E4","G4"] などを期待
-            insert_chord_across_measures(
-                target_part=target_part,
-                measure_cache=measure_cache,
-                start_bar_number=bar_number_int,
-                start_offset=start_bar,
-                duration=duration,
-                pitches=pitches,
-            )
-        else:
-            # 単音 Note として扱う
-            insert_note_across_measures(
-                target_part=target_part,
-                measure_cache=measure_cache,
-                start_bar_number=bar_number_int,
-                start_offset=start_bar,
-                duration=duration,
-                pitch=pitch,
-            )
+
+        PlaceNode(
+            target_part=target_part,
+            measure_cache=measure_cache,
+            start_bar_number=bar_number_int,
+            start_offset=start_bar,
+            duration=duration,
+            pitch=pitch,
+            voice_3=voice,voice_stream=voice_stream
+        )
+
 
     # 5) 出力 XML として保存
     try:
+        score = score.makeNotation()
         score.write("musicXml", fp=str(output_xml))
     except Exception as e:
         eprint(f"[edit_score_json] MusicXML の書き出しに失敗しました: {output_xml}\n{e}")

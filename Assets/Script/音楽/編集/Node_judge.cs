@@ -9,7 +9,7 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
     [SerializeField] private RectTransform staffRect; // クリック対象のエリア（五線譜など）
     [SerializeField] private Canvas canvas;           // 所属Canvas
     [SerializeField] private Camera uiCamera;         // Screen Space - Camera / World Space のときに使用
-    [SerializeField] private RectTransform NodePrehab;
+    [SerializeField] public RectTransform NodePrehab;
     [SerializeField] private Node_Place NodeCheak;
     [SerializeField] public EditMode editMode = EditMode.Place;
     public float beat = 4.0f;           //小節の拍数
@@ -47,12 +47,9 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
             // 正規化座標（0～1）も作っておくと便利（ビート/音高スナップに使う）
             float nx = Mathf.InverseLerp(-half.x, half.x, anchoredPos.x); // 横方向（時間）
             float ny = Mathf.InverseLerp(-half.y, half.y, anchoredPos.y); // 縦方向（音高）
-            //Debug.Log($"Normalized: ({nx:F3}, {ny:F3})");
-
 
             float snappedX = Normalize(Nodes, nx);
             float snappedY = Normalize(Scales, ny);
-            //Debug.Log($"snappedX,Y{snappedX} {snappedY}");
             if (snappedX >= 1) return;
 
             #region 変換
@@ -64,9 +61,9 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
                 hafeN == harfNode.Flat ? "♭" : "";
 
             string num = $"{Gcode[(BeatY / 5 ) % Gcode.Length]}{hafeNodes}{(((BeatY / 5) + 6) / Gcode.Length) + 3}";
-            float start =(snappedX * Mathf.Clamp(measure - 1,1,measure-1) * bar*2)%bar;
+            float start =(snappedX * Mathf.Clamp(measure - 1,1,measure-1) * bar*2) % bar;
             int truebars =(int)(measure+ (snappedX * Mathf.Clamp(measure - 1, 1, measure - 1) * bar * 2) / bar);
-            Debug.Log($"num [{num}]& start[{start}] &[{truebars}]");
+//            Debug.Log($"num [{num}]& start[{start}] &[{truebars}]");
 
             #endregion
             if (!NodeCheak.PlaceNode(nodeLength,part,num,start,truebars)) return;
@@ -84,14 +81,12 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
                 PlaceNodeat(NodesFin, nameNumber);
                 break;
         }
-        //PlaceNodeat(NodesFin, nameNumber);
     }
     public void PlaceNodeat (Vector2 anchore,string name)
     {
         RectTransform note = Instantiate(NodePrehab, staffRect);
         note.anchoredPosition = anchore;
         note.name = name;
-        //Debug.Log($"note.anchore{note.anchoredPosition}");
     }
 
     public void xml(float x,float y)
@@ -130,7 +125,12 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
     {
         Shape,Flat,None
     }
-    public enum nodelengths
+    public enum LengthNode
+    {
+        Harf,One,Two,all
+    }
+
+    public void CloseTab(GameObject Tab,RectTransform Area)
     {
 
     }

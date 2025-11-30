@@ -97,10 +97,8 @@ public class Xml_to_MIDI : MonoBehaviour
                 var inferred = Path.ChangeExtension(inAbs, ".mid");
                 expectedOut = inferred;
             }
-            if (File.Exists(expectedOut))
-                UnityEngine.Debug.Log($"[convert] 出力を確認: {expectedOut}");
-            else
-                UnityEngine.Debug.LogWarning($"[convert] ExitCode=0 ですが出力MIDIが見つかりません: {expectedOut}");
+            //if (File.Exists(expectedOut)) UnityEngine.Debug.Log($"[convert] 出力を確認: {expectedOut}");
+            //else UnityEngine.Debug.LogWarning($"[convert] ExitCode=0 ですが出力MIDIが見つかりません: {expectedOut}");
         }
         catch (Exception e)
         {

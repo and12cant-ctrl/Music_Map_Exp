@@ -11,7 +11,8 @@ public class EditCommand
     public string inputXml;
     public string outputXml;
     public string partName ;
-    public string instrument;
+    //public string instrument;
+    public string voice;
     public Node[] nodes;
 }
 
@@ -41,8 +42,6 @@ public class MusicXmlEditorCaller : MonoBehaviour
         string inputXml = Path.Combine(FluidSynthPaths.ScoresDir, "empty_score.xml");
         string outputXml = Path.Combine(FluidSynthPaths.ScoresDir, "edited_score.xml");
         string partName = Part.A.ToString();
-       //UnityEngine.Debug.Log("[DEBUG pythonPath] = " + pythonPath);
-       // UnityEngine.Debug.Log("[DEBUG scriptPath] = " + scriptPath);
         #region JSON文字列に変換し、標準出力へ
         var cmd = new EditCommand
         {
@@ -53,6 +52,7 @@ public class MusicXmlEditorCaller : MonoBehaviour
         };
         string json = JsonUtility.ToJson(cmd);
         #endregion
+        //UnityEngine.Debug.Log(json);
 
         #region Pythonプロセス起動
         var psi = new ProcessStartInfo
@@ -92,10 +92,8 @@ public class MusicXmlEditorCaller : MonoBehaviour
             if (!string.IsNullOrWhiteSpace(stderr))
                 UnityEngine.Debug.LogWarning($"[Python STDERR]\n{stderr}");
 
-            if (File.Exists(outputXml))
-                UnityEngine.Debug.Log($"出力OK: {outputXml}");
-            else
-                UnityEngine.Debug.LogError("出力ファイルが見つかりません。パス/権限を確認してください。");
+            //if (File.Exists(outputXml))UnityEngine.Debug.Log($"出力OK: {outputXml}");
+            //elseUnityEngine.Debug.LogError("出力ファイルが見つかりません。パス/権限を確認してください。");
         }
         catch (Exception ex)
         {

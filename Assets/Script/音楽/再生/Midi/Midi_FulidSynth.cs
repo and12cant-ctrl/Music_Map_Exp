@@ -70,8 +70,7 @@ public class Midi_FulidSynth : MonoBehaviour
             #region 結果出力
             proc.OutputDataReceived += (s, e) =>
             {
-                if (!string.IsNullOrEmpty(e.Data))
-                    UnityEngine.Debug.Log($"[PYTHON OUT] {e.Data}");
+                //if (!string.IsNullOrEmpty(e.Data)) UnityEngine.Debug.Log($"[PYTHON OUT] {e.Data}");
             };
             proc.ErrorDataReceived += (s, e) =>
             {
@@ -81,7 +80,7 @@ public class Midi_FulidSynth : MonoBehaviour
 
             proc.Exited += (s, e) =>
             {
-                UnityEngine.Debug.Log($"[PYTHON EXIT] code={proc.ExitCode}");
+                //UnityEngine.Debug.Log($"[PYTHON EXIT] code={proc.ExitCode}");
                 proc.Dispose();
             };
 

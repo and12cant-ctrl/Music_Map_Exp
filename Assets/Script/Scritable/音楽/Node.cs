@@ -9,11 +9,14 @@ public class Node
     public string _pitch;       //‚Ç‚Ì‰¹ŠK‚©
     public float _startBar;    //‰½”–Ú‚É‚¨‚¢‚Ä‚ ‚é‚©
     public int _bar;            //‰½¬ß–Ú‚©
-    public bool _harmony;
+    public voice _voice;
 }
 
 public enum Part
 {
     A, B, C,D
 }
-
+public enum voice
+{
+    Up,Middle,Down
+}

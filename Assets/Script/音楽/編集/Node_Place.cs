@@ -9,6 +9,11 @@ public class Node_Place : MonoBehaviour
     // “¯‚¶Y(_scale)‚É’u‚¯‚éÅ‘å”
     private const int MaxPerY = 3;
     private bool check = false;
+    private voice voic;
+    private void Start()
+    {
+        
+    }
 
     public bool CanPlace(float time, Part part, string pitch, float start, int bars)
     {
@@ -33,7 +38,21 @@ public class Node_Place : MonoBehaviour
                 
             }
         }
-        if (countSameY > 2)check = true;
+        switch (countSameY)
+        {
+            case 0:
+               voic = voice.Up;
+                break;
+            case 1:
+                voic= voice.Middle;
+                break;
+            case 2:
+                voic = voice.Down;
+                break;
+            default:
+                break;
+        }
+
         if (countSameY >= MaxPerY)
         {
             return false;
@@ -61,7 +80,7 @@ public class Node_Place : MonoBehaviour
         node._pitch = pitch;
         node._startBar = start;
         node._bar = bars;
-        node._harmony = check;
+        node._voice = voic;
 
         _nodes.Add(node);
         return true;
