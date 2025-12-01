@@ -24,17 +24,7 @@
   <part id="P8f0431057206e7b52bc81e32d618e87d">
     <!--========================= Measure 1 ==========================-->
     <measure implicit="no" number="1">
-      <attributes>
-        <divisions>10080</divisions>
-        <key>
-          <fifths>0</fifths>
-          <mode>major</mode>
-        </key>
-        <time>
-          <beats>4</beats>
-          <beat-type>4</beat-type>
-        </time>
-      </attributes>
+
       <note>
         <rest measure="yes" />
         <duration>40320</duration>

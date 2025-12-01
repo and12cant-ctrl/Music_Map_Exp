@@ -8,13 +8,7 @@ public class Node_Place : MonoBehaviour
 
     // “¯‚¶Y(_scale)‚É’u‚¯‚éÅ‘å”
     private const int MaxPerY = 3;
-    private bool check = false;
     private voice voic;
-    private void Start()
-    {
-        
-    }
-
     public bool CanPlace(float time, Part part, string pitch, float start, int bars)
     {
         //Debug.Log($"{scale},{beats}");

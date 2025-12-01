@@ -25,10 +25,7 @@ public class HakenTab : MonoBehaviour
         gm.OnPlayerIconSet += HakenTabView;
         gm.OnPlayerIconSet += HakenTabOut;
     }
-    private void Update()
-    {
-        
-    }
+
     void HakenTabView(Vector2Int PL)
     {
         MapCell PL2Int = gm.questMap.mapGrid[PL.x, PL.y];

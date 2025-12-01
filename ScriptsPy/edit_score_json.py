@@ -1,7 +1,7 @@
 import sys
 import json
 from pathlib import Path
-from music21 import stream
+from music21 import stream,note
 
 def eprint (*args,**kwargs):
     "エラー出力"
@@ -48,18 +48,20 @@ def get_or_create_measure(target_part,bar_number: int,measure_cache):
     measure_cache[bar_number] = m
     return m
 
-def checkVoice(voice:str,measure:stream.Measure,
-        voice_stream: dict[tuple[str, str],stream.Voice]):
+voice_stream: dict[tuple[int, str], stream.Voice] = {}
+
+def checkVoice(measure:stream.Measure,voice:str,):
     key = (id(measure),voice)
 
     Voi = voice_stream.get(key)
     if Voi is not None:
         return Voi
+
     Voi = stream.Voice()
-    Voi.id = voice
+    Voi.id =str(voice)
+
     measure.insert(0,Voi)
     voice_stream[key] = Voi
-    #ここにpartにvoiceを追加する処理を入れたい
     return Voi
 
 def PlaceNode(
@@ -69,14 +71,13 @@ def PlaceNode(
     start_offset: float,
     duration: float,
     pitch:str,
-    voice_3:str,
-    voice_stream):
-    from music21 import note  # ローカル import
+    voice_3:str):
+    # from music21 import note  # ローカル import
     measure = get_or_create_measure(target_part,start_bar_number, measure_cache)
-    V =checkVoice(voice_3,measure,voice_stream)
+    V =checkVoice(measure,str(voice_3))
 
     n = (note.Note(pitch,quarterLength = duration))
-    measure.insert(start_offset,n)
+    V.insert(start_offset,n)
 
 
 def main():
@@ -182,7 +183,7 @@ def main():
             start_offset=start_bar,
             duration=duration,
             pitch=pitch,
-            voice_3=voice,voice_stream=voice_stream
+            voice_3=voice,
         )
 
 

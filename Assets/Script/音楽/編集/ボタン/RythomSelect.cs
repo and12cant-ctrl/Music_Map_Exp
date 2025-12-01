@@ -39,6 +39,7 @@ public class RythomSelect : MonoBehaviour
             NodeLen(LengthNode.all);
         });
         #endregion
+        ChangeImage(Edi_Score.NodePrehab, Nodesprites[0]);
 
     }
     void NodeLen(LengthNode leng)
