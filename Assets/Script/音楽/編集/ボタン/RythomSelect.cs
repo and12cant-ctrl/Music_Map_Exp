@@ -12,7 +12,7 @@ public class RythomSelect : MonoBehaviour
     [SerializeField] private Button btnOne;
     [SerializeField] private Button btnTwo;
     [SerializeField] private Button btnAll;
-    [SerializeField] private Sprite[] Nodesprites;
+    private int sizeY = 10;
     private float LenNo = 0.5f;
     void Start()
     {
@@ -39,7 +39,7 @@ public class RythomSelect : MonoBehaviour
             NodeLen(LengthNode.all);
         });
         #endregion
-        ChangeImage(Edi_Score.NodePrehab, Nodesprites[0]);
+        ChangeImage(Edi_Score.NodePrehab, 1);
 
     }
     void NodeLen(LengthNode leng)
@@ -47,25 +47,25 @@ public class RythomSelect : MonoBehaviour
         switch (leng)
         {
             case LengthNode.Harf:
-                ChangeImage(Edi_Score.NodePrehab, Nodesprites[0]);
+                ChangeImage(Edi_Score.NodePrehab,1);
                 LenNo = 0.5f;
                 break;
             case LengthNode.One:
-                ChangeImage(Edi_Score.NodePrehab, Nodesprites[1]);
+                ChangeImage(Edi_Score.NodePrehab,2);
                 LenNo = 1f;
                 break;
             case LengthNode.Two:
-                ChangeImage(Edi_Score.NodePrehab, Nodesprites[2]);
+                ChangeImage(Edi_Score.NodePrehab, 4);
                 LenNo = 2f;
                 break;
             case LengthNode.all:
-                ChangeImage(Edi_Score.NodePrehab, Nodesprites[3]);
+                ChangeImage(Edi_Score.NodePrehab, 8);
                 LenNo = Edi_Score.beat;
                 break;
         }
         Edi_Score.nodeLength = LenNo;
     }
-    public void ChangeImage(RectTransform rt, Sprite newSprite)
+    public void ChangeImage(RectTransform rt, int n)
     {
         if (rt == null) return;
 
@@ -73,7 +73,7 @@ public class RythomSelect : MonoBehaviour
         var img = rt.GetComponentInChildren<Image>();
         if (img != null)
         {
-            img.sprite = newSprite;
-        }
+            img.rectTransform.sizeDelta =new Vector2(60 * n,sizeY);
+;        }
     }
 }

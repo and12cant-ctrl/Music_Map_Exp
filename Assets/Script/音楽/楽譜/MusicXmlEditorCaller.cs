@@ -93,7 +93,7 @@ public class MusicXmlEditorCaller : MonoBehaviour
                 UnityEngine.Debug.LogWarning($"[Python STDERR]\n{stderr}");
 
             //if (File.Exists(outputXml))UnityEngine.Debug.Log($"出力OK: {outputXml}");
-            //elseUnityEngine.Debug.LogError("出力ファイルが見つかりません。パス/権限を確認してください。");
+            //else UnityEngine.Debug.LogError("出力ファイルが見つかりません。パス/権限を確認してください。");
         }
         catch (Exception ex)
         {

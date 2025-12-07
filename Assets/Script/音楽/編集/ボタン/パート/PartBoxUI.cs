@@ -17,10 +17,20 @@ public class PartBoxUI : MonoBehaviour
         _button.onClick.RemoveAllListeners();
         _button.onClick.AddListener(() =>
         {
-
+            Sel.img.color = NodeCol(part);
             Sel.Nodesele(part);
             Sel.UnClicer();
         });
 
+    }
+
+    private Color NodeCol(Part part)
+    {
+        Color Ncolor =
+        part == Part.A ? Color.white :
+        part == Part.B ? Color.red:
+        part == Part.C ?Color.blue :Color.black ;
+
+        return Ncolor;
     }
 }

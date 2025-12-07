@@ -8,14 +8,22 @@ public class PartSelect : MonoBehaviour
     [SerializeField] private GameObject partPrehabBox;
     [SerializeField] private GameObject partBox;
     [SerializeField] private Button GeneButton;
+    [SerializeField] private RectTransform Node;
+    TabOverLayCloser TabClose;
+    public Image img;
     void Start()
     {
         GeneButton.onClick.RemoveAllListeners();
         SpawnPartBoxes();
+        img = Node.GetComponentInChildren<Image>();
         GeneButton.onClick.AddListener(() =>
         {
-            Clicker();
+            TabClose.OpenTab(partBox);
         });
+        //GeneButton.onClick.AddListener(() =>
+        //{
+        //    Clicker();
+        //});
     }
     public void Nodesele(Part part)
     {

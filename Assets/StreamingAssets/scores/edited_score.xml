@@ -5,7 +5,7 @@
   <identification>
     <creator type="composer">Music21</creator>
     <encoding>
-      <encoding-date>2025-12-01</encoding-date>
+      <encoding-date>2025-12-07</encoding-date>
       <software>music21 v.9.9.1</software>
     </encoding>
   </identification>
@@ -19,14 +19,14 @@
     <score-part id="P8f0431057206e7b52bc81e32d618e87d">
       <part-name />
     </score-part>
-    <score-part id="P2ce71b7e4ea5d4377b51e7c6cfd330b3">
+    <score-part id="Pb9233fd34cf26bfb9e83efba4b67ad81">
       <part-name>A</part-name>
       <part-abbreviation>Pno</part-abbreviation>
-      <score-instrument id="I96fd6638374221018d39505a474c3e38">
+      <score-instrument id="Ieac7807a6c19b3443ac739fd892da908">
         <instrument-name>Piano</instrument-name>
         <instrument-abbreviation>Pno</instrument-abbreviation>
       </score-instrument>
-      <midi-instrument id="I96fd6638374221018d39505a474c3e38">
+      <midi-instrument id="Ieac7807a6c19b3443ac739fd892da908">
         <midi-channel>2</midi-channel>
         <midi-program>1</midi-program>
       </midi-instrument>
@@ -46,7 +46,7 @@
     </measure>
   </part>
   <!--=========================== Part 2 ===========================-->
-  <part id="P2ce71b7e4ea5d4377b51e7c6cfd330b3">
+  <part id="Pb9233fd34cf26bfb9e83efba4b67ad81">
     <!--========================= Measure 1 ==========================-->
     <measure implicit="no" number="1">
       <attributes>
@@ -54,20 +54,18 @@
       </attributes>
       <note>
         <pitch>
-          <step>A</step>
-          <octave>6</octave>
+          <step>D</step>
+          <octave>5</octave>
         </pitch>
         <duration>5040</duration>
-        <voice>0</voice>
         <type>eighth</type>
       </note>
       <note>
         <pitch>
-          <step>A</step>
-          <octave>6</octave>
+          <step>D</step>
+          <octave>5</octave>
         </pitch>
         <duration>5040</duration>
-        <voice>0</voice>
         <type>eighth</type>
       </note>
       <note>
@@ -76,85 +74,22 @@
           <octave>5</octave>
         </pitch>
         <duration>5040</duration>
-        <voice>0</voice>
         <type>eighth</type>
       </note>
-      <note>
-        <pitch>
-          <step>A</step>
-          <octave>6</octave>
-        </pitch>
-        <duration>5040</duration>
-        <voice>0</voice>
-        <type>eighth</type>
-      </note>
-      <note>
-        <pitch>
-          <step>A</step>
-          <octave>6</octave>
-        </pitch>
-        <duration>5040</duration>
-        <voice>0</voice>
-        <type>eighth</type>
-      </note>
-      <note>
-        <pitch>
-          <step>G</step>
-          <octave>5</octave>
-        </pitch>
-        <duration>5040</duration>
-        <voice>0</voice>
-        <type>eighth</type>
-      </note>
-      <note>
-        <pitch>
-          <step>E</step>
-          <octave>5</octave>
-        </pitch>
-        <duration>5040</duration>
-        <voice>0</voice>
-        <type>eighth</type>
-      </note>
-      <note>
-        <pitch>
-          <step>A</step>
-          <octave>6</octave>
-        </pitch>
-        <duration>5040</duration>
-        <voice>0</voice>
-        <type>eighth</type>
-      </note>
-      <backup>
-        <duration>40320</duration>
-      </backup>
+    </measure>
+    <!--========================= Measure 2 ==========================-->
+    <measure implicit="no" number="2">
       <note print-object="no" print-spacing="yes">
         <rest />
         <duration>10080</duration>
-        <voice>1</voice>
         <type>quarter</type>
       </note>
       <note>
         <pitch>
-          <step>G</step>
+          <step>D</step>
           <octave>5</octave>
         </pitch>
         <duration>5040</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-      </note>
-      <note print-object="no" print-spacing="yes">
-        <rest />
-        <duration>20160</duration>
-        <voice>1</voice>
-        <type>half</type>
-      </note>
-      <note>
-        <pitch>
-          <step>E</step>
-          <octave>5</octave>
-        </pitch>
-        <duration>5040</duration>
-        <voice>1</voice>
         <type>eighth</type>
       </note>
     </measure>

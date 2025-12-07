@@ -58,18 +58,18 @@ public class Node_Place : MonoBehaviour
 
     /// <summary>
     /// 置けるなら Node を作って登録する
-    /// （※ ScriptableObject を動的生成する例）
+    /// duration=拍子,pitch=音階,bar=小節
     /// </summary>
-    public bool PlaceNode(float time, Part part,string pitch,float start,int bars)
+    public bool PlaceNode(float duration, Part part,string pitch,float start,int bars)
     {
-        if (!CanPlace( time,part, pitch, start, bars))
+        if (!CanPlace( duration,part, pitch, start, bars))
         {
-            Debug.LogWarning($"この位置には置けません: {bars}小節、{start+1}拍、{pitch}");
+            Debug.LogWarning($"この位置には置けません: {bars}小節、{start*4}拍、{pitch}");
             return false;
         }
 
         var node = new Node();
-        node._duration = time;
+        node._duration = duration;
         node._Part = part;
         node._pitch = pitch;
         node._startBar = start;

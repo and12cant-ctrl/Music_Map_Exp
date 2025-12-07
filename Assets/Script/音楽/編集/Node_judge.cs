@@ -16,17 +16,17 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
     private int scale = 20;             //音階の下から上までの数
     private string nameNumber = "1";    //音符の名付け
     public Part part = Part.A;         //パート名
-    [HideInInspector]public float nodeLength = 1f;        //選択した音符の拍数（現在八分音符）
+    [HideInInspector]public float nodeLength = 0.5f;        //選択した音符の拍数（現在八分音符）
     private int currentBar = 1;            //現在小節数
     public float maxBar = 4;               //最大小節数
     [HideInInspector]public harfNode hafeN =harfNode.None;
     [HideInInspector]public LengthNode Leng = LengthNode.One;
-    private string[] Gcode = { "G", "A", "B", "C", "D", "E", "F" };
+    private string[] Gcode = {  "A", "B", "C", "D", "E", "F", "G", };
 
     public void OnPointerClick(PointerEventData eventData)
     {
 
-        double[] Nodes = Enumerable.Range(0,(int)(2*beat)).Select(i =>(double)i*nodeLength*(1.0/beat)).ToArray();
+        double[] Nodes = Enumerable.Range(0,(int)(2*beat)).Select(i =>i*nodeLength*(1.0/beat)).ToArray();
         Debug.Log(Nodes.Length);
         double[] Scales = Enumerable.Range(0, scale).Select(i => (double)i / scale).ToArray();
         // Canvasの種類に応じてカメラを選ぶ
@@ -51,7 +51,7 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
             float nx = Mathf.InverseLerp(-half.x, half.x, anchoredPos.x); // 横方向（時間）
             float ny = Mathf.InverseLerp(-half.y, half.y, anchoredPos.y); // 縦方向（音高）
 
-            Debug.Log(nx);
+            //Debug.Log(nx);
             float snappedX = Normalize(Nodes, nx);
             float snappedY = Normalize(Scales, ny);
             if (snappedX >= 1) return;
@@ -59,16 +59,15 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
             #region 変換
             //int ScaleX = Mathf.RoundToInt(snappedX * 100);
             int BeatY= Mathf.RoundToInt(snappedY * 100);
-            //Debug.Log($"ScaleX{ScaleX} ,BeatY{BeatY}");
 
             string hafeNodes =
                 hafeN == harfNode.Shape ? "#" :
                 hafeN == harfNode.Flat ? "♭" : "";
 
             string num = $"{Gcode[(BeatY / 5 ) % Gcode.Length]}{hafeNodes}{(((BeatY / 5) + 6) / Gcode.Length) + 3}";
-            float start =(snappedX * Mathf.Clamp(currentBar - 1,1,currentBar-1) * maxBar*2) % maxBar;
+            float start =(snappedX * Mathf.Clamp(currentBar - 1,1,currentBar-1) * 2);
             int truebars =(int)(currentBar+ (snappedX * Mathf.Clamp(currentBar - 1, 1, currentBar - 1) * maxBar * 2) / maxBar);
-//            Debug.Log($"num [{num}]& start[{start}] &[{truebars}]");
+            Debug.Log($"num [{num}]& start[{start}] &[{truebars}]");
 
             #endregion
             if (!NodeCheak.PlaceNode(nodeLength,part,num,start,truebars)) return;

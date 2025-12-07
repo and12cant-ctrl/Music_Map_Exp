@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class NodeSelect : MonoBehaviour
+public class ModeSelect : MonoBehaviour
 {
     [SerializeField] private Node_judge Edi_Score;
     [SerializeField] private Button btnGene;
