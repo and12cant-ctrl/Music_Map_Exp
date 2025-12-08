@@ -7,6 +7,7 @@ using UnityEngine.EventSystems;
 public class Node_judge : MonoBehaviour,IPointerClickHandler
 {
     [SerializeField] private RectTransform staffRect; // クリック対象のエリア（五線譜など）
+    [SerializeField] private RectTransform exBox;
     [SerializeField] private Canvas canvas;           // 所属Canvas
     [SerializeField] private Camera uiCamera;         // Screen Space - Camera / World Space のときに使用
     [SerializeField] public RectTransform NodePrehab;
@@ -17,8 +18,8 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
     private string nameNumber = "1";    //音符の名付け
     public Part part = Part.A;         //パート名
     [HideInInspector]public float nodeLength = 0.5f;        //選択した音符の拍数（現在八分音符）
-    private int currentBar = 1;            //現在小節数
-    public float maxBar = 4;               //最大小節数
+    [HideInInspector] public int currentBar = 1;            //現在小節数
+    [HideInInspector] public float maxBar = 4;               //最大小節数
     [HideInInspector]public harfNode hafeN =harfNode.None;
     [HideInInspector]public LengthNode Leng = LengthNode.One;
     private string[] Gcode = {  "A", "B", "C", "D", "E", "F", "G", };
@@ -38,18 +39,14 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 staffRect, eventData.position, cam, out Vector2 localPoint))
         {
-
             Vector2 half = staffRect.rect.size * 0.5f;
             Vector2 clamped = new Vector2(
                 Mathf.Clamp(localPoint.x, -half.x, half.x),
-                Mathf.Clamp(localPoint.y, -half.y, half.y)
-            );
+                Mathf.Clamp(localPoint.y, -half.y, half.y));
 
             #region     正規化
-            Vector2 anchoredPos = clamped; // staffRect直下に子を置くならこのまま使える
-            // 正規化座標（0～1）も作っておくと便利（ビート/音高スナップに使う）
-            float nx = Mathf.InverseLerp(-half.x, half.x, anchoredPos.x); // 横方向（時間）
-            float ny = Mathf.InverseLerp(-half.y, half.y, anchoredPos.y); // 縦方向（音高）
+            float nx = Mathf.InverseLerp(-half.x, half.x, clamped.x); // 横方向（時間）
+            float ny = Mathf.InverseLerp(-half.y, half.y, clamped.y); // 縦方向（音高）
 
             //Debug.Log(nx);
             float snappedX = Normalize(Nodes, nx);
@@ -76,7 +73,7 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
             float ansX = Mathf.Lerp(0, staffRect.rect.width, snappedX); //割合で×して返す
             float ansY = Mathf.Lerp(0, staffRect.rect.height, snappedY);
 
-            NodesFin = new Vector2(ansX, ansY);
+            NodesFin = new Vector2(ansX+((currentBar-1)*330), ansY);
             #endregion
         }
         switch (editMode)
@@ -89,9 +86,15 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
     }
     public void PlaceNodeat (Vector2 anchore,string name)
     {
-        RectTransform note = Instantiate(NodePrehab, staffRect);
+        RectTransform note = Instantiate(NodePrehab, exBox);
         note.anchoredPosition = anchore;
         note.name = name;
+    }
+
+    private Vector2 XmltoNode(string Code,float sta,int bar)
+    {
+        Vector2 a = new Vector2(0,0);
+        return a;
     }
 
     public void xml(float x,float y)
