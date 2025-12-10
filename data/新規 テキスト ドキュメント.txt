@@ -1,0 +1,305 @@
+OK、じゃあ今日は「設計図をきれいに描く日」にしましょう ✍️
+ご要望どおり、
+
+全体方針＆ゴール
+
+目次
+
+具体的な作業内容の一覧
+
+の順で整理します。
+
+1. 全体方針＆ゴール
+🔵 全体方針
+
+感情4クラス分類モデルを作る：
+
+クラス：
+
+0: 楽しい（Joy）
+
+1: 悲しい（Sadness）
+
+2: 恐ろしい（Fear）
+
+3: 不安（Anxiety）
+
+学習は Python + music21 + scikit-learn で行う。
+
+学習データは：
+
+2〜4小節
+
+拍子は 3/4, 2/2, 4/4 など
+
+最大4パート
+
+音価は「全・二・四・八音符のみ」
+
+music21で フレーズから特徴量を抽出 → scikit-learnで分類器を学習。
+
+学習が終わったらモデルをファイル（例：emotion_model.pkl）として保存し、
+
+Unity から Python を呼び出すときは
+
+保存済みモデルを読み込んで “予測だけ” する（再学習しない）。
+
+🏁 最終ゴール（この一連の流れの着地点）
+
+Unity でプレイヤーが作った 2〜4小節のフレーズについて：
+
+Pythonスクリプトにフレーズ情報（JSON or XML）を渡す
+
+Python側で music21 により特徴量を計算
+
+保存済みの感情モデルで
+→ 「楽しい／悲しい／恐ろしい／不安」のどれかを予測
+
+Unity にその結果（ラベル or スコア）を返す
+
+これをゲームの 「感情判定システム」として安定して使える状態 にする。
+
+2. 目次（大きなステップの構造）
+
+あとで一つずつやっていくための「道順マップ」です。
+
+仕様の最終確認
+
+対象となるフレーズの条件（小節数・拍子・パート数・音価など）を文章で固定
+
+感情ラベル（4クラス）の定義を決める
+
+データ配置ルールの決定
+
+学習用データ（MusicXML/MIDI）のフォルダ構成
+
+例：data/joy/, data/sad/, data/fear/, data/anxiety/
+
+music21での特徴量設計
+
+どんな特徴量を使うか一覧を決める
+
+例：調性／音域／平均音高／平均音価／ノート数／休符率／跳躍率…など
+
+特徴量抽出コード（Python）の実装
+
+load_phrase()：2〜4小節を読み込む関数
+
+extract_features()：楽曲 → 特徴量辞書
+
+features_to_vector()：辞書 → 数値ベクトル
+
+データセット構築コードの実装
+
+フォルダを走査し、全曲の X（特徴量）と y（感情ラベル）を作る
+
+エラーや音がないファイルの扱いも決める
+
+k-fold クロスバリデーションによる性能評価
+
+scikit-learn の StratifiedKFold を使って 5-fold 評価
+
+各foldの精度・平均・標準偏差を確認
+
+必要なら特徴量やパラメータを微調整
+
+最終モデルの学習 & 保存
+
+全データを使って最終モデルを学習
+
+emotion_model.pkl（仮）として保存
+
+推論用スクリプトの作成
+
+プレイヤーのフレーズ（JSON or XML）を読み込み
+
+特徴量を計算
+
+emotion_model.pklを読み込んで感情ラベルを出力
+
+Unityとの連携設計
+
+C#側で Process.Start して Pythonを起動
+
+JSONを渡して結果を受け取るインタフェース
+
+エラー時のハンドリング（Pythonが失敗したときなど）
+
+3. 具体的な作業内容リスト
+
+ここから先は、「一個ずつ消化していくチェックリスト」です。
+※いまは全体像だけ出して、次のメッセージから1つずつ潰していきましょう。
+
+Step 1. 仕様の最終確認（文章で固める）
+
+ 対象フレーズの条件をテキストで確定：
+
+ 小節数：2〜4小節
+
+ 拍子：3/4, 2/2, 4/4 など（他を許可するかどうか）
+
+ パート数：最大4パート（実際に感情判定に使うのは何パートかも決める）
+
+ 音価：全・二・四・八のみを許可
+
+ 感情ラベルの意味をざっくり定義：
+
+ 楽しい：明るく、元気、前向き
+
+ 悲しい：しんみり、落ち着き、哀愁
+
+ 恐ろしい：緊張・圧迫・ホラー寄り
+
+ 不安：落ち着かず、揺らぎ、曖昧な不快さ
+
+Step 2. データ配置ルールの決定・準備
+
+ プロジェクトフォルダ内に data/ ディレクトリを作成
+
+ その中に4つのサブフォルダを作成：
+
+ data/joy/
+
+ data/sad/
+
+ data/fear/
+
+ data/anxiety/
+
+ 各フォルダに、ラベルに合う MusicXML or MIDI を入れていく（最初はサンプル少量でOK）
+
+Step 3. 特徴量設計（何を見るか決める）
+
+ 使用する特徴量のリストを確定
+
+例：
+
+ is_major（長調フラグ）
+
+ tonic_pitch_class（主音のピッチクラス）
+
+ pitch_range（音域）
+
+ avg_pitch（平均音高）
+
+ avg_duration（平均音価）
+
+ note_count（ノート数）
+
+ rest_ratio（休符率）
+
+ avg_interval（平均音程差）
+
+ large_leaps_ratio（大きい跳躍の割合）
+
+ 必要なら追加候補（拍頭に置かれる音の重み、など）もメモする
+
+Step 4. 特徴量抽出コードの作成
+
+ features_extractor.py を作る
+
+ load_phrase(path, max_measures=4) を実装
+
+ 先頭パートを取り出す
+
+ 1〜max_measures小節ぶんのフレーズに切る
+
+ extract_features(phrase) を実装
+
+ music21 の analyze('key') や notes, notesAndRests, interval.Interval を使う
+
+ features_to_vector(feat_dict) を実装
+
+ 辞書 → list[float] に変換
+
+Step 5. データセット構築コードの作成
+
+ build_dataset.py を作る
+
+ collect_files(base_dir="data") でフォルダ走査：
+
+ data/joy/*.xml, *.mid → ラベル0
+
+ data/sad/*.xml, *.mid → ラベル1
+
+ …同様に fear, anxiety
+
+ build_dataset(base_dir="data") を実装：
+
+ 全ファイルを load_phrase → extract_features → features_to_vector の順で処理
+
+ X（特徴量配列）と y（ラベル配列）を返す
+
+ 音がない／読めないファイルは skip してログだけ出す
+
+Step 6. k-fold クロスバリデーションによる評価
+
+ kfold_train.py を作る
+
+ scikit-learn で：
+
+ RandomForestClassifier（他のモデルでもOK）を用意
+
+ StratifiedKFold(n_splits=5, shuffle=True, random_state=42) を設定
+
+ cross_val_score() で accuracy を計算
+
+ 出力例：
+
+ 各foldの精度
+
+ 平均精度
+
+ 標準偏差
+
+ 必要に応じて：
+
+ cross_val_predict + classification_report でクラスごとの精度を確認
+
+Step 7. 最終モデルの学習 & 保存
+
+ 全データ(X, y)で最終モデルを学習（RandomForestなど）
+
+ joblib.dump(clf, "emotion_model.pkl") で保存
+
+ 別スクリプトで joblib.load() し、問題なく読み込めるかテスト
+
+Step 8. 推論用スクリプトの作成
+
+ classify_emotion.py を作成
+
+ 入力：
+
+ Unityから渡される JSON or ファイルパスを受け取る仕様にする
+
+ 処理：
+
+ emotion_model.pkl を読み込む
+
+ フレーズから特徴量ベクトルを作る
+
+ clf.predict() でクラス（0〜3）を得る
+
+ 出力：
+
+ {"emotion": "joy", "label": 0} などのJSONを標準出力に返す
+
+Step 9. Unityとの連携（ざっくり）
+
+ C#の Process.Start() で python classify_emotion.py を呼ぶ仕組みを作る
+
+ JSONを標準入力 or 引数で渡す方式を決める
+
+ Python側の標準出力を C# で受け取り、emotion ラベルを解析
+
+ エラー時（Python例外・music21読み込み失敗など）の処理方針を決める
+
+ここまでが「全体方針 → 目次 → 具体タスク」の整理です。
+
+次のステップは、あなたの指示どおり 一つずつ進めたいので、
+まずは Step 1「仕様の最終確認」 を、実際の文章として一緒に固めるところから入るのが良さそうです。
+
+このまま、次のメッセージで
+「Step 1 用の “仕様を書いた文章案”」をこちらから提案してしまいますね。
+
+あなた:
