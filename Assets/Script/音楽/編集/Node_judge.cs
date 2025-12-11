@@ -3,7 +3,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-
 public class Node_judge : MonoBehaviour,IPointerClickHandler
 {
     [SerializeField] private RectTransform staffRect; // クリック対象のエリア（五線譜など）
