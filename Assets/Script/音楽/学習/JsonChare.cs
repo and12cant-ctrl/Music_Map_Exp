@@ -42,7 +42,7 @@ public class JsonChare : MonoBehaviour
         string micromambaExe = FluidSynthPaths.micromambaExe;
         string scriptPath = Path.Combine(FluidSynthPaths.scriptPy, "extract_lmd_phrases.py");
 
-        string midiRoot = Path.Combine(projectRoot, "data", "Test");
+        string midiRoot = Path.Combine(FluidSynthPaths.dataroot, "Test");
         string midiPath = Path.Combine(midiRoot, "Bittersweet_Symphony.mid");
         string outputDir = Path.Combine(projectRoot, "data", "Output");
         string inputRoot = Path.Combine(projectRoot, "data", "LMD_clean");
