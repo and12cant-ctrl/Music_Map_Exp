@@ -16,11 +16,14 @@ public class ExtractResponse
 [System.Serializable]
 public class ExtractCommand
 {
-    public string midiPath;
+    public string midiPath; 
+    public string InputRoot;
+    public string outputPath; 
     public string outputDir;
     public int minMeasures;
     public int maxMeasures;
     public int maxPhrasesPerSong;
+    public int maxSongs;
 }
 
 public class JsonChare : MonoBehaviour
@@ -42,6 +45,7 @@ public class JsonChare : MonoBehaviour
         string midiRoot = Path.Combine(projectRoot, "data", "Test");
         string midiPath = Path.Combine(midiRoot, "Bittersweet_Symphony.mid");
         string outputDir = Path.Combine(projectRoot, "data", "Output");
+        string inputRoot = Path.Combine(projectRoot, "data", "LMD_clean");
 
         var cmdObj = new ExtractCommand
         {
@@ -50,6 +54,7 @@ public class JsonChare : MonoBehaviour
             minMeasures = 2,
             maxMeasures = 4,
             maxPhrasesPerSong = 10,
+            maxSongs = 200
         };
 
         string json = JsonUtility.ToJson(cmdObj);

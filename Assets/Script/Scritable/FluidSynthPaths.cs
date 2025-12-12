@@ -10,6 +10,8 @@ public static class FluidSynthPaths
 
     public static string ToolsDir => Path.Combine(ProjectRoot, "Tools");
     public static string scriptPy => Path.Combine(ProjectRoot, "ScriptsPy");
+    public static string dataroot => Path.Combine(ProjectRoot, "data");
+    public static string EmotionDir => Path.Combine(dataroot, "Emotion");
     public static string FluidSynthDir => Path.Combine(ToolsDir, "fluidsynth");
     public static string FluidSynthExe => Path.Combine(FluidSynthDir, "fluidsynth.exe");
 
