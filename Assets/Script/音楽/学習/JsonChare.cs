@@ -42,73 +42,75 @@ public class JsonChare : MonoBehaviour
         string micromambaExe = FluidSynthPaths.micromambaExe;
         string scriptPath = Path.Combine(FluidSynthPaths.scriptPy, "extract_lmd_phrases.py");
 
-        string midiRoot = Path.Combine(FluidSynthPaths.dataroot, "Test");
-        string midiPath = Path.Combine(midiRoot, "Bittersweet_Symphony.mid");
-        string outputDir = Path.Combine(projectRoot, "data", "Output");
         string inputRoot = Path.Combine(projectRoot, "data", "LMD_clean");
+        //string midiPath = Path.Combine(inputRoot, "Bittersweet_Symphony.mid");
+        //string midiPath = "";
+        string outputDir = Path.Combine(projectRoot, "data", "Output");
 
-        var cmdObj = new ExtractCommand
-        {
-            midiPath = midiPath,
-            outputDir = outputDir,
-            minMeasures = 2,
-            maxMeasures = 4,
-            maxPhrasesPerSong = 10,
-            maxSongs = 200
-        };
-
-        string json = JsonUtility.ToJson(cmdObj);
-        var psi = new ProcessStartInfo
-        {
-            FileName = micromambaExe,
-            Arguments = $"run -r \"{FluidSynthPaths.micromambaroot}\" -n unitypy python \"{scriptPath}\"",
-            UseShellExecute = false,
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
-        };
-
-        using (var proc = new Process())
-        {
-            proc.StartInfo = psi;
-            proc.Start();
-
-            proc.StandardInput.WriteLine(json);
-            proc.StandardInput.Close();
-
-            string stdout = proc.StandardOutput.ReadToEnd();
-            string stderr = proc.StandardError.ReadToEnd();
-
-            proc.WaitForExit();
-
-            UnityEngine.Debug.Log($"[Py STDOUT]\n{stdout}");
-            if (!string.IsNullOrEmpty(stderr))
+        foreach (string midiPath in Directory.GetFiles(inputRoot,"*.mid")) {
+            var cmdObj = new ExtractCommand
             {
-                UnityEngine.Debug.LogWarning($"[Py STDERR]\n{stderr}");
-            }
+                midiPath = midiPath,
+                outputDir = outputDir,
+                minMeasures = 2,
+                maxMeasures = 4,
+                maxPhrasesPerSong = 10,
+                maxSongs = 200
+            };
 
-            try
+            string json = JsonUtility.ToJson(cmdObj);
+            var psi = new ProcessStartInfo
             {
-                var resp = JsonUtility.FromJson<ExtractResponse>(stdout);
+                FileName = micromambaExe,
+                Arguments = $"run -r \"{FluidSynthPaths.micromambaroot}\" -n unitypy python \"{scriptPath}\"",
+                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8,
+            };
 
-                if (resp != null && resp.ok)
+            using (var proc = new Process())
+            {
+                proc.StartInfo = psi;
+                proc.Start();
+
+                proc.StandardInput.WriteLine(json);
+                proc.StandardInput.Close();
+
+                string stdout = proc.StandardOutput.ReadToEnd();
+                string stderr = proc.StandardError.ReadToEnd();
+
+                proc.WaitForExit();
+
+                UnityEngine.Debug.Log($"[Py STDOUT]\n{stdout}");
+                if (!string.IsNullOrEmpty(stderr))
                 {
-                    foreach (var f in resp.outputFiles)
+                    UnityEngine.Debug.LogWarning($"[Py STDERR]\n{stderr}");
+                }
+
+                try
+                {
+                    var resp = JsonUtility.FromJson<ExtractResponse>(stdout);
+
+                    if (resp != null && resp.ok)
                     {
-                        UnityEngine.Debug.Log($"output:{f}");
+                        foreach (var f in resp.outputFiles)
+                        {
+                            UnityEngine.Debug.Log($"output:{f}");
+                        }
+                    }
+                    else
+                    {
+                        UnityEngine.Debug.LogError($"Python error: {resp?.error}");
                     }
                 }
-                else
+                catch (System.Exception e)
                 {
-                    UnityEngine.Debug.LogError($"Python error: {resp?.error}");
+                    UnityEngine.Debug.LogError($"JSON parse error: {e}\nraw: {stdout}");
                 }
-            }
-            catch (System.Exception e)
-            {
-                UnityEngine.Debug.LogError($"JSON parse error: {e}\nraw: {stdout}");
             }
         }
     }

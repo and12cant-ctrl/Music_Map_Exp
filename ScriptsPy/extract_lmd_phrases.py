@@ -49,7 +49,7 @@ def phrase_has_allowed_durations(phrase: stream.Stream,min_noteRatio:float = 0.8
     elements = list(phrase.recurse().notesAndRests)
     notes = [el for el in elements if isinstance(el,note.Note)]
     if not notes:
-        return False    
+        return False
     ok = 0
 
     for no in notes:
@@ -91,12 +91,14 @@ def extract_phrases_from_file(
 
     ts_str = ts.ratioString  # "4/4" など
     if ts_str not in ALLOWED_TS:
+        print(f"[INFO] TS not allowed ({ts_str},skip: {midi_path}",file=sys.stderr)
         return 0,[]
     safe_ts =ts_str.replace("/","_")
 
     # 小節一覧を取得
     measures = list(part.getElementsByClass("Measure"))
     if not measures:
+        print(f"[INFO]No Measure extracted,skip: {midi_path}",file = sys.stderr)
         return 0,[]
 
     # measure.number が None のものを除外して最大番号を求める
@@ -253,7 +255,7 @@ def main():
         err = {"ok":False,"error":f"Json parse error: {e}"}
         print(json.dumps(err,ensure_ascii=False))
         return
-    
+
     # 必須パラメータ
     midi_path = Path(cmd.get("midiPath", ""))
 
@@ -279,8 +281,8 @@ def main():
 
     midi_path_str = cmd.get("midiPath", "")
     input_root_str = cmd.get("inputRoot", "")
-    
-    midi_files: list[Path] = []  
+
+    midi_files: list[Path] = []
 
     if midi_path_str:
         p = Path(midi_path_str)
