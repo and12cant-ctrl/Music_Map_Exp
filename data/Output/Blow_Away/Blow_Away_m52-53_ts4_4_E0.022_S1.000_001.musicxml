@@ -5,7 +5,7 @@
   <identification>
     <creator type="composer">Music21</creator>
     <encoding>
-      <encoding-date>2025-12-15</encoding-date>
+      <encoding-date>2025-12-16</encoding-date>
       <software>music21 v.9.9.1</software>
     </encoding>
   </identification>
@@ -16,21 +16,21 @@
     </scaling>
   </defaults>
   <part-list>
-    <score-part id="Pcaa3452ee5d6e24264b05accc17dad79">
+    <score-part id="P9d93756f5f2642e267ad40b77b6ee1c5">
       <part-name>Acoustic Guitar</part-name>
       <part-abbreviation>Ac Gtr</part-abbreviation>
-      <score-instrument id="I40a825c8eafc3010b55173f6084606fc">
+      <score-instrument id="Icbd33965cf14a72203e232a4b6160b01">
         <instrument-name>Acoustic Guitar</instrument-name>
         <instrument-abbreviation>Ac Gtr</instrument-abbreviation>
       </score-instrument>
-      <midi-instrument id="I40a825c8eafc3010b55173f6084606fc">
+      <midi-instrument id="Icbd33965cf14a72203e232a4b6160b01">
         <midi-channel>7</midi-channel>
         <midi-program>26</midi-program>
       </midi-instrument>
     </score-part>
   </part-list>
   <!--=========================== Part 1 ===========================-->
-  <part id="Pcaa3452ee5d6e24264b05accc17dad79">
+  <part id="P9d93756f5f2642e267ad40b77b6ee1c5">
     <!--========================= Measure 52 =========================-->
     <measure implicit="no" number="52">
       <attributes>

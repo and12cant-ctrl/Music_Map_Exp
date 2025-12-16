@@ -29,11 +29,7 @@ def main():
     sf2 = os.path.normpath(sf2)
     mid = os.path.normpath(mid)
 
-#    print(f"[INFO] Root : {root}")
-#    print(f"[INFO] MIDI : {mid}")
-#    print(f"[INFO] SF2  : {sf2}")
-#    print(f"[INFO] EXE  : {exe}")
-    
+
     for label, path in [("FluidSynth", exe), ("SoundFont", sf2), ("MIDI", mid)]:
             if not os.path.exists(path):
                 print(f"[ERROR] {label} not found: {path}", file=sys.stderr)

@@ -26,7 +26,7 @@ public class ExtractCommand
     public int maxSongs;
 }
 
-public class JsonChare : MonoBehaviour
+public class SelectBarXml: MonoBehaviour
 {
     [SerializeField] private Button btnOne;
     public void Start()
