@@ -1,26 +1,27 @@
-using System;
+
 using System.Collections;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
 using UnityEngine;
-using UnityEngine.DedicatedServer;
+
 using UnityEngine.UI;
 public class EmoJson
 {
     public string MusicXML;
     public string Soundfont;
-
+    public string fluidsynth;
 }
 
 public class SampleMIDI : MonoBehaviour
 {
     private string Sf2Path = FluidSynthPaths.SoundFontFile;
     private string pyScript = Path.Combine(FluidSynthPaths.scriptPy, "Midi_Cheker.py");
-    private string testpy = Path.Combine(FluidSynthPaths.scriptPy, "TestScript.py");
     private string envName = "unitypy";
     private string XmlPath = "";
     private string XmlFolder = Path.Combine(FluidSynthPaths.dataroot,"Output");
+    private string fluidExe = FluidSynthPaths.FluidSynthExe;
+    private string XMLName = "";
     #region Š´î
     private string sadDir = Path.Combine(FluidSynthPaths.EmotionDir, "sad");
     private string fearDir = Path.Combine(FluidSynthPaths.EmotionDir, "fear");
@@ -44,6 +45,7 @@ public class SampleMIDI : MonoBehaviour
         btnSad.onClick.AddListener(() =>
         {
             JudgeXml(Path.Combine(FluidSynthPaths.EmotionDir, "sad"));
+            UnityEngine.Debug.Log(Path.Combine(FluidSynthPaths.EmotionDir, "sad"));
         });
         btnFear.onClick.AddListener(() =>
         {
@@ -77,10 +79,12 @@ public class SampleMIDI : MonoBehaviour
             string[] files = Directory.GetFiles(folderPath);
             foreach (string file in files)
             {
+
+                XMLName = Path.GetFileName(file);
                 XmlPath = Path.Combine(folderPath,file);
                 UnityEngine.Debug.Log(XmlPath);
-                //PlayXml(XmlPath, Sf2Path);
-                TestMamba();
+                PlayXml(XmlPath, Sf2Path);
+                //TestMamba();
 
                 yield return new WaitUntil(() => isPressed);
                 isPressed = false;
@@ -92,16 +96,12 @@ public class SampleMIDI : MonoBehaviour
         var cmd = new EmoJson
         {
             MusicXML = xml,
-            Soundfont = sf2
+            Soundfont = sf2,
+            fluidsynth = fluidExe
         };
         string json = JsonUtility.ToJson(cmd);
-
-        string tmpJsonPath = Path.Combine(Path.GetTempPath(), $"unity_cmd_{Guid.NewGuid():N}.json");
-        //var args  = $"run -r \"{FluidSynthPaths.micromambaroot}\" -n {envName}"+
-        //            $"python -u \"{pyScript}\" --root \"{json}\"";
-        var args =
-            $"run -r \"{FluidSynthPaths.micromambaroot}\" -n {envName} " +
-            $"python -u \"{testpy}\"";
+        var args = $"run -r \"{FluidSynthPaths.micromambaroot}\" -n {envName} " +
+                   $"python -X utf8 -u \"{pyScript}\"";
         var psi = new ProcessStartInfo
         {
             FileName = FluidSynthPaths.micromambaExe,
@@ -110,79 +110,56 @@ public class SampleMIDI : MonoBehaviour
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            RedirectStandardInput = true,
             CreateNoWindow = true,
 
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8,
         };
-        //File.WriteAllText(tmpJsonPath, json);
 
         StringBuilder stdoutBuf = new StringBuilder();
         StringBuilder stderrBuf = new StringBuilder();
-        Process process = new Process { StartInfo = psi, EnableRaisingEvents = true };
+        Process _proc = new Process { StartInfo = psi, EnableRaisingEvents = true };
 
-        process.OutputDataReceived += (s, e) =>
+        _proc.OutputDataReceived += (s, e) =>
         {
-            if (e.Data != null) return;
+            if (e.Data == null) return;
             stdoutBuf.AppendLine(e.Data);
         };
-        process.ErrorDataReceived += (s, e) =>
+        _proc.ErrorDataReceived += (s, e) =>
         {
-            if (e.Data != null) return;
+            if (e.Data == null) return;
             stderrBuf.AppendLine(e.Data);
         };
+        UnityEngine. Debug.Log("start");
+        _proc.Start();
+        _proc.BeginOutputReadLine();
+        _proc.BeginErrorReadLine();
+        _proc.StandardInput.Write(json);
+        _proc.StandardInput.Close(); 
 
-        process.Start();
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-
-        process.WaitForExit();
-        if (stdoutBuf.Length > 0)UnityEngine. Debug.Log("[PY STDOUT]\n" + stdoutBuf);
-        if (stderrBuf.Length > 0) UnityEngine.Debug.LogError("[PY STDERR]\n" + stderrBuf);
-        //process.Dispose();
-    }
-
-    void TestMamba()
-    {
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = FluidSynthPaths.micromambaExe,
-            Arguments =
-            $"run -r \"{FluidSynthPaths.micromambaroot}\" -n {envName} " +
-            $"python -u \"{testpy}\"",
-
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true,
-
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
-        };
-          
-        StringBuilder stdoutBuf = new StringBuilder();
-        Process _p = new Process { StartInfo = psi, EnableRaisingEvents = true };
-
-        _p.OutputDataReceived += (s, e) =>
-        {
-            if (e.Data != null) stdoutBuf.AppendLine(e.Data);
-        };
-        _p.Start();
-        _p.BeginOutputReadLine();
-        _p.WaitForExit();   // © I—¹‚ð‘Ò‚Â
-
-        if (stdoutBuf.Length > 0)
-        {
-            UnityEngine.Debug.Log("[PY STDOUT] " + stdoutBuf.ToString());
-        }
+        if (stdoutBuf.Length > 0)UnityEngine. Debug.Log("[PY STDOUT]" + stdoutBuf.ToString());
+        if (stderrBuf.Length > 0) UnityEngine.Debug.LogError("[PY STDERR]\n" + stderrBuf.ToString());
+        
+        //_proc.Dispose();
     }
 
     void JudgeXml(string FolderName)
     {
-         UnityEngine.Debug.Log($"XML = {XmlPath}");
+        string folder = Path.Combine(FolderName, XMLName);
+        UnityEngine.Debug.Log($"XML = {XMLName}");
         UnityEngine.Debug.Log($"Folder = {FolderName}");
-        File.Move(XmlPath, FolderName);
+        UnityEngine.Debug.Log($"Folder = {folder}");
+        if (XmlPath == "") return;
+        //File.Move(XmlPath, folder);
+        if (File.Exists(folder))
+        {
+            UnityEngine. Debug.Log("Œ©‚Â‚©‚è‚Ü‚µ‚½: " + folder);
+        }
+        else
+        {
+            UnityEngine.Debug.Log("Œ©‚Â‚©‚è‚Ü‚¹‚ñ");
+        }
         isPressed = true;
     }
 }
