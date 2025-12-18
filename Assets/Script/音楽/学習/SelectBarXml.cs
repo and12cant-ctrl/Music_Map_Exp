@@ -42,10 +42,10 @@ public class SelectBarXml: MonoBehaviour
         string micromambaExe = FluidSynthPaths.micromambaExe;
         string scriptPath = Path.Combine(FluidSynthPaths.scriptPy, "extract_lmd_phrases.py");
 
-        string inputRoot = Path.Combine(projectRoot, "data", "LMD_clean");
+        string inputRoot = Path.Combine(FluidSynthPaths.MusicDataroot, "LMD_clean");
         //string midiPath = Path.Combine(inputRoot, "Bittersweet_Symphony.mid");
         //string midiPath = "";
-        string outputDir = Path.Combine(projectRoot, "data", "Output");
+        string outputDir = Path.Combine(FluidSynthPaths.MusicDataroot, "Output");
 
         foreach (string midiPath in Directory.GetFiles(inputRoot,"*.mid")) {
             var cmdObj = new ExtractCommand

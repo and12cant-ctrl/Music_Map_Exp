@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 """
 Lakh MIDI Dataset から 2〜4 小節の単一パートフレーズを大量抽出するスクリプト。
 
@@ -21,7 +21,7 @@ import sys
 import json
 import re
 from pathlib import Path
-
+from statistics import mean
 from music21 import converter, meter, note, stream
 
 
@@ -32,15 +32,68 @@ ALLOWED_TS = {"4/4", "3/4", "2/2"}
 ALLOWED_DURATIONS = {4.0, 2.0, 1.0, 0.5
                      ,0.25,1.5,3.0}
 
+LENGTH_BONUS = {2: 1.00, 3: 1.15, 4: 1.30}
 
+# Partがある場合は、Partそのもの＋(可能なら) Voice分解したPart(voicesToParts) を候補にする
+# avg_pitch（高め） + avg_duration（長め） + density（低め）で旋律候補を選ぶ
 def pick_melody_part(score: stream.Score) -> stream.Part | stream.Stream:
-    """
-    一番ノート数が多いパートを「メロディパート」とみなして返す。
-    パートが無い場合は score 自体を返す。
-    """
-    if getattr(score, "parts", None) and len(score.parts) > 0:
-        return max(score.parts, key=lambda p: len(list(p.recurse().notes)))
-    return score
+    if not getattr(score, "parts", None) and len(score.parts) > 0:
+        return score
+    
+    candidates: list[stream.Stream] = []
+    
+    for p in score.parts:
+        candidates.append(p)
+
+        try:
+            vp = p.voicesToParts()
+            if vp:
+                candidates.extend(vp)
+        except Exception:
+            pass
+
+    feats = []
+    for c in candidates:
+        stats = calc_phrase_stats(c)
+        if stats["note_count"] <= 0:
+            continue
+        ap = _avg_pitch_midi(c)
+        feats.append((c,ap,stats["avg_duration"],stats["density"]))
+
+    if not feats:
+        return score
+
+    pitches = [x[1] for x in feats]
+    durs    = [x[2] for x in feats]
+    pmin,pmax = min(pitches),max(pitches)
+    dmin,dmax = min(durs),max(durs)
+
+    def norm(x,lo,hi):
+        return 0.5 if hi <= lo else (x-lo)/(hi - lo)
+    
+    best_p = None
+    best_s = -1e9
+    for p, ap ,ad in feats:
+        s = 0.6 * norm(ap,pmin,pmax) + 0.4 * norm(ad , dmin,dmax)
+        if s > best_s:
+            best_s = s
+            best_p = p
+    return best_p
+
+
+def avg_pitch_duration(p: stream.Stream):
+    notes = [n for n in p.recurce().notes if isinstance(n,note.Note)]
+    if not notes:
+        return None
+    avg_pitch = mean(n.pitch.midi for n in notes if n.pitch is not None)
+    avg_dur = sum(float(n.quarterLength) for n in notes) / len (notes)
+    return avg_pitch,avg_dur
+
+def _avg_pitch_midi(s: stream.Stream) -> float:
+    ns = [n for n in s.recurse().notes if isinstance(n, note.Note) and getattr(n, "pitch", None) is not None]
+    if not ns:
+        return 0.0
+    return float(mean(n.pitch.midi for n in ns))
 
 def safeFolder(name:str) -> str:
      return re.sub(r'[<>:"/\\|?*\x00-\x1f]',"_",name).strip().strip(".")
@@ -62,6 +115,30 @@ def phrase_has_allowed_durations(phrase: stream.Stream,min_noteRatio:float = 0.8
     ratio = ok /len(notes)
     return ratio >= min_noteRatio
 
+def pick_best_by_len(cands, score_idx: int):
+    # score_idx: energy=4, stability=5
+    for L in (4, 3, 2):
+        pool = [c for c in cands if c[2] == L]
+        if pool:
+            return max(pool, key=lambda x: x[score_idx])
+    return None
+    
+def extract_melody_voice(part):
+    candidates = []
+
+    for v in part.getElementsByClass(stream.Voice):
+        notes = [n for n in v.notes if isinstance(n, note.Note)]
+        if not notes:
+            continue
+
+        avg_pitch = sum(n.pitch.midi for n in notes) / len(notes)
+        continuity = sum(n.quarterLength for n in notes)
+        single_ratio = len(notes) / (len(v.notes) + 1)
+
+        score = avg_pitch * 0.4 + continuity * 0.4 + single_ratio * 0.2
+        candidates.append((score, v))
+
+    return max(candidates, key=lambda x: x[0])[1]
 
 def extract_phrases_from_file(
     midi_path: Path,
@@ -108,7 +185,7 @@ def extract_phrases_from_file(
     last_number = max(numbers)
 
     # 2〜4小節のすべての連続フレーズを候補にする
-    candidates: list[tuple[int, int, stream.Stream]] = []
+    candidates: list[tuple[int, int,int, stream.Stream,float,float]] = []
 
     for length in range(min_measures, max_measures + 1):
         for start_num in range(1, last_number - length + 2):
@@ -118,15 +195,16 @@ def extract_phrases_from_file(
                 continue
             if phrase_has_allowed_durations(phrase):
                 stats = calc_phrase_stats(phrase)
-                e_score = score_energy(stats)
-                s_score = score_stability(stats)
-                candidates.append((start_num, end_num, phrase, e_score, s_score))
+                e = score_energy(stats)*LENGTH_BONUS.get(length,1.0)
+                s = score_stability(stats)*LENGTH_BONUS.get(length,1.0)
+                candidates.append((start_num, end_num,length,phrase, e, s))
 
     if not candidates:
         return 0,[]
 
-    best_energy = max(candidates, key=lambda x: x[3])   # energy score
-    best_stable = max(candidates, key=lambda x: x[4])   # stability score
+
+    best_energy = pick_best_by_len(candidates,4)   # energy score
+    best_stable = pick_best_by_len(candidates,5)   # stability score
 
     selected = [best_energy]
     # 同じ区間が選ばれたら重複保存しない
@@ -144,7 +222,7 @@ def extract_phrases_from_file(
     song_dir = output_dir / safeFolder(stem)
     song_dir.mkdir(parents=True, exist_ok=True)
 
-    for idx, (start_num, end_num, phrase, e_score, s_score) in enumerate(selected):
+    for idx, (start_num, end_num, length,phrase, e_score, s_score) in enumerate(selected):
         out_name = f"{stem}_m{start_num}-{end_num}_ts{safe_ts}_E{e_score:.3f}_S{s_score:.3f}_{idx:03d}.musicxml"
         out_path = song_dir / out_name
 
@@ -156,6 +234,8 @@ def extract_phrases_from_file(
             print(f"[ERROR] write failed: {out_path} ({e})", file=sys.stderr)
 
     return saved, outputs
+
+
 
 def _clamp01(x: float) -> float:
     return 0.0 if x < 0.0 else 1.0 if x > 1.0 else x

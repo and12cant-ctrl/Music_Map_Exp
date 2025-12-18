@@ -5,7 +5,7 @@
   <identification>
     <creator type="composer">Music21</creator>
     <encoding>
-      <encoding-date>2025-12-16</encoding-date>
+      <encoding-date>2025-12-18</encoding-date>
       <software>music21 v.9.9.1</software>
     </encoding>
   </identification>
@@ -16,23 +16,23 @@
     </scaling>
   </defaults>
   <part-list>
-    <score-part id="P0a88af74cb710e527eb0bead7ad8606a">
+    <score-part id="Pe8f7ee1590a952924ee1726124eb477c">
       <part-name>Acoustic Guitar</part-name>
       <part-abbreviation>Ac Gtr</part-abbreviation>
-      <score-instrument id="Ifdde72ebaa427f12947ec9363d1e9fdf">
+      <score-instrument id="Ice2fb4befb52e81c4a8d96783dedd441">
         <instrument-name>Acoustic Guitar</instrument-name>
         <instrument-abbreviation>Ac Gtr</instrument-abbreviation>
       </score-instrument>
-      <midi-instrument id="Ifdde72ebaa427f12947ec9363d1e9fdf">
+      <midi-instrument id="Ice2fb4befb52e81c4a8d96783dedd441">
         <midi-channel>7</midi-channel>
         <midi-program>26</midi-program>
       </midi-instrument>
     </score-part>
   </part-list>
   <!--=========================== Part 1 ===========================-->
-  <part id="P0a88af74cb710e527eb0bead7ad8606a">
-    <!--========================= Measure 36 =========================-->
-    <measure implicit="no" number="36">
+  <part id="Pe8f7ee1590a952924ee1726124eb477c">
+    <!--========================= Measure 34 =========================-->
+    <measure implicit="no" number="34">
       <attributes>
         <divisions>10080</divisions>
         <key>
@@ -48,6 +48,20 @@
           <line>4</line>
         </clef>
       </attributes>
+      <note>
+        <rest measure="yes" />
+        <duration>40320</duration>
+      </note>
+    </measure>
+    <!--========================= Measure 35 =========================-->
+    <measure implicit="no" number="35">
+      <note>
+        <rest measure="yes" />
+        <duration>40320</duration>
+      </note>
+    </measure>
+    <!--========================= Measure 36 =========================-->
+    <measure implicit="no" number="36">
       <note>
         <rest />
         <duration>2520</duration>

@@ -11,6 +11,7 @@ public class EmoJson
     public string MusicXML;
     public string Soundfont;
     public string fluidsynth;
+    public string outputFolder;
 }
 
 public class SampleMIDI : MonoBehaviour
@@ -19,9 +20,11 @@ public class SampleMIDI : MonoBehaviour
     private string pyScript = Path.Combine(FluidSynthPaths.scriptPy, "Midi_Cheker.py");
     private string envName = "unitypy";
     private string XmlPath = "";
-    private string XmlFolder = Path.Combine(FluidSynthPaths.dataroot,"Output");
+    private string XmlFolder = Path.Combine(FluidSynthPaths.MusicDataroot,"Output");
     private string fluidExe = FluidSynthPaths.FluidSynthExe;
     private string XMLName = "";
+    private string outputDir = Path.Combine(FluidSynthPaths.MusicDataroot, "temporary");
+    private bool finished = false;
     #region 感情
     private string sadDir = Path.Combine(FluidSynthPaths.EmotionDir, "sad");
     private string fearDir = Path.Combine(FluidSynthPaths.EmotionDir, "fear");
@@ -45,7 +48,6 @@ public class SampleMIDI : MonoBehaviour
         btnSad.onClick.AddListener(() =>
         {
             JudgeXml(Path.Combine(FluidSynthPaths.EmotionDir, "sad"));
-            UnityEngine.Debug.Log(Path.Combine(FluidSynthPaths.EmotionDir, "sad"));
         });
         btnFear.onClick.AddListener(() =>
         {
@@ -73,6 +75,10 @@ public class SampleMIDI : MonoBehaviour
 
     IEnumerator Run()
     {
+        foreach (var file in Directory.GetFiles(outputDir))
+        {
+            File.Delete(file);
+        }
         string[] SubFolder = Directory.GetDirectories(XmlFolder);
         foreach (string folderPath in SubFolder)
         {
@@ -97,7 +103,8 @@ public class SampleMIDI : MonoBehaviour
         {
             MusicXML = xml,
             Soundfont = sf2,
-            fluidsynth = fluidExe
+            fluidsynth = fluidExe,
+            outputFolder = outputDir,
         };
         string json = JsonUtility.ToJson(cmd);
         var args = $"run -r \"{FluidSynthPaths.micromambaroot}\" -n {envName} " +
@@ -124,19 +131,31 @@ public class SampleMIDI : MonoBehaviour
         _proc.OutputDataReceived += (s, e) =>
         {
             if (e.Data == null) return;
+            UnityEngine.Debug.Log("[PY] " + e.Data);
             stdoutBuf.AppendLine(e.Data);
         };
         _proc.ErrorDataReceived += (s, e) =>
         {
             if (e.Data == null) return;
+            UnityEngine.Debug.LogError("[PY ERR] " + e.Data);
             stderrBuf.AppendLine(e.Data);
+        };
+        _proc.Exited += (s, e) =>
+        {
+            // Exited は別スレッドのことが多いので、Unity API直呼びは避けるのが安全
+            // → フラグを立てて Update で処理、または ConcurrentQueue に積む
+            finished = true;
         };
         UnityEngine. Debug.Log("start");
         _proc.Start();
         _proc.BeginOutputReadLine();
         _proc.BeginErrorReadLine();
+
         _proc.StandardInput.Write(json);
-        _proc.StandardInput.Close(); 
+        _proc.StandardInput.Close();
+
+        //_proc.CancelOutputRead();
+        //_proc.CancelErrorRead();
 
         if (stdoutBuf.Length > 0)UnityEngine. Debug.Log("[PY STDOUT]" + stdoutBuf.ToString());
         if (stderrBuf.Length > 0) UnityEngine.Debug.LogError("[PY STDERR]\n" + stderrBuf.ToString());
@@ -147,11 +166,8 @@ public class SampleMIDI : MonoBehaviour
     void JudgeXml(string FolderName)
     {
         string folder = Path.Combine(FolderName, XMLName);
-        UnityEngine.Debug.Log($"XML = {XMLName}");
-        UnityEngine.Debug.Log($"Folder = {FolderName}");
-        UnityEngine.Debug.Log($"Folder = {folder}");
         if (XmlPath == "") return;
-        //File.Move(XmlPath, folder);
+        File.Move(XmlPath, folder);
         if (File.Exists(folder))
         {
             UnityEngine. Debug.Log("見つかりました: " + folder);
