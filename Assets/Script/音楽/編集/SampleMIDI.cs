@@ -17,7 +17,7 @@ public class EmoJson
 public class SampleMIDI : MonoBehaviour
 {
     private string Sf2Path = FluidSynthPaths.SoundFontFile;
-    private string pyScript = Path.Combine(FluidSynthPaths.scriptPy, "Midi_Cheker.py");
+    private string pyScript = Path.Combine(FluidSynthPaths.scriptPy, "Xml_to_Midi.py");
     private string envName = "unitypy";
     private string XmlPath = "";
     private string XmlFolder = Path.Combine(FluidSynthPaths.MusicDataroot,"Output");

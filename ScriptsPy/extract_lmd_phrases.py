@@ -34,14 +34,16 @@ ALLOWED_DURATIONS = {4.0, 2.0, 1.0, 0.5
 
 LENGTH_BONUS = {2: 1.00, 3: 1.15, 4: 1.30}
 
+def _json_error(msg):
+    print(json.dumps({"ok": False, "error": msg}))
 # Partがある場合は、Partそのもの＋(可能なら) Voice分解したPart(voicesToParts) を候補にする
 # avg_pitch（高め） + avg_duration（長め） + density（低め）で旋律候補を選ぶ
 def pick_melody_part(score: stream.Score) -> stream.Part | stream.Stream:
     if not getattr(score, "parts", None) and len(score.parts) > 0:
         return score
-    
+
     candidates: list[stream.Stream] = []
-    
+
     for p in score.parts:
         candidates.append(p)
 
@@ -53,12 +55,12 @@ def pick_melody_part(score: stream.Score) -> stream.Part | stream.Stream:
             pass
 
     feats = []
-    for c in candidates:
-        stats = calc_phrase_stats(c)
+    for cand in candidates:
+        stats = calc_phrase_stats(cand)
         if stats["note_count"] <= 0:
             continue
         ap = _avg_pitch_midi(c)
-        feats.append((c,ap,stats["avg_duration"],stats["density"]))
+        feats.append((cand,ap,stats["avg_duration"],stats["density"]))
 
     if not feats:
         return score
@@ -70,34 +72,36 @@ def pick_melody_part(score: stream.Score) -> stream.Part | stream.Stream:
 
     def norm(x,lo,hi):
         return 0.5 if hi <= lo else (x-lo)/(hi - lo)
-    
-    best_p = None
+
+    best_stream = cand
     best_s = -1e9
-    for p, ap ,ad in feats:
+    for cand, ap ,ad,_den in feats:
         s = 0.6 * norm(ap,pmin,pmax) + 0.4 * norm(ad , dmin,dmax)
         if s > best_s:
             best_s = s
-            best_p = p
-    return best_p
+            best_stream = cand
+    return best_stream
 
-
+# ストリーム内の Note の平均音高と平均音価を返す（未使用っぽい補助関数）。
 def avg_pitch_duration(p: stream.Stream):
-    notes = [n for n in p.recurce().notes if isinstance(n,note.Note)]
+    notes = [n for n in p.recurse().notes if isinstance(n,note.Note)]
     if not notes:
         return None
     avg_pitch = mean(n.pitch.midi for n in notes if n.pitch is not None)
     avg_dur = sum(float(n.quarterLength) for n in notes) / len (notes)
     return avg_pitch,avg_dur
-
+# Note の pitch.midi の平均を返す（主旋律選別に使用）。
 def _avg_pitch_midi(s: stream.Stream) -> float:
     ns = [n for n in s.recurse().notes if isinstance(n, note.Note) and getattr(n, "pitch", None) is not None]
     if not ns:
         return 0.0
     return float(mean(n.pitch.midi for n in ns))
 
+# ファイル/フォルダ名に使えない文字を _ に置換して安全化。
 def safeFolder(name:str) -> str:
      return re.sub(r'[<>:"/\\|?*\x00-\x1f]',"_",name).strip().strip(".")
 
+# フレーズ内の音価が「許可セット中心」かを判定してフィルタする。
 def phrase_has_allowed_durations(phrase: stream.Stream,min_noteRatio:float = 0.8) -> bool:
     elements = list(phrase.recurse().notesAndRests)
     notes = [el for el in elements if isinstance(el,note.Note)]
@@ -114,7 +118,7 @@ def phrase_has_allowed_durations(phrase: stream.Stream,min_noteRatio:float = 0.8
 
     ratio = ok /len(notes)
     return ratio >= min_noteRatio
-
+# 候補の中から「できるだけ長い（4→3→2）」ものを優先しつつ、指定スコア最大を選ぶ。
 def pick_best_by_len(cands, score_idx: int):
     # score_idx: energy=4, stability=5
     for L in (4, 3, 2):
@@ -122,23 +126,33 @@ def pick_best_by_len(cands, score_idx: int):
         if pool:
             return max(pool, key=lambda x: x[score_idx])
     return None
-    
-def extract_melody_voice(part):
-    candidates = []
 
-    for v in part.getElementsByClass(stream.Voice):
-        notes = [n for n in v.notes if isinstance(n, note.Note)]
-        if not notes:
+# Part 内の Voice から「旋律っぽい Voice」を選ぶ。
+def safe_extract_melody_voice(part) -> stream.Stream:
+    candidates = []
+    try:
+        voices = list(part.getElementsByClass(stream.Voice))
+    except Exception:
+        voices = []
+
+    for v in voices:
+        ns = [n for n in v.notes if isinstance(n, note.Note) and getattr(n, "pitch", None) is not None]
+        if not ns:
             continue
 
-        avg_pitch = sum(n.pitch.midi for n in notes) / len(notes)
-        continuity = sum(n.quarterLength for n in notes)
-        single_ratio = len(notes) / (len(v.notes) + 1)
+        avg_pitch = sum(n.pitch.midi for n in ns) / len(ns)
+        continuity = sum(float(n.quarterLength) for n in ns)
+        # Voice内要素に対する Note の比率（休符・他要素が多いと下がる）
+        single_ratio = len(ns) / (len(list(v.notesAndRests)) + 1)
 
         score = avg_pitch * 0.4 + continuity * 0.4 + single_ratio * 0.2
         candidates.append((score, v))
 
-    return max(candidates, key=lambda x: x[0])[1]
+    if not candidates:
+        return part
+
+    candidates.sort(key=lambda x: x[0], reverse=True)
+    return candidates[0][1]
 
 def extract_phrases_from_file(
     midi_path: Path,
@@ -159,6 +173,8 @@ def extract_phrases_from_file(
 
     part = pick_melody_part(score)
 
+    if is_classical_like(part):
+        part = safe_extract_melody_voice(part)
     # 拍子チェック
     ts = part.recurse().getElementsByClass(meter.TimeSignature).first()
     if ts is None:
@@ -235,7 +251,13 @@ def extract_phrases_from_file(
 
     return saved, outputs
 
-
+# クラシックかどうかの判定
+def is_classical_like(part: stream.Stream,min_voices: int = 2) -> bool:
+    try:
+        voices = list(part.getElementsByClass(stream.Voice))
+        return len(voices) >= min_voices
+    except Exception:
+        return False
 
 def _clamp01(x: float) -> float:
     return 0.0 if x < 0.0 else 1.0 if x > 1.0 else x
@@ -332,49 +354,43 @@ def main():
             raise ValueError("no JSON on stdin")
         cmd = json.loads(raw)
     except Exception as e :
-        err = {"ok":False,"error":f"Json parse error: {e}"}
-        print(json.dumps(err,ensure_ascii=False))
+        _json_error("outputDir is missing")
         return
 
     # 必須パラメータ
     midi_path = Path(cmd.get("midiPath", ""))
+    output_dir_str = cmd.get("outputDir", "")
 
-    output_dir = Path(cmd.get("outputDir", ""))
-    if not output_dir:
-        print(json.dumps({"ok":False,"error":"outputsDir is missing"},ensure_ascii=False))
+    if not isinstance(output_dir_str,str) or not output_dir_str.strip():
+        _json_error("outputDir is missing")
         return
 
-    if not midi_path.exists() or midi_path.is_dir():
-        resp = {
-            "ok": False,
-            "error": f"Invalid MIDI path (not a file): {midi_path}",
-        }
-        print(json.dumps(resp, ensure_ascii=False))
-        return
+    output_dir = Path(output_dir_str)
+    midi_path_str = cmd.get("midiPath", "")
+    input_root_str = cmd.get("inputRoot", "")
+
     # オプション（来てなければデフォルト）
     min_measures = int(cmd.get("minMeasures", 2))
     max_measures = int(cmd.get("maxMeasures", 4))
     max_phrases_per_song = int(cmd.get("maxPhrasesPerSong", 50))
+
     max_songs = cmd.get("maxSongs", None)
     if max_songs is not None:
         max_songs = int(max_songs)
 
-    midi_path_str = cmd.get("midiPath", "")
-    input_root_str = cmd.get("inputRoot", "")
-
     midi_files: list[Path] = []
 
-    if midi_path_str:
+    if isinstance(midi_path_str,str) and midi_path_str.strip():
         p = Path(midi_path_str)
         if not p.exists() or p.is_dir():
-            print(json.dumps({"ok": False, "error": f"Invalid MIDI path: {p}"}, ensure_ascii=False))
+            _json_error(f"Invalid MIDI path: {p}")
             return
         midi_files = [p]
 
-    elif input_root_str:
+    elif isinstance(input_root_str,str) and input_root_str.strip():
         root = Path(input_root_str)
         if not root.exists() or not root.is_dir():
-            print(json.dumps({"ok": False, "error": f"Invalid inputRoot: {root}"}, ensure_ascii=False))
+            _json_error(f"Invalid inputRoot: {root}")
             return
         midi_files = [p for p in root.rglob("*") if p.suffix.lower() in (".mid", ".midi")]
         midi_files.sort()
@@ -382,7 +398,7 @@ def main():
             midi_files = midi_files[:max_songs]
 
     else:
-        print(json.dumps({"ok": False, "error": "midiPath or inputRoot is required"}, ensure_ascii=False))
+        _json_error("midiPath or inputRoot is required")
         return
 
     total_saved = 0
