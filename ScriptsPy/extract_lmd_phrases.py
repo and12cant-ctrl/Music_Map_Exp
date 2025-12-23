@@ -59,7 +59,7 @@ def pick_melody_part(score: stream.Score) -> stream.Part | stream.Stream:
         stats = calc_phrase_stats(cand)
         if stats["note_count"] <= 0:
             continue
-        ap = _avg_pitch_midi(c)
+        ap = _avg_pitch_midi(cand)
         feats.append((cand,ap,stats["avg_duration"],stats["density"]))
 
     if not feats:
