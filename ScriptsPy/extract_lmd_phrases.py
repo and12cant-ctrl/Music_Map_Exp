@@ -34,6 +34,7 @@ ALLOWED_DURATIONS = {4.0, 2.0, 1.0, 0.5
 
 LENGTH_BONUS = {2: 1.00, 3: 1.15, 4: 1.30}
 
+
 def _json_error(msg):
     print(json.dumps({"ok": False, "error": msg}))
 # Partがある場合は、Partそのもの＋(可能なら) Voice分解したPart(voicesToParts) を候補にする
@@ -82,7 +83,7 @@ def pick_melody_part(score: stream.Score) -> stream.Part | stream.Stream:
             best_stream = cand
     return best_stream
 
-# ストリーム内の Note の平均音高と平均音価を返す（未使用っぽい補助関数）。
+# ストリーム内の Note の平均音高と平均音価を返す（未使用補助関数）。
 def avg_pitch_duration(p: stream.Stream):
     notes = [n for n in p.recurse().notes if isinstance(n,note.Note)]
     if not notes:
@@ -90,6 +91,7 @@ def avg_pitch_duration(p: stream.Stream):
     avg_pitch = mean(n.pitch.midi for n in notes if n.pitch is not None)
     avg_dur = sum(float(n.quarterLength) for n in notes) / len (notes)
     return avg_pitch,avg_dur
+
 # Note の pitch.midi の平均を返す（主旋律選別に使用）。
 def _avg_pitch_midi(s: stream.Stream) -> float:
     ns = [n for n in s.recurse().notes if isinstance(n, note.Note) and getattr(n, "pitch", None) is not None]
@@ -154,54 +156,84 @@ def safe_extract_melody_voice(part) -> stream.Stream:
     candidates.sort(key=lambda x: x[0], reverse=True)
     return candidates[0][1]
 
+def safePartName(p,idx:int) -> str:
+    name = (getattr(p, "partName", None) or getattr(p, "id", None) or f"part{idx}")
+    return safeFolder(str(name))
+
+def other_parts(score,main_part):
+    outs = []
+    for i,p in enumerate(score.parts):
+        if p is main_part:
+            continue
+        outs.append((i,p))
+    return outs
+
+def fullscore_slice(score: stream.Score,start_num: int,end_num:int) -> stream.Score | None:
+    out = stream.Score()
+    ok = False
+    for p in score.parts:
+        try:
+            ph = p.measures(start_num,end_num)
+            if ph is None:
+                continue
+            st = calc_phrase_stats(ph)
+            if st["note_count"]<= 0:
+                continue
+            out.insert(0,ph)
+            ok = True
+        except Exception:
+            continue
+    return out if ok else None
+
 def extract_phrases_from_file(
     midi_path: Path,
     output_dir: Path,
     min_measures: int = 2,
     max_measures: int = 4,
     max_phrases_per_song: int = 50,
+    other: bool = True,
 ) -> int:
     """
     1つの MIDI ファイルから 2〜4小節フレーズを抽出し、MusicXML で出力する。
-    戻り値：保存したフレーズ数,保存したファイルパスのリスト
+    追加仕様：イントロ（冒頭4小節）も必ず保存する（重複は除外）。
+    戻り値：保存したフレーズ数, 保存したファイルパスのリスト
     """
     try:
         score = converter.parse(str(midi_path))
     except Exception as e:
         print(f"[ERROR] parse failed: {midi_path} ({e})", file=sys.stderr)
-        return 0,[]
+        return 0, []
 
     part = pick_melody_part(score)
 
     if is_classical_like(part):
         part = safe_extract_melody_voice(part)
+
     # 拍子チェック
     ts = part.recurse().getElementsByClass(meter.TimeSignature).first()
     if ts is None:
-        # 拍子が不明なものはスキップ
         print(f"[INFO] No TimeSignature, skip: {midi_path}", file=sys.stderr)
-        return 0,[]
+        return 0, []
 
     ts_str = ts.ratioString  # "4/4" など
     if ts_str not in ALLOWED_TS:
-        print(f"[INFO] TS not allowed ({ts_str},skip: {midi_path}",file=sys.stderr)
-        return 0,[]
-    safe_ts =ts_str.replace("/","_")
+        print(f"[INFO] TS not allowed ({ts_str},skip: {midi_path}", file=sys.stderr)
+        return 0, []
+    safe_ts = ts_str.replace("/", "_")
 
     # 小節一覧を取得
     measures = list(part.getElementsByClass("Measure"))
     if not measures:
-        print(f"[INFO]No Measure extracted,skip: {midi_path}",file = sys.stderr)
-        return 0,[]
+        print(f"[INFO] No Measure extracted, skip: {midi_path}", file=sys.stderr)
+        return 0, []
 
-    # measure.number が None のものを除外して最大番号を求める
     numbers = [mea.number for mea in measures if mea.number is not None]
     if not numbers:
-        return 0,[]
+        return 0, []
     last_number = max(numbers)
 
     # 2〜4小節のすべての連続フレーズを候補にする
-    candidates: list[tuple[int, int,int, stream.Stream,float,float]] = []
+    candidates: list[tuple[int, int, int, stream.Stream, float, float]] = []
 
     for length in range(min_measures, max_measures + 1):
         for start_num in range(1, last_number - length + 2):
@@ -211,23 +243,21 @@ def extract_phrases_from_file(
                 continue
             if phrase_has_allowed_durations(phrase):
                 stats = calc_phrase_stats(phrase)
-                e = score_energy(stats)*LENGTH_BONUS.get(length,1.0)
-                s = score_stability(stats)*LENGTH_BONUS.get(length,1.0)
-                candidates.append((start_num, end_num,length,phrase, e, s))
+                e = score_energy(stats) * LENGTH_BONUS.get(length, 1.0)
+                s = score_stability(stats) * LENGTH_BONUS.get(length, 1.0)
+                candidates.append((start_num, end_num, length, phrase, e, s))
 
     if not candidates:
-        return 0,[]
+        # ここで「イントロだけは出したい」なら、intro保存だけは続行する実装も可能
+        return 0, []
 
-
-    best_energy = pick_best_by_len(candidates,4)   # energy score
-    best_stable = pick_best_by_len(candidates,5)   # stability score
+    best_energy = pick_best_by_len(candidates, 4)  # energy score
+    best_stable = pick_best_by_len(candidates, 5)  # stability score
 
     selected = [best_energy]
-    # 同じ区間が選ばれたら重複保存しない
     if (best_stable[0], best_stable[1]) != (best_energy[0], best_energy[1]):
         selected.append(best_stable)
 
-    # 念のため：外部指定 max_phrases_per_song が 1 のときは 1つに抑える
     selected = selected[:max_phrases_per_song]
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -238,16 +268,127 @@ def extract_phrases_from_file(
     song_dir = output_dir / safeFolder(stem)
     song_dir.mkdir(parents=True, exist_ok=True)
 
-    for idx, (start_num, end_num, length,phrase, e_score, s_score) in enumerate(selected):
-        out_name = f"{stem}_m{start_num}-{end_num}_ts{safe_ts}_E{e_score:.3f}_S{s_score:.3f}_{idx:03d}.musicxml"
-        out_path = song_dir / out_name
+    intro_dir = song_dir /"Intro"
+    chorus_dir = song_dir / f"Chorus"
+    stable_dir = song_dir / f"Stable"
+
+    intro_dir.mkdir(exist_ok=True)
+    chorus_dir.mkdir(exist_ok=True)
+    stable_dir.mkdir(exist_ok=True)
+
+
+    intro_len = 4
+    intro_end = min(intro_len, last_number)
+
+    # 「最低2小節」はあなたの抽出方針(2〜4小節)に合わせたガード
+    if intro_end >= 2:
+        intro_phrase = part.measures(1, intro_end)
+
+        if intro_phrase is not None:
+            intro_stats = calc_phrase_stats(intro_phrase)
+
+            # イントロは「必ず抜きたい」が目的なので、
+            # durationフィルタで落としすぎないよう note_count > 0 を最低条件にするのがおすすめ
+            if intro_stats["note_count"] > 0:
+                intro_e = score_energy(intro_stats) * LENGTH_BONUS.get(intro_end, 1.0)
+                intro_s = score_stability(intro_stats) * LENGTH_BONUS.get(intro_end, 1.0)
+
+                intro_base = f"{stem}_INTRO_m1-{intro_end}_ts{safe_ts}_E{intro_e:.3f}_S{intro_s:.3f}"
+                intro_main = intro_dir / f"{intro_base}_MAIN.musicxml"
+                full_intro = fullscore_slice(score, 1, intro_end)
+                if full_intro is not None:
+                    out_full = intro_dir / f"{intro_base}_FULL.musicxml"
+                try:
+                    full_intro.write("musicxml", fp=str(out_full))
+                    saved += 1
+                    outputs.append(str(out_full))
+                except Exception as e:
+                    print(f"[ERROR] intro full write failed: {out_full} ({e})", file=sys.stderr)
+                try:
+                    intro_phrase.write("musicxml", fp=str(intro_main))
+                    saved += 1
+                    outputs.append(str(intro_main))
+                except Exception as e:
+                    print(f"[ERROR] intro write failed: {intro_main} ({e})", file=sys.stderr)
+
+                # イントロの伴奏(Other parts)も同区間で保存
+                if other:
+                    for pi, p in other_parts(score, part):
+                        try:
+                            ph = p.measures(1, intro_end)
+                            if ph is None:
+                                continue
+                            st = calc_phrase_stats(ph)
+                            if st["note_count"] <= 0:
+                                continue
+
+                            pname = safePartName(p, pi)
+                            intro_p = intro_dir / f"{intro_base}_P{pi:02d}_{pname}.musicxml"
+                            ph.write("musicxml", fp=str(intro_p))
+                            saved += 1
+                            outputs.append(str(intro_p))
+                        except Exception as e:
+                            print(f"[WARN] intro other part write failed: {stem} P{pi} ({e})", file=sys.stderr)
+
+                # 通常抽出(selected)と同じ区間があれば重複保存しない
+                selected = [
+                    x for x in selected
+                    if not (x[0] == 1 and x[1] == intro_end)
+                ]
+
+    # =========================
+    # 通常の selected を保存
+    # =========================
+    for idx, (start_num, end_num, length, phrase, e_score, s_score) in enumerate(selected):
+
+            # どの役割か判定
+        if (start_num, end_num) == (best_energy[0], best_energy[1]):
+            role = "Chorus"
+            target_dir = chorus_dir
+        else:
+            role = "Stable"
+            target_dir = stable_dir
+
+        out_base = f"{stem}_{role}_m{start_num}-{end_num}_ts{safe_ts}_E{e_score:.3f}_S{s_score:.3f}_{idx:03d}"
+        out_main = target_dir / f"{out_base}_MAIN.musicxml"
+# --- 追加：全パート入り（パート分けしてない版）も保存 ---
+        full_score = fullscore_slice(score, start_num, end_num)
+        if full_score is not None:
+            out_full = target_dir / f"{out_base}_FULL.musicxml"
+            try:
+                full_score.write("musicxml", fp=str(out_full))
+                saved += 1
+                outputs.append(str(out_full))
+            except Exception as e:
+                print(f"[ERROR] full write failed: {out_full} ({e})", file=sys.stderr)
 
         try:
-            phrase.write("musicxml", fp=str(out_path))
+            phrase.write("musicxml", fp=str(out_main))
             saved += 1
-            outputs.append(str(out_path))
+            outputs.append(str(out_main))
         except Exception as e:
-            print(f"[ERROR] write failed: {out_path} ({e})", file=sys.stderr)
+            print(f"[ERROR] write failed: {out_main} ({e})", file=sys.stderr)
+
+        if not other:
+            continue
+
+        others = other_parts(score, part)
+        for pi, p in others:
+            try:
+                ph = p.measures(start_num, end_num)
+                if ph is None:
+                    continue
+                st = calc_phrase_stats(ph)
+                if st["note_count"] <= 0:
+                    continue
+
+                pname = safePartName(p, pi)
+                out_p = target_dir / f"{out_base}_P{pi:02d}_{pname}.musicxml"
+                ph.write("musicxml", fp=str(out_p))
+                saved += 1
+                outputs.append(str(out_p))
+            except Exception as e:
+                print(f"[WARN] other part write failed: {stem} P{pi} ({e})", file=sys.stderr)
 
     return saved, outputs
 
@@ -361,6 +502,7 @@ def main():
     midi_path = Path(cmd.get("midiPath", ""))
     output_dir_str = cmd.get("outputDir", "")
 
+
     if not isinstance(output_dir_str,str) or not output_dir_str.strip():
         _json_error("outputDir is missing")
         return
@@ -373,6 +515,7 @@ def main():
     min_measures = int(cmd.get("minMeasures", 2))
     max_measures = int(cmd.get("maxMeasures", 4))
     max_phrases_per_song = int(cmd.get("maxPhrasesPerSong", 50))
+    export_others = bool(cmd.get("exportOtherParts", True))
 
     max_songs = cmd.get("maxSongs", None)
     if max_songs is not None:
