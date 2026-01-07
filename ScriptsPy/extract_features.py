@@ -1,15 +1,3 @@
-# extract_features_main_acc.py
-# Usage:
-#   python extract_features_main_acc.py path/to/xxx_MAIN.musicxml --out_json out.json
-#   python extract_features_main_acc.py path/to/xxx_MAIN.musicxml --out_csv features.csv
-#
-# Rule:
-#   - filename contains MAIN -> MAIN
-#   - otherwise -> ACC
-#
-# Pairing:
-#   - base_key = main_stem with trailing _MAIN removed
-#   - ACC is the first *.musicxml in same folder whose stem contains base_key and does NOT contain MAIN
 
 from __future__ import annotations
 
@@ -122,7 +110,7 @@ def resolve_acc_list_from_main(main_path: Path) -> List[Path]:
     accs.sort(key=lambda x: x.stem.upper())
 
     if not accs:
-        raise FileNotFoundError(...)
+        return []
     return accs
 
 ACC_KEYS = [
@@ -130,6 +118,7 @@ ACC_KEYS = [
     "chord_event_count_per_bar","mean_chord_size","chord_size_std","polyphony_ratio_time","accomp_density_time",
     "dissonance_ratio","tritone_ratio","minor_third_ratio","major_third_ratio","seventh_chord_ratio","sus_ratio",
     "key_fit_ratio_acc","chromatic_ratio_acc","cadence_strength_score",
+    * [f"pc_acc_{i}" for i in range(12)],
 ]
 
 def aggregate_acc_features_mean(acc_feature_list: List[Dict[str, float]]) -> Dict[str, float]:
@@ -171,6 +160,29 @@ def key_fit_and_chromatic_ratio(notes: List[note.Note], k: Optional[key.Key]) ->
     acc_ratio = ratio(accidental, total)
     return key_fit, chroma, acc_ratio
 
+def pitch_class_histogram(notes_list: List[note.Note], prefix: str = "pc_") -> Dict[str, float]:
+    """
+    Pitch Class histogram (0..11) as ratios (transposition-invariant).
+    prefix="pc_"     -> pc_0..pc_11
+    prefix="pc_acc_" -> pc_acc_0..pc_acc_11
+    """
+    counts = [0] * 12
+    total = 0
+    for n in notes_list:
+        p = getattr(n, "pitch", None)
+        if p is None:
+            continue
+        try:
+            counts[int(p.pitchClass)] += 1
+            total += 1
+        except Exception:
+            continue
+
+    out: Dict[str, float] = {}
+    for i in range(12):
+        out[f"{prefix}{i}"] = (counts[i] / total) if total > 0 else 0.0
+    return out
+
 def tonic_ending_flag(part: stream.Part, k: Optional[key.Key]) -> float:
     try:
         ns = [n for n in part.flat.recurse().notes if isinstance(n, note.Note)]
@@ -206,6 +218,7 @@ def extract_main_features(main_part: stream.Part, sc_ref: stream.Score) -> Dict[
 
     ns = flatten_notes(main_part.flat)
     mids = [float(n.pitch.midi) for n in ns if getattr(n, "pitch", None) is not None]
+    pc_main = pitch_class_histogram(ns,prefix="pc_")
     durs = [safe_float(n.duration.quarterLength, 0.0) for n in ns]
     total_dur = get_total_duration_quarter(main_part.flat)
 
@@ -249,11 +262,9 @@ def extract_main_features(main_part: stream.Part, sc_ref: stream.Score) -> Dict[
     sync_score = syncopation_score_simple(main_part, ts_num, ts_den)
 
     return {
-        "pitch_mean_midi": mean(mids),
         "pitch_std_midi": std(mids),
-        "pitch_min_midi": min(mids) if mids else 0.0,
-        "pitch_max_midi": max(mids) if mids else 0.0,
         "pitch_range_midi": (max(mids) - min(mids)) if mids else 0.0,
+        **pc_main,
         "interval_abs_mean_semitone": mean(intervals),
         "interval_abs_std_semitone": std(intervals),
         "step_ratio": ratio(step, len(intervals)) if intervals else 0.0,
@@ -385,6 +396,17 @@ def extract_acc_features(acc_score: stream.Score, key_ref_score: stream.Score) -
     chord_event_count_per_bar = ratio(len(chord_events), bars_len)
 
     chord_sizes = [float(len(ch.pitches)) for ch in chord_events]
+    pc_counts = [0] * 12
+    pc_total = 0
+    for ch in chord_events:
+        # ch is music21.chord.Chord
+        for p in ch.pitches:
+            try:
+                pc_counts[int(p.pitchClass)] += 1
+                pc_total += 1
+            except Exception:
+                continue
+    pc_acc = {f"pc_acc_{i}": (pc_counts[i] / pc_total) if pc_total > 0 else 0.0 for i in range(12)}
     total_dur = get_total_duration_quarter(acc_part.flat)
 
     poly_time = sum(safe_float(ch.duration.quarterLength, 0.0) for ch in chord_events if len(ch.pitches) >= 2)
@@ -432,6 +454,7 @@ def extract_acc_features(acc_score: stream.Score, key_ref_score: stream.Score) -
         "accomp_density_time": accomp_density_time,
         "dissonance_ratio": dis,
         "tritone_ratio": tri,
+        **pc_acc,
         **quals,
         "key_fit_ratio_acc": key_fit,
         "chromatic_ratio_acc": chroma,
@@ -474,16 +497,29 @@ def extract_common_meta(sc_main: stream.Score, main_part: stream.Part) -> Dict[s
 # CSV columns
 # -----------------------------
 FINAL_COLUMNS = [
+    # basics
     "time_signature_num","time_signature_den","tempo_bpm_est","bars_len","total_duration_quarter","pickup_flag",
-    "pitch_mean_midi","pitch_std_midi","pitch_min_midi","pitch_max_midi","pitch_range_midi",
-    "interval_abs_mean_semitone","interval_abs_std_semitone","step_ratio","leap_ratio","direction_up_ratio","direction_change_rate",
-    "note_count_per_bar","onset_count_per_bar","dur_mean_quarter","dur_std_quarter","short_note_ratio","rest_ratio_time","syncopation_score",
+
+    # MAIN (melody) - transposition-invariant + robust pitch stats
+    "pitch_std_midi","pitch_range_midi",
+    *[f"pc_{i}" for i in range(12)],
+    "interval_abs_mean_semitone","interval_abs_std_semitone",
+    "step_ratio","leap_ratio","direction_up_ratio","direction_change_rate",
+    "note_count_per_bar","onset_count_per_bar",
+    "dur_mean_quarter","dur_std_quarter","short_note_ratio","rest_ratio_time","syncopation_score",
     "key_fit_ratio","chromatic_ratio","accidental_note_ratio","tonic_ending_flag",
+
+    # ACC (accompaniment) aggregated over matching ACC files
     "bass_mean_midi","bass_range_midi","bass_step_ratio","bass_leap_ratio",
-    "chord_event_count_per_bar","mean_chord_size","chord_size_std","polyphony_ratio_time","accomp_density_time",
-    "dissonance_ratio","tritone_ratio","minor_third_ratio","major_third_ratio","seventh_chord_ratio","sus_ratio",
-    "key_fit_ratio_acc","chromatic_ratio_acc","cadence_strength_score",    *ACC_KEYS,
+    "chord_event_count_per_bar","mean_chord_size","chord_size_std",
+    "polyphony_ratio_time","accomp_density_time",
+    "dissonance_ratio","tritone_ratio","minor_third_ratio","major_third_ratio",
+    "seventh_chord_ratio","sus_ratio",
+    "key_fit_ratio_acc",
+    *[f"pc_acc_{i}" for i in range(12)],
+    "chromatic_ratio_acc","cadence_strength_score",
 ]
+
 
 def write_json(path: Path, data: Dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
