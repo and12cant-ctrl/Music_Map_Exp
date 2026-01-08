@@ -10,7 +10,6 @@ from typing import Dict, Any, Optional, List, Tuple
 
 from music21 import converter, stream, note, chord, meter, tempo, key, interval
 
-
 # -----------------------------
 # Basic math utils
 # -----------------------------
@@ -213,27 +212,45 @@ def syncopation_score_simple(part: stream.Part, ts_num: int, ts_den: int) -> flo
         return 0.0
 
 def extract_main_features(main_part: stream.Part, sc_ref: stream.Score) -> Dict[str, float]:
+    # ---- context (time signature / key) ----
     ts_num, ts_den = get_time_signature(sc_ref)
     k = estimate_key(sc_ref)
 
+    # ---- notes and durations ----
     ns = flatten_notes(main_part.flat)
-    mids = [float(n.pitch.midi) for n in ns if getattr(n, "pitch", None) is not None]
-    pc_main = pitch_class_histogram(ns,prefix="pc_")
-    durs = [safe_float(n.duration.quarterLength, 0.0) for n in ns]
     total_dur = get_total_duration_quarter(main_part.flat)
 
-    intervals: List[float] = []
+    mids = [float(n.pitch.midi) for n in ns if getattr(n, "pitch", None) is not None]
+    durs = [safe_float(n.duration.quarterLength, 0.0) for n in ns]
+    pc_main = pitch_class_histogram(ns, prefix="pc_")
+
+    # ---- bars length (quarterLength based) ----
+    bar_quarter_len = ts_num * (4.0 / ts_den)  # 4/4->4.0, 6/8->3.0
+    bars_len = max(1.0, safe_float(total_dur / bar_quarter_len, 1.0))
+
+    # ---- onset density (unique offsets per bar) ----
+    offsets: List[float] = []
+    for n in ns:
+        try:
+            offsets.append(float(n.offset))
+        except Exception:
+            continue
+    unique_onsets = len(set(offsets))
+    onset_count_per_bar = unique_onsets / bars_len
+
+    # ---- melodic motion (intervals / direction changes) ----
+    intervals_abs: List[float] = []
     directions: List[int] = []
     for i in range(1, len(ns)):
         try:
             semis = interval.Interval(ns[i - 1], ns[i]).semitones
-            intervals.append(abs(float(semis)))
+            intervals_abs.append(abs(float(semis)))
             directions.append(1 if semis > 0 else (-1 if semis < 0 else 0))
         except Exception:
             continue
 
-    step = sum(1 for x in intervals if x <= 2)
-    leap = sum(1 for x in intervals if x >= 5)
+    step = sum(1 for x in intervals_abs if x <= 2)
+    leap = sum(1 for x in intervals_abs if x >= 5)
     up = sum(1 for d in directions if d > 0)
     down = sum(1 for d in directions if d < 0)
 
@@ -245,32 +262,39 @@ def extract_main_features(main_part: stream.Part, sc_ref: stream.Score) -> Dict[
         if prev != 0 and d != prev:
             flips += 1
         prev = d
-    change_rate = ratio(flips, max(1, sum(1 for d in directions if d != 0)))
+    dir_nonzero = sum(1 for d in directions if d != 0)
+    change_rate = ratio(flips, max(1, dir_nonzero))
 
-    bars_len = max(1, get_bars_len(main_part))
+    # ---- density / duration stats ----
     note_count_per_bar = ratio(len(ns), bars_len)
-    onset_count_per_bar = note_count_per_bar
 
-    short = sum(1 for q in durs if q > 0 and q <= 0.5)
+    short = sum(1 for q in durs if 0 < q <= 0.5)
     short_ratio = ratio(short, len(durs)) if durs else 0.0
 
     sounding = sum(durs)
     rest_ratio = ratio(max(0.0, total_dur - sounding), total_dur) if total_dur > 0 else 0.0
 
+    # ---- tonal / rhythmic features ----
     key_fit, chroma, acc_ratio = key_fit_and_chromatic_ratio(ns, k)
     tonic_end = tonic_ending_flag(main_part, k)
     sync_score = syncopation_score_simple(main_part, ts_num, ts_den)
 
+    # ---- output ----
     return {
+        # pitch (transposition-robust)
         "pitch_std_midi": std(mids),
         "pitch_range_midi": (max(mids) - min(mids)) if mids else 0.0,
         **pc_main,
-        "interval_abs_mean_semitone": mean(intervals),
-        "interval_abs_std_semitone": std(intervals),
-        "step_ratio": ratio(step, len(intervals)) if intervals else 0.0,
-        "leap_ratio": ratio(leap, len(intervals)) if intervals else 0.0,
+
+        # melodic motion
+        "interval_abs_mean_semitone": mean(intervals_abs),
+        "interval_abs_std_semitone": std(intervals_abs),
+        "step_ratio": ratio(step, len(intervals_abs)) if intervals_abs else 0.0,
+        "leap_ratio": ratio(leap, len(intervals_abs)) if intervals_abs else 0.0,
         "direction_up_ratio": ratio(up, (up + down)) if (up + down) > 0 else 0.0,
         "direction_change_rate": change_rate,
+
+        # rhythm / density
         "note_count_per_bar": note_count_per_bar,
         "onset_count_per_bar": onset_count_per_bar,
         "dur_mean_quarter": mean(durs),
@@ -278,6 +302,8 @@ def extract_main_features(main_part: stream.Part, sc_ref: stream.Score) -> Dict[
         "short_note_ratio": short_ratio,
         "rest_ratio_time": rest_ratio,
         "syncopation_score": sync_score,
+
+        # tonality
         "key_fit_ratio": key_fit,
         "chromatic_ratio": chroma,
         "accidental_note_ratio": acc_ratio,
