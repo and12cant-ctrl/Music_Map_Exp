@@ -485,8 +485,6 @@ def score_stability(stats: dict) -> float:
         0.15 * (1.0 - n_rest_ratio)
     )
 
-
-
 def main():
 
     try:

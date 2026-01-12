@@ -238,6 +238,24 @@ def extract_main_features(main_part: stream.Part, sc_ref: stream.Score) -> Dict[
     unique_onsets = len(set(offsets))
     onset_count_per_bar = unique_onsets / bars_len
 
+    # ---- beat placement features (strongbeat / offbeat) ----
+    # Use unique onsets (avoid chord count inflation)
+    unique_offsets = sorted(set(offsets))
+    if unique_offsets:
+        eps = 1e-3  # tolerance for floating point
+        strong_hits = 0
+        for off in unique_offsets:
+            pos_in_bar = off % bar_quarter_len  # 0..bar_quarter_len
+            # strong beat: bar start (beat 1)
+            if abs(pos_in_bar - 0.0) < eps or abs(pos_in_bar - bar_quarter_len) < eps:
+                strong_hits += 1
+
+        strongbeat_hit_ratio = strong_hits / len(unique_offsets)
+        offbeat_ratio = (len(unique_offsets) - strong_hits) / len(unique_offsets)
+    else:
+        strongbeat_hit_ratio = 0.0
+        offbeat_ratio = 0.0
+
     # ---- melodic motion (intervals / direction changes) ----
     intervals_abs: List[float] = []
     directions: List[int] = []
@@ -308,6 +326,9 @@ def extract_main_features(main_part: stream.Part, sc_ref: stream.Score) -> Dict[
         "chromatic_ratio": chroma,
         "accidental_note_ratio": acc_ratio,
         "tonic_ending_flag": tonic_end,
+
+        "strongbeat_hit_ratio": strongbeat_hit_ratio,
+        "offbeat_ratio": offbeat_ratio,
     }
 
 
@@ -544,6 +565,7 @@ FINAL_COLUMNS = [
     "key_fit_ratio_acc",
     *[f"pc_acc_{i}" for i in range(12)],
     "chromatic_ratio_acc","cadence_strength_score",
+    "strongbeat_hit_ratio", "offbeat_ratio"
 ]
 
 
