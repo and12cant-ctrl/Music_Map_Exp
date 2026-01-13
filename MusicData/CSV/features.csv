@@ -1,3 +1,1 @@
-id,src_file,part_role,start_bar,end_bar,duration_quarter,mean_pitch,pitch_std,pitch_range,interval_mean_abs,interval_std,onset_density,rest_ratio,key_mode,key_confidence,emotion
-dummy_001,SongA.musicxml,MAIN,1,2,8,64.3,2.1,7,1.5,0.8,1.75,0.12,major,0.83,trust
-dummy_002,SongB.musicxml,MAIN,3,4,8,71.8,4.9,12,2.2,1.1,3.2,0.05,minor,0.76,sad
+

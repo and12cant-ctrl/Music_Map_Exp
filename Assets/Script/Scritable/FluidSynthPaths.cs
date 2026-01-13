@@ -15,6 +15,7 @@ public static class FluidSynthPaths
     public static string FluidSynthDir => Path.Combine(ToolsDir, "fluidsynth");
     public static string FluidSynthExe => Path.Combine(FluidSynthDir, "fluidsynth.exe");
 
+    public static string CSVDir => Path.Combine(MusicDataroot, "CSV"); 
     public static string StreamingAssetsDir => Path.Combine(Application.dataPath, "StreamingAssets");
     public static string ScoresDir => Path.Combine(StreamingAssetsDir, "scores");
     public static string SoundFontsDir => Path.Combine(FluidSynthDir, "SoundFonts");
