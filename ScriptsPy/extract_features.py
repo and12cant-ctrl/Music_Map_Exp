@@ -103,7 +103,7 @@ def resolve_acc_list_from_main(main_path: Path) -> List[Path]:
         if "MAIN" in su:
             continue
         # FULLも無視したい場合はここで除外できる
-        # if "FULL" in su: continue
+        if "FULL" in su: continue
         accs.append(p)
 
     accs.sort(key=lambda x: x.stem.upper())

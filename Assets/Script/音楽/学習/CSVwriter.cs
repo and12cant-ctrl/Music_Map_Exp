@@ -10,17 +10,18 @@ public class CSVwriter : MonoBehaviour
 {
     string path = Path.Combine(FluidSynthPaths.CSVDir,"features.csv");
     string scriptsPy = Path.Combine(FluidSynthPaths.scriptPy, "extract_features.py");
+    string MusicXmlPath = Path.Combine(FluidSynthPaths.EmotionDir);
 
     int row;
     int col = 3;
 
-    private void Update()
+    void mainGmic()
     {
         string script =
         $"run -r \"{FluidSynthPaths.micromambaroot}\" " +
         $"-n unitypy " +
         $"python -u \"{scriptsPy}\" " +
-        $"\"{mainMusicXmlPath}\"";
+        $"\"{MusicXmlPath}\"";
     
         string json = PyRunner.RunAndGetStdout(FluidSynthPaths.micromambaExe,scriptsPy);
 
