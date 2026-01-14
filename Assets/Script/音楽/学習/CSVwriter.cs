@@ -1,9 +1,9 @@
-
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEngine;
+using UnityEngine.UI;
 
 
 public class CSVwriter : MonoBehaviour
@@ -14,21 +14,36 @@ public class CSVwriter : MonoBehaviour
 
     int row;
     int col = 3;
+    [SerializeField] Button Example;
 
-    void mainGmic()
+    private void Start()
     {
-        string script =
-        $"run -r \"{FluidSynthPaths.micromambaroot}\" " +
-        $"-n unitypy " +
-        $"python -u \"{scriptsPy}\" " +
-        $"\"{MusicXmlPath}\"";
-    
-        string json = PyRunner.RunAndGetStdout(FluidSynthPaths.micromambaExe,scriptsPy);
+        Example.onClick.AddListener(() =>
+        {
+            mainGmic(Path.Combine(MusicXmlPath,"sad"));
+        });
+    }
+    void mainGmic(string EmoFolderName)
+    {
+        foreach (string EmoFolder in Directory.GetDirectories(EmoFolderName))
+        {
+            foreach (string EmoXmls in Directory.GetFiles(EmoFolder)) {
+                //Debug.Log(EmoXmls);
 
-        string csvPath = Path.Combine(Application.persistentDataPath, "features.csv");
+                string script =
+                $"run -r \"{FluidSynthPaths.micromambaroot}\" " +
+                $"-n unitypy " +
+                $"python -u \"{scriptsPy}\" " +
+                $"\"{EmoXmls}\"";
 
-        WriteCsvHeaderIfNotExists(csvPath);
-        WriterCSV(csvPath, json);
+                //string json = RunAndGetStdout(FluidSynthPaths.micromambaExe,scriptsPy);
+
+                string csvPath = Path.Combine(Application.persistentDataPath, "features.csv");
+
+                WriteCsvHeaderIfNotExists(csvPath);
+                //WriterCSV(csvPath, json);
+            }
+        }
     }
     void WriterCSV(string Path,string jsonText)
     {

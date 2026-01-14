@@ -27,6 +27,7 @@ public class ExtractCommand
     public bool others;
 }
 
+
 public class SelectBarXml: MonoBehaviour
 {
     [SerializeField] private Button btnOne;
@@ -50,6 +51,7 @@ public class SelectBarXml: MonoBehaviour
         string[] MusicerName = Directory.GetDirectories(inputRoot);
         foreach (string FolderName in MusicerName) {
             string[] ForderName = Directory.GetDirectories(FolderName);
+
             foreach (string midiPath in Directory.GetFiles(FolderName, "*.mid")) {
                 var cmdObj = new ExtractCommand
                 {
