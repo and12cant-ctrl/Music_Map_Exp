@@ -631,6 +631,9 @@ def main():
         write_json(Path(args.out_json), out)
     if args.out_csv:
         append_csv(Path(args.out_csv), out)
+        print(f"CSV_OK\t{args.out_csv}")
+    else:
+        print(json.dumps(out, ensure_ascii=False))
 
     print(json.dumps(out, ensure_ascii=False))
 

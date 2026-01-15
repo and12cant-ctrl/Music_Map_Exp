@@ -3,24 +3,27 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEngine;
+using UnityEngine.DedicatedServer;
 using UnityEngine.UI;
+using static UnityEngine.Rendering.GPUSort;
 
 
 public class CSVwriter : MonoBehaviour
 {
-    string path = Path.Combine(FluidSynthPaths.CSVDir,"features.csv");
+    string Emo = "anxiety";
+    string fear = "fear";
+    string trust = "trust";
+    string path = Path.Combine(FluidSynthPaths.CSVDir,"trust.csv");
     string scriptsPy = Path.Combine(FluidSynthPaths.scriptPy, "extract_features.py");
     string MusicXmlPath = Path.Combine(FluidSynthPaths.EmotionDir);
 
-    int row;
-    int col = 3;
     [SerializeField] Button Example;
 
     private void Start()
     {
         Example.onClick.AddListener(() =>
         {
-            mainGmic(Path.Combine(MusicXmlPath,"sad"));
+            mainGmic(Path.Combine(MusicXmlPath,trust));
         });
     }
     void mainGmic(string EmoFolderName)
@@ -28,45 +31,30 @@ public class CSVwriter : MonoBehaviour
         foreach (string EmoFolder in Directory.GetDirectories(EmoFolderName))
         {
             foreach (string EmoXmls in Directory.GetFiles(EmoFolder)) {
-                //Debug.Log(EmoXmls);
+                Debug.Log("Start!!");
+                var stemUpper = Path.GetFileNameWithoutExtension(EmoXmls);
+                if (stemUpper.Contains("FULL"))continue;
+                if (!stemUpper.Contains("MAIN"))continue;
 
-                string script =
+                string arguments =
                 $"run -r \"{FluidSynthPaths.micromambaroot}\" " +
                 $"-n unitypy " +
                 $"python -u \"{scriptsPy}\" " +
-                $"\"{EmoXmls}\"";
+                $"\"{EmoXmls}\" --out_csv \"{path}\"";
 
-                //string json = RunAndGetStdout(FluidSynthPaths.micromambaExe,scriptsPy);
+                var r = PythonReturn.RunWithStdin(
+                    exePath: FluidSynthPaths.micromambaExe,
+                    arguments: arguments,
+                    stdinText: null,
+                    timeoutMs: 120_000,                 
+                    encoding: Encoding.UTF8
+                );
 
                 string csvPath = Path.Combine(Application.persistentDataPath, "features.csv");
+                PyLog.LogStderr(r.Stderr, contextTag: "PY", contextInfo: EmoXmls);
 
-                WriteCsvHeaderIfNotExists(csvPath);
-                //WriterCSV(csvPath, json);
             }
         }
-    }
-    void WriterCSV(string Path,string jsonText)
-    {
-        var dict = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonText);
-
-        var cells = new List<string>(FINAL_COLUMNS.Length);
-        foreach (var key in FINAL_COLUMNS)
-        {
-            if (dict.TryGetValue(key, out var value) && value != null)
-            {
-                cells.Add(value.ToString());
-            }
-            else
-            {
-                // 欠損値は空セル（または 0 / NaN にしてもよい）
-                cells.Add("");
-            }
-        }
-        string line = string.Join(",", cells);
-        File.AppendAllText(
-            Path, line +"\n",
-            new UTF8Encoding(false )
-            );
     }
 
     static void WriteCsvHeaderIfNotExists(string csvPath)
