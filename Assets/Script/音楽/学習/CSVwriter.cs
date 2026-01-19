@@ -23,10 +23,11 @@ public class CSVwriter : MonoBehaviour
     {
         Example.onClick.AddListener(() =>
         {
-            mainGmic(Path.Combine(MusicXmlPath,trust));
+            //ChengeCSV(Path.Combine(MusicXmlPath,trust));
+            trainToCSV(Path.Combine(FluidSynthPaths.CSVDir));
         });
     }
-    void mainGmic(string EmoFolderName)
+    void ChengeCSV(string EmoFolderName)
     {
         foreach (string EmoFolder in Directory.GetDirectories(EmoFolderName))
         {
@@ -55,6 +56,39 @@ public class CSVwriter : MonoBehaviour
 
             }
         }
+    }
+
+    void trainToCSV(string CSVDirectory)
+    {
+        Debug.Log($"Start!!{CSVDirectory}");
+        string CsvArg = "";
+        foreach (string CSVEmo in Directory.GetFiles(CSVDirectory)){
+            string stemUpper = Path.GetFileNameWithoutExtension(CSVEmo);
+
+            Debug.Log(stemUpper);
+
+            CsvArg += $"\"{stemUpper}\":\"{CSVEmo}\",";
+
+
+        }
+        Debug.Log(CsvArg);
+
+        string arguments =
+        $"run -r \"{FluidSynthPaths.micromambaroot}\" " +
+        $"-n unitypy " +
+        $"python -u \"{scriptsPy}\" " +
+        $"\"{CsvArg}\" --out_csv \"{path}\"";
+
+        //var r = PythonReturn.RunWithStdin(
+        //    exePath: FluidSynthPaths.micromambaExe,
+        //    arguments: arguments,
+        //    stdinText: null,
+        //    timeoutMs: 120_000,
+        //    encoding: Encoding.UTF8
+        //);
+
+        //string csvPath = Path.Combine(Application.persistentDataPath, "features.csv");
+        //PyLog.LogStderr(r.Stderr, contextTag: "PY", contextInfo: EmoXmls);
     }
 
     static void WriteCsvHeaderIfNotExists(string csvPath)

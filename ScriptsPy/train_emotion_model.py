@@ -139,8 +139,7 @@ def _load_and_concat(csv_by_label: Dict[str, str]) -> pd.DataFrame:
 
         df = pd.read_csv(path)
 
-        # CSV内に label/emotion があるならそれを尊重しても良いが、
-        # 今回は「ファイル単位でクラスが分かれている」前提なので確実に上書き
+        # 「ファイル単位でクラスが分かれている」前提なので確実に上書き
         df["label"] = label
         df["__source_csv"] = str(path)
 
@@ -187,6 +186,7 @@ def _train_lgbm(data: pd.DataFrame, cfg: TrainConfig):
         class_weight="balanced",
     )
 
+    # 学習
     clf.fit(X_train, y_train)
 
     # 評価
