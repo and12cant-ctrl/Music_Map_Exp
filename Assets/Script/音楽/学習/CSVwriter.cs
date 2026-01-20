@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEngine;
-using UnityEngine.DedicatedServer;
 using UnityEngine.UI;
-using static UnityEngine.Rendering.GPUSort;
 
 
 public class CSVwriter : MonoBehaviour
@@ -14,8 +12,10 @@ public class CSVwriter : MonoBehaviour
     string fear = "fear";
     string trust = "trust";
     string path = Path.Combine(FluidSynthPaths.CSVDir,"trust.csv");
-    string scriptsPy = Path.Combine(FluidSynthPaths.scriptPy, "extract_features.py");
+    string CsvPy = Path.Combine(FluidSynthPaths.scriptPy, "extract_features.py");
+    string trainPy = Path.Combine(FluidSynthPaths.scriptPy, "train_emotion_model.py");
     string MusicXmlPath = Path.Combine(FluidSynthPaths.EmotionDir);
+    string ModelFile = Path.Combine(FluidSynthPaths.ModelDir, "LightGBM_Model.txt");
 
     [SerializeField] Button Example;
 
@@ -40,7 +40,7 @@ public class CSVwriter : MonoBehaviour
                 string arguments =
                 $"run -r \"{FluidSynthPaths.micromambaroot}\" " +
                 $"-n unitypy " +
-                $"python -u \"{scriptsPy}\" " +
+                $"python -u \"{CsvPy}\" " +
                 $"\"{EmoXmls}\" --out_csv \"{path}\"";
 
                 var r = PythonReturn.RunWithStdin(
@@ -61,34 +61,42 @@ public class CSVwriter : MonoBehaviour
     void trainToCSV(string CSVDirectory)
     {
         Debug.Log($"Start!!{CSVDirectory}");
-        string CsvArg = "";
-        foreach (string CSVEmo in Directory.GetFiles(CSVDirectory)){
-            string stemUpper = Path.GetFileNameWithoutExtension(CSVEmo);
+        var csvByLabel = new Dictionary<string, string>();
 
-            Debug.Log(stemUpper);
-
-            CsvArg += $"\"{stemUpper}\":\"{CSVEmo}\",";
-
-
+        foreach (string CSVEmo in Directory.GetFiles(CSVDirectory,"*.csv")){
+            string label = Path.GetFileNameWithoutExtension(CSVEmo);
+            csvByLabel[label] = CSVEmo.Replace("\\", "/");
         }
-        Debug.Log(CsvArg);
+    
 
+        var root = new Dictionary<string, object>
+        {
+            ["csvByLabel"] = csvByLabel,   // Dictionary ‚ð‚»‚Ì‚Ü‚Ü“ü‚ê‚ÄOK
+            ["outputDir"] = "C:/.../Models",
+            ["modelName"] = "emotion_lgbm",
+            ["testSize"] = 0.2,
+            ["seed"] = 42,
+            ["fillna"] = 0
+        };
+
+        string json = JsonConvert.SerializeObject(root,Formatting.Indented);
+        Debug.Log("[JSON TO PY]\n" + json);
         string arguments =
-        $"run -r \"{FluidSynthPaths.micromambaroot}\" " +
-        $"-n unitypy " +
-        $"python -u \"{scriptsPy}\" " +
-        $"\"{CsvArg}\" --out_csv \"{path}\"";
+                $"run -r \"{FluidSynthPaths.micromambaroot}\" " +
+                $"-n unitypy " +
+                $"python -u \"{trainPy}\" --stdin";
 
-        //var r = PythonReturn.RunWithStdin(
-        //    exePath: FluidSynthPaths.micromambaExe,
-        //    arguments: arguments,
-        //    stdinText: null,
-        //    timeoutMs: 120_000,
-        //    encoding: Encoding.UTF8
-        //);
+        var r = PythonReturn.RunWithStdin(
+            exePath: FluidSynthPaths.micromambaExe,
+            arguments: arguments,
+            stdinText: json,
+            timeoutMs: 120_000,
+            encoding: Encoding.UTF8
+        );
 
         //string csvPath = Path.Combine(Application.persistentDataPath, "features.csv");
-        //PyLog.LogStderr(r.Stderr, contextTag: "PY", contextInfo: EmoXmls);
+        PyLog.LogStdout(r.Stdout, contextTag: "PY");
+        PyLog.LogStderr(r.Stderr, contextTag: "PY");
     }
 
     static void WriteCsvHeaderIfNotExists(string csvPath)
