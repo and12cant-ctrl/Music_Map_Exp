@@ -15,7 +15,7 @@ public class CSVwriter : MonoBehaviour
     string CsvPy = Path.Combine(FluidSynthPaths.scriptPy, "extract_features.py");
     string trainPy = Path.Combine(FluidSynthPaths.scriptPy, "train_emotion_model.py");
     string MusicXmlPath = Path.Combine(FluidSynthPaths.EmotionDir);
-    string ModelFile = Path.Combine(FluidSynthPaths.ModelDir, "LightGBM_Model.txt");
+    string ModelFile = Path.Combine(FluidSynthPaths.ModelDir, "GBM_Model.txt");
 
     [SerializeField] Button Example;
 
@@ -72,7 +72,7 @@ public class CSVwriter : MonoBehaviour
         var root = new Dictionary<string, object>
         {
             ["csvByLabel"] = csvByLabel,   // Dictionary ‚ð‚»‚Ì‚Ü‚Ü“ü‚ê‚ÄOK
-            ["outputDir"] = "C:/.../Models",
+            ["outputDir"] = ModelFile,
             ["modelName"] = "emotion_lgbm",
             ["testSize"] = 0.2,
             ["seed"] = 42,

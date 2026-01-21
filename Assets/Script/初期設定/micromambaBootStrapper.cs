@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class micromambaBootStrapper : MonoBehaviour
 {
+    //micromamba.exe install --root-prefix "mamba_root" -p "mamba_root\envs\unitypy" -c conda-forge pandas scikit-learn lightgbm
     public void RunBootstrap()
     {
         // プロジェクトのルートを基準にパスを構成

@@ -129,6 +129,32 @@ def _normalize_config(obj: Dict[str, Any]) -> TrainConfig:
         fillna_value=fillna_value,
     )
 
+def load_features_csv_with_order(
+    path: Path,
+    final_columns: list[str]
+) -> pd.DataFrame:
+
+    # まず通常読み（headerあり想定）
+    df = pd.read_csv(path)
+
+    # ケース①：列名が完全一致（理想）
+    if all(col in df.columns for col in final_columns):
+        return df[final_columns].copy()
+
+    # ケース②：列名が使えない → 順番で再割り当て
+    df_raw = pd.read_csv(path, header=None)
+
+    if df_raw.shape[1] < len(final_columns):
+        raise ValueError(
+            f"CSV列数不足: {path} "
+            f"(cols={df_raw.shape[1]}, need={len(final_columns)})"
+        )
+
+    # 先頭 len(FINAL_COLUMNS) 列だけ使う
+    df_fixed = df_raw.iloc[:, :len(final_columns)].copy()
+    df_fixed.columns = final_columns
+
+    return df_fixed
 
 def _load_and_concat(csv_by_label: Dict[str, str]) -> pd.DataFrame:
     dfs = []
@@ -137,7 +163,7 @@ def _load_and_concat(csv_by_label: Dict[str, str]) -> pd.DataFrame:
         if not path.exists():
             raise FileNotFoundError(f"CSVが見つかりません: label={label} path={path}")
 
-        df = pd.read_csv(path)
+        df = load_features_csv_with_order(path,FINAL_COLUMNS)
 
         # 「ファイル単位でクラスが分かれている」前提なので確実に上書き
         df["label"] = label
@@ -145,8 +171,7 @@ def _load_and_concat(csv_by_label: Dict[str, str]) -> pd.DataFrame:
 
         dfs.append(df)
 
-    data = pd.concat(dfs, ignore_index=True)
-    return data
+    return pd.concat(dfs,ignore_index=True)
 
 
 def _train_lgbm(data: pd.DataFrame, cfg: TrainConfig):
@@ -184,6 +209,7 @@ def _train_lgbm(data: pd.DataFrame, cfg: TrainConfig):
         colsample_bytree=0.9,
         random_state=cfg.seed,
         class_weight="balanced",
+        verbose = -1,
     )
 
     # 学習
