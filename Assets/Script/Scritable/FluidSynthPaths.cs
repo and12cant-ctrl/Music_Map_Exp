@@ -26,6 +26,8 @@ public static class FluidSynthPaths
     public static string micromambaExe => Path.Combine(micromambaDir, "micromamba.exe");
     public static string micromambaroot => Path.Combine(micromambaDir, "mamba_root");
 
+    public static string GBMModelDir => Path.Combine(ModelDir, "GBM_Model");
+
     public static string ToAbsoluteFromStreamingAssets(string relativeUnderSA)
         => Path.GetFullPath(Path.Combine(StreamingAssetsDir, relativeUnderSA.Replace('/', Path.DirectorySeparatorChar)));
 }

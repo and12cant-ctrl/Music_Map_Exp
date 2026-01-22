@@ -19,6 +19,8 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
 from lightgbm import LGBMClassifier
+import lightgbm as lbg
+import numpy as np
 
 
 # ========== あなたの FINAL_COLUMNS（順番が命） ==========
@@ -80,13 +82,11 @@ def _read_json_from_file(path: Path) -> Dict[str, Any]:
     txt = path.read_text(encoding="utf-8")
     return json.loads(txt)
 
-
 def _read_json_from_stdin() -> Dict[str, Any]:
     txt = sys.stdin.read()
     if not txt.strip():
         raise ValueError("stdinが空です。--stdin を使う場合はJSON文字列を標準入力に流してください。")
     return json.loads(txt)
-
 
 def _normalize_config(obj: Dict[str, Any]) -> TrainConfig:
     # csvByLabel 方式
@@ -173,7 +173,6 @@ def _load_and_concat(csv_by_label: Dict[str, str]) -> pd.DataFrame:
 
     return pd.concat(dfs,ignore_index=True)
 
-
 def _train_lgbm(data: pd.DataFrame, cfg: TrainConfig):
     # 列存在チェック
     missing_cols = [c for c in FINAL_COLUMNS if c not in data.columns]
@@ -243,7 +242,6 @@ def _train_lgbm(data: pd.DataFrame, cfg: TrainConfig):
         "label_counts": {k: int(v) for k, v in data["label"].value_counts().to_dict().items()},
     }
 
-
 def _save_outputs(clf: LGBMClassifier, cfg: TrainConfig, summary: Dict[str, Any]) -> Dict[str, str]:
     cfg.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -279,9 +277,110 @@ def _save_outputs(clf: LGBMClassifier, cfg: TrainConfig, summary: Dict[str, Any]
         "meta": str(meta_path),
     }
 
+# 判定用コード
+def _read_json_from_path_or_stdin(args: List[str]) -> Dict[str, Any]:
+    # --stdin のとき
+    if len(args) >= 1 and args[0] == "--stdin":
+        return _read_json_from_stdin()
+
+    # JSONファイルパスのとき
+    if len(args) >= 1:
+        json_path = Path(args[0])
+        if not json_path.exists():
+            raise FileNotFoundError(f"JSONファイルが見つかりません: {json_path}")
+        return _read_json_from_file(json_path)
+
+    raise ValueError("入力JSONが必要です。--stdin か JSONファイルパスを指定してください。")
+
+
+def _load_meta(meta_path: Path) -> Dict[str, Any]:
+    if not meta_path.exists():
+        raise FileNotFoundError(f"meta が見つかりません: {meta_path}")
+    return json.loads(meta_path.read_text(encoding="utf-8"))
+
+def _vectorize_features(obj: Dict[str, Any], final_columns: List[str], fillna: float) -> np.ndarray:
+    """
+    入力JSONから 1サンプル分の特徴量ベクトル（shape=(1, n_features)）を作る。
+    対応入力:
+      - {"featuresByName": {"time_signature_num": 4, ...}}  # 名前で指定
+      - {"featuresRow": [4, 4, 120.0, ...]}                 # 順番で指定（FINAL_COLUMNS順）
+    """
+    if isinstance(obj.get("featuresByName"), dict):
+        d = obj["featuresByName"]
+        row = []
+        for c in final_columns:
+            v = d.get(c, None)
+            row.append(fillna if v is None else v)
+        return np.array([row], dtype=float)
+
+    if isinstance(obj.get("featuresRow"), list):
+        arr = obj["featuresRow"]
+        if len(arr) < len(final_columns):
+            raise ValueError(f"featuresRow の要素数が不足: {len(arr)} / {len(final_columns)}")
+        row = [fillna if (v is None) else v for v in arr[:len(final_columns)]]
+        return np.array([row], dtype=float)
+
+    raise ValueError("predict入力に featuresByName か featuresRow が必要です。")
+
+def _predict_with_saved_model(model_path: Path, meta: Dict[str, Any], feat_obj: Dict[str, Any]) -> Dict[str, Any]:
+    final_columns = meta.get("final_columns", FINAL_COLUMNS)
+    classes = meta.get("classes")
+    fillna = float(meta.get("preprocess", {}).get("fillna", 0.0))
+
+    if not isinstance(classes, list) or not classes:
+        raise ValueError("meta に classes がありません。")
+
+    if not model_path.exists():
+        raise FileNotFoundError(f"model が見つかりません: {model_path}")
+
+    X = _vectorize_features(feat_obj, final_columns, fillna)
+
+    booster = lgb.Booster(model_file=str(model_path))
+    proba = booster.predict(X)  # multiclass => shape (1, num_class)
+
+    # LightGBMの戻り形が (num_class,) の場合もあるので整形
+    proba = np.asarray(proba)
+    if proba.ndim == 1:
+        proba = proba.reshape(1, -1)
+
+    if proba.shape[1] != len(classes):
+        raise ValueError(f"proba次元とclasses数が不一致: proba={proba.shape} classes={len(classes)}")
+
+    probs = {str(classes[i]): float(proba[0, i]) for i in range(len(classes))}
+    pred = max(probs.items(), key=lambda kv: kv[1])[0]
+
+    return {
+        "pred": pred,
+        "proba": probs,
+        "classes": [str(c) for c in classes],
+    }
 
 def main():
     try:
+        # stdin固定
+        # --- PREDICT MODE ---
+        if len(sys.argv) >= 2 and sys.argv[1] == "--predict":
+            obj = _read_json_from_path_or_stdin(sys.argv[2:])
+
+            # 入力からモデル/メタを決める（指定がなければ meta から解決してもOK）
+            meta_path = Path(str(obj.get("metaPath") or obj.get("meta_path") or "")).expanduser()
+            if not str(meta_path).strip():
+                raise ValueError("predict入力に metaPath が必要です。")
+
+            meta = _load_meta(meta_path)
+
+            # modelPath が指定されていればそれを優先、なければ meta["model_path"]
+            model_path_str = str(obj.get("modelPath") or obj.get("model_path") or meta.get("model_path") or "")
+            if not model_path_str.strip():
+                raise ValueError("predict入力に modelPath が必要です（または meta に model_path が必要）。")
+            model_path = Path(model_path_str)
+
+            result = _predict_with_saved_model(model_path, meta, obj)
+
+            out = {"ok": True, "result": result}
+            print(json.dumps(out, ensure_ascii=False))
+            return 0
+
         # 入力：引数でJSONファイルパス or --stdin
         if len(sys.argv) >= 2 and sys.argv[1] == "--stdin":
             obj = _read_json_from_stdin()
@@ -318,7 +417,6 @@ def main():
         # Unity側で拾いやすいように stdout にJSONで返す
         print(json.dumps(err, ensure_ascii=False))
         return 1
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

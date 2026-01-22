@@ -78,8 +78,8 @@ public class SelectBarXml: MonoBehaviour
                 );
 
                 #region JSONÉpÅ[ÉX
-                PyLog.LogStdout(r.Stdout, contextTag: "PY", contextInfo: midiPath);
-                PyLog.LogStderr(r.Stderr, contextTag: "PY", contextInfo: midiPath);
+                PythonReturn.PyLog.LogStdout(r.Stdout, contextTag: "PY", contextInfo: midiPath);
+                PythonReturn.PyLog.LogStderr(r.Stderr, contextTag: "PY", contextInfo: midiPath);
 
                 if (r.TimedOut)
                 {

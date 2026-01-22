@@ -15,7 +15,7 @@ public class CSVwriter : MonoBehaviour
     string CsvPy = Path.Combine(FluidSynthPaths.scriptPy, "extract_features.py");
     string trainPy = Path.Combine(FluidSynthPaths.scriptPy, "train_emotion_model.py");
     string MusicXmlPath = Path.Combine(FluidSynthPaths.EmotionDir);
-    string ModelFile = Path.Combine(FluidSynthPaths.ModelDir, "GBM_Model.txt");
+    string ModelFile = Path.Combine(FluidSynthPaths.ModelDir, "GBM_Model");
 
     [SerializeField] Button Example;
 
@@ -52,7 +52,7 @@ public class CSVwriter : MonoBehaviour
                 );
 
                 string csvPath = Path.Combine(Application.persistentDataPath, "features.csv");
-                PyLog.LogStderr(r.Stderr, contextTag: "PY", contextInfo: EmoXmls);
+                PythonReturn.PyLog.LogStderr(r.Stderr, contextTag: "PY", contextInfo: EmoXmls);
 
             }
         }
@@ -95,9 +95,10 @@ public class CSVwriter : MonoBehaviour
         );
 
         //string csvPath = Path.Combine(Application.persistentDataPath, "features.csv");
-        PyLog.LogStdout(r.Stdout, contextTag: "PY");
-        PyLog.LogStderr(r.Stderr, contextTag: "PY");
+        PythonReturn.PyLog.LogStdout(r.Stdout, contextTag: "PY");
+        PythonReturn.PyLog.LogStderr(r.Stderr, contextTag: "PY");
     }
+
 
     static void WriteCsvHeaderIfNotExists(string csvPath)
     {
