@@ -34,9 +34,7 @@ class PredictResultWrapper
 }
 public class MusicXMLStart : MonoBehaviour
 {
-    public static EmotionResult AnalyzeEmotionFromMusicXML(
-    string musicXmlPath
-    )
+    public static EmotionResult AnalyzeEmotionFromMusicXML(string musicXmlPath)
     {
         string extractpy = Path.Combine(FluidSynthPaths.scriptPy,"extract_features.py");
         string trainPy = Path.Combine(FluidSynthPaths.scriptPy, "train_emotion_model.py");
@@ -64,8 +62,6 @@ public class MusicXMLStart : MonoBehaviour
         Debug.Log("[PY extract STDOUT]\n" + featResult.Stdout);
         Debug.Log("[PY extract STDERR]\n" + featResult.Stderr);
 
-        //if (!featResult.Stdout.Contains("featuresRow"))
-        //    throw new Exception("特徴量抽出に失敗しました");
         if (featResult.ExitCode != 0)
             throw new Exception("extract_features.py 実行失敗");
 
@@ -76,7 +72,8 @@ public class MusicXMLStart : MonoBehaviour
 
         string json = stdout.Substring(jsonStart);
 
-        var featJson = JsonUtility.FromJson<FeatureRowWrapper>(featResult.Stdout);
+        string featJsonText = ExtractLastJsonObject(featResult.Stdout);
+        var featJson = JsonUtility.FromJson<FeatureRowWrapper>(featJsonText);
         List<float> featuresRow = featJson.featuresRow;
 
         // -----------------------------
@@ -103,8 +100,26 @@ public class MusicXMLStart : MonoBehaviour
 
         if (!predResult.Stdout.Contains("\"ok\": true"))
             throw new Exception("感情推論に失敗しました\n" + predResult.Stdout);
-        var wrapper = JsonUtility.FromJson<PredictResultWrapper>(predResult.Stdout);
+        string predJsonText = ExtractLastJsonObject(predResult.Stdout);
+        var wrapper = JsonUtility.FromJson<PredictResultWrapper>(predJsonText);
         return wrapper.result;
     }
 
+    private static string ExtractLastJsonObject(string s)
+    {
+        if (string.IsNullOrEmpty(s))
+            throw new Exception("stdout が空です");
+
+        int start = s.LastIndexOf('{');
+        if (start < 0)
+            throw new Exception("stdout に JSON 開始 '{' が見つかりません:\n" + s);
+
+        string tail = s.Substring(start).Trim();
+
+        int end = tail.LastIndexOf('}');
+        if (end < 0)
+            throw new Exception("stdout に JSON 終端 '}' が見つかりません:\n" + tail);
+
+        return tail.Substring(0, end + 1);
+    }
 }
