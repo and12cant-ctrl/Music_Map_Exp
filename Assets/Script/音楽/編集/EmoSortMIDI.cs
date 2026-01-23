@@ -197,4 +197,9 @@ public class EmoSortMIDI : MonoBehaviour
 
         isPressed = true;
     }
+
+    void AllXMLJudge(string XmlDir)
+    {
+       
+    }
 }
