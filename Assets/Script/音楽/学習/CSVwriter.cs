@@ -114,7 +114,7 @@ public class CSVwriter : MonoBehaviour
         return JsonConvert.DeserializeObject<string[]>(json);
     }
 
-    static readonly string[] FINAL_COLUMNS =
+   public static readonly string[] FINAL_COLUMNS =
 {
     // basics
     "time_signature_num","time_signature_den","tempo_bpm_est","bars_len","total_duration_quarter","pickup_flag",

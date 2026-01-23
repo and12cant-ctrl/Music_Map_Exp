@@ -1,43 +1,72 @@
-using Melanchall.DryWetMidi.Composing;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using UnityEngine;
+using System.Globalization;
 
+#region 判定用クラス
 [Serializable]
-public class EmotionResult
+public class HintScores
 {
-    public string pred;
-    public Dictionary<string, float> proba;
+    public float move;
+    public float density;
+    public float order;
+    public float rhythm;
+    public float emotion;
+    public float total;
 }
 
 [Serializable]
-class PredictRequest
+public class EmotionPred
+{
+    public string label;
+    public Dictionary<string, float> proba_by_class;
+    public List<float> proba_vec;
+    public List<string> classes;
+}
+
+[Serializable]
+public class JudgeResult
+{
+    public bool ok;
+    public EmotionPred emotion_pred;
+    public HintScores scores;
+    public object error; // 失敗時
+}
+
+public class JudgeRequest
 {
     public string metaPath;
     public string modelPath;
-    public List<float> featuresRow;
-}
 
-[Serializable]
-class FeatureRowWrapper
-{
-    public List<float> featuresRow;
-}
+    // プレイヤー特徴（extract_features出力から作る）
+    public Dictionary<string, float> featuresByName;
 
-[Serializable]
-class PredictResultWrapper
-{
-    public bool ok;
-    public EmotionResult result;
+    // テンプレ特徴（同じ列名で持つ。まだ無ければ null でもOKにしておく）
+    public Dictionary<string, float> templateFeaturesByName;
+
+    // テンプレ感情（あれば）
+    public List<float> templateEmotionVec;
+
+    public Dictionary<string, object> scoreConfig;
 }
+#endregion
+
+
 public class MusicXMLStart : MonoBehaviour
 {
-    public static EmotionResult AnalyzeEmotionFromMusicXML(string musicXmlPath)
+    public static JudgeResult AnalyzeEmotionFromMusicXML(
+        string musicXmlPath,
+        Dictionary<string, float> templateFeaturesByName,
+    List<float> templateEmotionVec = null,
+    string difficulty = "normal")
     {
         string extractpy = Path.Combine(FluidSynthPaths.scriptPy,"extract_features.py");
-        string trainPy = Path.Combine(FluidSynthPaths.scriptPy, "train_emotion_model.py");
+        string judgepy = Path.Combine(FluidSynthPaths.scriptPy, "judge_hints.py");
         string mambaRoot = Path.Combine(FluidSynthPaths.micromambaroot);
         string mambaExe = Path.Combine(FluidSynthPaths.micromambaExe);
         string emo_lgbm = Path.Combine(FluidSynthPaths.GBMModelDir, "emotion_lgbm.txt");
@@ -46,8 +75,6 @@ public class MusicXMLStart : MonoBehaviour
         // MusicXML → featuresRow
         // -----------------------------
 
-        Debug.Log("musicXmlPath = " + musicXmlPath);
-        Debug.Log("File.Exists = " + File.Exists(musicXmlPath));
         string extractArgs =
             $"run -r \"{mambaRoot}\" -n unitypy " +
             $"python -u \"{extractpy}\" \"{musicXmlPath}\" --out_json -";
@@ -65,44 +92,54 @@ public class MusicXMLStart : MonoBehaviour
         if (featResult.ExitCode != 0)
             throw new Exception("extract_features.py 実行失敗");
 
-        string stdout = featResult.Stdout.Trim();
-        int jsonStart = stdout.LastIndexOf('{');
-        if (jsonStart < 0)
-            throw new Exception("JSONが見つかりません");
-
-        string json = stdout.Substring(jsonStart);
-
         string featJsonText = ExtractLastJsonObject(featResult.Stdout);
-        var featJson = JsonUtility.FromJson<FeatureRowWrapper>(featJsonText);
-        List<float> featuresRow = featJson.featuresRow;
 
-        // -----------------------------
-        // featuresRow → 感情推論
-        PredictRequest req = new PredictRequest
+        var playerFeaturesByName = BuildFeaturesByNameFromFlatJson(
+            featJsonText,
+            CSVwriter.FINAL_COLUMNS.ToList(),
+            fillna: 0f
+        );
+
+
+        if (templateFeaturesByName == null)
+            throw new ArgumentNullException(nameof(templateFeaturesByName), "テンプレ特徴が必要です。");
+
+        var req = new JudgeRequest
         {
-            modelPath = emo_lgbm,
             metaPath = emo_Json,
-            featuresRow = featuresRow
+            modelPath = emo_lgbm,
+            featuresByName = playerFeaturesByName,
+            templateFeaturesByName = templateFeaturesByName,
+            templateEmotionVec = templateEmotionVec,
+            scoreConfig = new Dictionary<string, object>
+        {
+            { "difficulty", difficulty },
+            { "weights", new Dictionary<string, object> {
+                { "move", 0.25 }, { "density", 0.15 }, { "order", 0.20 }, { "rhythm", 0.25 }, { "emotion", 0.15 }
+            }}
+        }
         };
 
-        string predictJson = JsonUtility.ToJson(req);
+        string stdinJson = JsonConvert.SerializeObject(req);
 
-        string predictArgs =
+        string judgeArgs =
             $"run -r \"{mambaRoot}\" -n unitypy " +
-            $"python -u \"{trainPy}\" --predict --stdin";
+            $"python -u \"{judgepy}\" --stdin";
 
-        var predResult = PythonReturn.RunWithStdin(
+        var judgeResult = PythonReturn.RunWithStdin(
             exePath: mambaExe,
-            arguments: predictArgs,
-            stdinText: predictJson,
+            arguments: judgeArgs,
+            stdinText: stdinJson,
             timeoutMs: 30_000
         );
 
-        if (!predResult.Stdout.Contains("\"ok\": true"))
-            throw new Exception("感情推論に失敗しました\n" + predResult.Stdout);
-        string predJsonText = ExtractLastJsonObject(predResult.Stdout);
-        var wrapper = JsonUtility.FromJson<PredictResultWrapper>(predJsonText);
-        return wrapper.result;
+        string outJson = ExtractLastJsonObject(judgeResult.Stdout);
+        var res = JsonConvert.DeserializeObject<JudgeResult>(outJson);
+
+        if (res == null || !res.ok)
+            throw new Exception("判定に失敗しました\nSTDOUT:\n" + judgeResult.Stdout + "\nSTDERR:\n" + judgeResult.Stderr);
+
+        return res;
     }
 
     private static string ExtractLastJsonObject(string s)
@@ -110,16 +147,58 @@ public class MusicXMLStart : MonoBehaviour
         if (string.IsNullOrEmpty(s))
             throw new Exception("stdout が空です");
 
-        int start = s.LastIndexOf('{');
+        int start = s.LastIndexOf("\"ok\"");
         if (start < 0)
-            throw new Exception("stdout に JSON 開始 '{' が見つかりません:\n" + s);
+            if (start < 0) start = s.LastIndexOf('{');
+        int depth = 0;
+        for (int i = start; i < s.Length; i++)
+        {
+            char c = s[i];
+            if (c == '{') depth++;
+            else if (c == '}')
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    // start..i が1つのJSONオブジェクト
+                    return s.Substring(start, i - start + 1).Trim();
+                }
+            }
+        }
 
-        string tail = s.Substring(start).Trim();
-
-        int end = tail.LastIndexOf('}');
-        if (end < 0)
-            throw new Exception("stdout に JSON 終端 '}' が見つかりません:\n" + tail);
-
-        return tail.Substring(0, end + 1);
+        throw new Exception("JSONの '}' が閉じません:\n" + s.Substring(start));
     }
+
+    private static Dictionary<string, float> BuildFeaturesByNameFromFlatJson(
+        string flatJson,
+        List<string> finalColumns,
+        float fillna = 0f
+    )
+    {
+        var jo = JObject.Parse(flatJson);
+        var dict = new Dictionary<string, float>(finalColumns.Count);
+
+        foreach (var col in finalColumns)
+        {
+            JToken tok = jo[col];
+            if (tok == null || tok.Type == JTokenType.Null)
+            {
+                dict[col] = fillna;
+                continue;
+            }
+
+            if (tok.Type == JTokenType.Integer || tok.Type == JTokenType.Float)
+            {
+                dict[col] = tok.Value<float>();
+            }
+            else
+            {
+                dict[col] = fillna;
+            }
+        }
+        return dict;
+    }
+
+
+
 }

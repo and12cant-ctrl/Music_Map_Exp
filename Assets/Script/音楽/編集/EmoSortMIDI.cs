@@ -80,7 +80,7 @@ public class EmoSortMIDI : MonoBehaviour
         });
         btnExRun.onClick.AddListener(() =>
         {
-            PlayXml(XmlPath, Sf2Path);
+            PlayXml(Test.MusicXML, Sf2Path);
         });
         #endregion
     }

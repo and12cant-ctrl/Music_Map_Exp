@@ -19,7 +19,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
 from lightgbm import LGBMClassifier
-import lightgbm as lbg
+import lightgbm as lgb
 import numpy as np
 
 
