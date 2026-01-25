@@ -56,7 +56,12 @@ public class JudgeRequest
 }
 #endregion
 
-
+//templateEmotionVec = new List<float> {
+//0.05f,  // trust
+//    0.85f,  // sad
+//    0.05f,  // fear
+//    0.05f   // anxiety
+//};
 public class MusicXMLStart : MonoBehaviour
 {
     public static JudgeResult AnalyzeEmotionFromMusicXML(
