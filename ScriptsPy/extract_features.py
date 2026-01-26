@@ -582,13 +582,20 @@ def append_csv(path: Path, row: Dict[str, Any]) -> None:
         w = csv.DictWriter(f, fieldnames=FINAL_COLUMNS)
         if not exists:
             w.writeheader()
-        w.writerow({c: row.get(c, 0.0) for c in FINAL_COLUMNS})
+
+        out_row = {}
+        for c in FINAL_COLUMNS:
+            if c == "source_main_rel":
+                out_row[c] = row.get(c, "")
+            else:
+                out_row[c] = row.get(c, 0.0)
+        w.writerow(out_row)
 
 
 # -----------------------------
 # Main
 # -----------------------------
-def extract_all(main_path: Path) -> Dict[str, Any]:
+def extract_all(main_path: Path,root_dir: Optional[Path] = None) -> Dict[str, Any]:
     if not is_main_file(main_path):
         raise ValueError("Input must be a MAIN file (stem contains 'MAIN').")
     sc_main: stream.Score = converter.parse(str(main_path))
@@ -608,9 +615,17 @@ def extract_all(main_path: Path) -> Dict[str, Any]:
 
     acc_agg = aggregate_acc_features_mean(acc_feat_list)
 
+    if root_dir:
+        try:
+            source_rel = str(main_path.resolve().relative_to(root_dir.resolve()))
+        except Exception:
+            source_rel = str(main_path)
+    else:
+        source_rel = str(main_path)
+
     out: Dict[str, Any] = {
         "source_main": str(main_path),
-        "acc_count": float(len(acc_paths)),
+        "source_main_rel": source_rel,
         "main_partName": getattr(main_part, "partName", "") or "",
         **common,
         **main_feats,
@@ -625,9 +640,11 @@ def main():
     ap.add_argument("main", type=str, help="input MAIN MusicXML path")
     ap.add_argument("--out_json", type=str, default="")
     ap.add_argument("--out_csv", type=str, default="")
+    ap.add_argument("--root_dir", type=str, default="", help="root directory to make relative path")
     args = ap.parse_args()
 
-    out = extract_all(Path(args.main))
+    root_dir = Path(args.root_dir) if args.root_dir else None
+    out = extract_all(Path(args.main), root_dir=root_dir)
 
     if args.out_json:
         write_json(Path(args.out_json), out)

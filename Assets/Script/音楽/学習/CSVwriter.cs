@@ -17,43 +17,52 @@ public class CSVwriter : MonoBehaviour
     string MusicXmlPath = Path.Combine(FluidSynthPaths.EmotionDir);
     string ModelFile = Path.Combine(FluidSynthPaths.ModelDir, "GBM_Model");
 
+
     [SerializeField] Button Example;
 
     private void Start()
     {
         Example.onClick.AddListener(() =>
         {
-            //ChengeCSV(Path.Combine(MusicXmlPath,trust));
-            trainToCSV(Path.Combine(FluidSynthPaths.CSVDir));
+            ChengeCSV(Path.Combine(MusicXmlPath));
+            //trainToCSV(Path.Combine(FluidSynthPaths.CSVDir));
         });
     }
     void ChengeCSV(string EmoFolderName)
     {
         foreach (string EmoFolder in Directory.GetDirectories(EmoFolderName))
         {
-            foreach (string EmoXmls in Directory.GetFiles(EmoFolder)) {
-                Debug.Log("Start!!");
-                var stemUpper = Path.GetFileNameWithoutExtension(EmoXmls);
-                if (stemUpper.Contains("FULL"))continue;
-                if (!stemUpper.Contains("MAIN"))continue;
+            string emo = Path.GetFileName(EmoFolder).ToLowerInvariant(); 
+            string outCsv = Path.Combine(FluidSynthPaths.CSVDir, $"{emo}.csv");
+            Debug.Log(EmoFolder);
+            foreach(string XMLFile in Directory.GetDirectories(EmoFolder)){
+                foreach (string EmoXmls in Directory.EnumerateFiles(XMLFile, "*.musicxml"))
+                {
+                    Debug.Log("Start!!");
+                    var stemUpper = Path.GetFileNameWithoutExtension(EmoXmls);
+                    if (stemUpper.Contains("FULL")) continue;
+                    if (!stemUpper.Contains("MAIN")) continue;
 
-                string arguments =
-                $"run -r \"{FluidSynthPaths.micromambaroot}\" " +
-                $"-n unitypy " +
-                $"python -u \"{CsvPy}\" " +
-                $"\"{EmoXmls}\" --out_csv \"{path}\"";
+                    string arguments =
+                    $"run -r \"{FluidSynthPaths.micromambaroot}\" " +
+                    $"-n unitypy " +
+                    $"python -u \"{CsvPy}\" " +
+                    $"\"{EmoXmls}\" --out_csv \"{outCsv}\" " +
+                    $"--root_dir \"{FluidSynthPaths.EmotionDir}\"";
 
-                var r = PythonReturn.RunWithStdin(
-                    exePath: FluidSynthPaths.micromambaExe,
-                    arguments: arguments,
-                    stdinText: null,
-                    timeoutMs: 120_000,                 
-                    encoding: Encoding.UTF8
-                );
 
-                string csvPath = Path.Combine(Application.persistentDataPath, "features.csv");
-                PythonReturn.PyLog.LogStderr(r.Stderr, contextTag: "PY", contextInfo: EmoXmls);
+                    var r = PythonReturn.RunWithStdin(
+                        exePath: FluidSynthPaths.micromambaExe,
+                        arguments: arguments,
+                        stdinText: null,
+                        timeoutMs: 120_000,
+                        encoding: Encoding.UTF8
+                    );
 
+                    //string csvPath = Path.Combine(Application.persistentDataPath, "features.csv");
+                    PythonReturn.PyLog.LogStderr(r.Stderr, contextTag: "PY", contextInfo: EmoXmls);
+
+                } 
             }
         }
     }
@@ -138,6 +147,6 @@ public class CSVwriter : MonoBehaviour
     "pc_acc_0","pc_acc_1","pc_acc_2","pc_acc_3","pc_acc_4","pc_acc_5",
     "pc_acc_6","pc_acc_7","pc_acc_8","pc_acc_9","pc_acc_10","pc_acc_11",
     "chromatic_ratio_acc","cadence_strength_score",
-    "strongbeat_hit_ratio","offbeat_ratio"
+    "strongbeat_hit_ratio","offbeat_ratio",   "strongbeat_hit_ratio","offbeat_ratio"
 };
 }

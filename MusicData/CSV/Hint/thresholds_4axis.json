@@ -26,35 +26,7 @@
     }
   },
   "norm_params": {
-    "pitch_range_midi": {
-      "lo": 0.0,
-      "hi": 1.0
-    },
-    "strongbeat_hit_ratio": {
-      "lo": 0.0,
-      "hi": 1.0
-    },
-    "rest_ratio_time": {
-      "lo": 0.0,
-      "hi": 1.0
-    },
-    "pc_concentration": {
-      "lo": 0.0,
-      "hi": 1.0
-    },
-    "key_fit_ratio": {
-      "lo": 0.0,
-      "hi": 1.0
-    },
-    "short_note_ratio": {
-      "lo": 0.0,
-      "hi": 1.0
-    },
     "dur_std_quarter": {
-      "lo": 0.0,
-      "hi": 1.0
-    },
-    "syncopation_score": {
       "lo": 0.0,
       "hi": 1.0
     },
@@ -62,7 +34,19 @@
       "lo": 0.0,
       "hi": 1.0
     },
-    "chromatic_ratio": {
+    "pc_concentration": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "syncopation_score": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "rest_ratio_time": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "short_note_ratio": {
       "lo": 0.0,
       "hi": 1.0
     },
@@ -70,7 +54,23 @@
       "lo": 0.0,
       "hi": 1.0
     },
+    "chromatic_ratio": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "strongbeat_hit_ratio": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "pitch_range_midi": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
     "note_count_per_bar": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "key_fit_ratio": {
       "lo": 0.0,
       "hi": 1.0
     }

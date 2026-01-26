@@ -1,6 +1,6 @@
 {
   "model_name": "emotion_lgbm",
-  "model_path": "G:\\Unity\\Product\\Music_Map_Exp\\MusicData\\Model\\GBM_Model.txt\\emotion_lgbm.txt",
+  "model_path": "G:\\Unity\\Product\\Music_Map_Exp\\MusicData\\Model\\GBM_Model\\emotion_lgbm.txt",
   "final_columns": [
     "time_signature_num",
     "time_signature_den",
