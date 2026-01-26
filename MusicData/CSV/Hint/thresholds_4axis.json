@@ -1,0 +1,116 @@
+{
+  "thresholds": {
+    "motion": {
+      "q1": 0.33,
+      "q2": 0.66,
+      "t1": 0.0,
+      "t2": 1e-06
+    },
+    "density": {
+      "q1": 0.33,
+      "q2": 0.66,
+      "t1": 0.35,
+      "t2": 0.35000099999999995
+    },
+    "order": {
+      "q1": 0.33,
+      "q2": 0.66,
+      "t1": 0.25,
+      "t2": 0.250001
+    },
+    "rhythm": {
+      "q1": 0.33,
+      "q2": 0.66,
+      "t1": 0.55,
+      "t2": 0.5500010000000001
+    }
+  },
+  "norm_params": {
+    "pitch_range_midi": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "strongbeat_hit_ratio": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "rest_ratio_time": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "pc_concentration": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "key_fit_ratio": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "short_note_ratio": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "dur_std_quarter": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "syncopation_score": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "direction_change_rate": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "chromatic_ratio": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "leap_ratio": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "note_count_per_bar": {
+      "lo": 0.0,
+      "hi": 1.0
+    }
+  },
+  "weights": {
+    "motion": {
+      "leap_ratio": 0.4,
+      "direction_change_rate": 0.3,
+      "pitch_range_midi": 0.3
+    },
+    "density": {
+      "note_count_per_bar": 0.45,
+      "rest_ratio_time": 0.35,
+      "short_note_ratio": 0.2
+    },
+    "order": {
+      "key_fit_ratio": 0.5,
+      "chromatic_ratio": 0.25,
+      "pc_concentration": 0.25
+    },
+    "rhythm": {
+      "strongbeat_hit_ratio": 0.45,
+      "syncopation_score": 0.3,
+      "dur_std_quarter": 0.25
+    }
+  },
+  "invert_cols": [
+    "chromatic_ratio",
+    "dur_std_quarter",
+    "rest_ratio_time",
+    "syncopation_score"
+  ],
+  "notes": {
+    "bands": {
+      "low": "< q0.33",
+      "mid": "q0.33..q0.66",
+      "high": ">= q0.66"
+    },
+    "axis_scores_range": "0..1",
+    "pc_concentration": "max(pc_0..11)-mean(pc_0..11)",
+    "normalization": "robust minmax by quantiles (2%..98%), then clip 0..1"
+  }
+}

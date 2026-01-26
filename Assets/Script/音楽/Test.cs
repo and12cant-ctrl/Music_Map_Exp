@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System.IO;
+using System.Text;
 using UnityEngine;
 
 public class Test : MonoBehaviour
@@ -18,13 +19,29 @@ public class Test : MonoBehaviour
     //0.05f,  // fear
     //0.05f   // anxiety
     //};
-void Start()
+    void Start()
     {
-        string AS = $"{FluidSynthPaths.micromambaExe} run -r " +
-            $"{FluidSynthPaths.micromambaroot} -n unitypy ^\r\npython -u \"C:\\Music_Map_Exp\\ScriptsPy\\tag_templates_4axis.py\" ^\r\n\"C:\\Music_Map_Exp\\MusicData\\Emotion\\trust.csv\" ^\r\n\"C:\\Music_Map_Exp\\MusicData\\Emotion\\sad.csv\" ^\r\n\"C:\\Music_Map_Exp\\MusicData\\Emotion\\fear.csv\" ^\r\n\"C:\\Music_Map_Exp\\MusicData\\Emotion\\anxiety.csv\" ^\r\n--out_csv \"C:\\Music_Map_Exp\\MusicData\\Emotion\\tagged_templates.csv\" ^\r\n--out_json \"C:\\Music_Map_Exp\\MusicData\\Emotion\\thresholds_4axis.json\"";
+        string mamba = FluidSynthPaths.micromambaExe;
+        string scPy =Path.Combine(FluidSynthPaths.scriptPy, "tag_templates_4axis.py");
+        string trsut = Path.Combine(FluidSynthPaths.CSVDir, "trust.csv");
+        string sad = Path.Combine(FluidSynthPaths.CSVDir, "sad.csv");
+        string fear = Path.Combine(FluidSynthPaths.CSVDir, "fear.csv");
+        string anxiety = Path.Combine(FluidSynthPaths.CSVDir, "anxiety.csv");
+        string tagged = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "tagged_templates.csv");
+        string Json = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "thresholds_4axis.json");
+        string AS = $"run -r {FluidSynthPaths.micromambaroot} -n unitypy " +
+            $"python -u \"{scPy}\" \"{trsut}\" \"{sad}\" \"{fear}\" \"{anxiety}\" " +
+            $"--out_csv \"{tagged}\" " +
+            $"--out_json \"{Json}\"";
         //MusicXMLStart.AnalyzeEmotionFromMusicXML(MusicXML,null,,"normal");
-        PythonReturn.Run()
-
+        var featResult = PythonReturn.Run(
+            exePath: mamba,
+            arguments: AS,
+            timeoutMs: 60_000,
+            encoding: Encoding.UTF8
+        );
+        Debug.Log("[PY extract STDOUT]\n" + featResult.Stdout);
+        Debug.Log("[PY extract STDERR]\n" + featResult.Stderr);
     }
 
     // Update is called once per frame

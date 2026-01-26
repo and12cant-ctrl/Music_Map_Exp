@@ -565,7 +565,9 @@ FINAL_COLUMNS = [
     "key_fit_ratio_acc",
     *[f"pc_acc_{i}" for i in range(12)],
     "chromatic_ratio_acc","cadence_strength_score",
-    "strongbeat_hit_ratio", "offbeat_ratio"
+    "strongbeat_hit_ratio", "offbeat_ratio",
+        # --- meta (non-numeric) ---
+    "source_main_rel"
 ]
 
 
