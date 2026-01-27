@@ -3,46 +3,66 @@
     "motion": {
       "q1": 0.33,
       "q2": 0.66,
-      "t1": 0.0,
-      "t2": 1e-06
+      "t1": 0.1435679306273348,
+      "t2": 0.4095277112232648
     },
     "density": {
       "q1": 0.33,
       "q2": 0.66,
-      "t1": 0.35,
-      "t2": 0.35000099999999995
+      "t1": 0.2043974630021142,
+      "t2": 0.47601761804087384
     },
     "order": {
       "q1": 0.33,
       "q2": 0.66,
-      "t1": 0.25,
-      "t2": 0.250001
+      "t1": 0.5632430602572783,
+      "t2": 0.8413803317535546
     },
     "rhythm": {
       "q1": 0.33,
       "q2": 0.66,
-      "t1": 0.55,
-      "t2": 0.5500010000000001
+      "t1": 0.3630259945765378,
+      "t2": 0.55
     }
   },
   "norm_params": {
-    "dur_std_quarter": {
-      "lo": 0.0,
-      "hi": 1.0
-    },
-    "direction_change_rate": {
-      "lo": 0.0,
-      "hi": 1.0
-    },
-    "pc_concentration": {
-      "lo": 0.0,
+    "key_fit_ratio": {
+      "lo": 0.5,
       "hi": 1.0
     },
     "syncopation_score": {
       "lo": 0.0,
       "hi": 1.0
     },
+    "chromatic_ratio": {
+      "lo": 0.0,
+      "hi": 0.5
+    },
     "rest_ratio_time": {
+      "lo": 0.0,
+      "hi": 0.9625000000000001
+    },
+    "strongbeat_hit_ratio": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "note_count_per_bar": {
+      "lo": 0.25,
+      "hi": 13.150000000000006
+    },
+    "pc_concentration": {
+      "lo": 0.08921568627450978,
+      "hi": 0.9166666666666666
+    },
+    "direction_change_rate": {
+      "lo": 0.0,
+      "hi": 0.9139849624060153
+    },
+    "pitch_range_midi": {
+      "lo": 0.0,
+      "hi": 30.600000000000023
+    },
+    "leap_ratio": {
       "lo": 0.0,
       "hi": 1.0
     },
@@ -50,29 +70,9 @@
       "lo": 0.0,
       "hi": 1.0
     },
-    "leap_ratio": {
+    "dur_std_quarter": {
       "lo": 0.0,
-      "hi": 1.0
-    },
-    "chromatic_ratio": {
-      "lo": 0.0,
-      "hi": 1.0
-    },
-    "strongbeat_hit_ratio": {
-      "lo": 0.0,
-      "hi": 1.0
-    },
-    "pitch_range_midi": {
-      "lo": 0.0,
-      "hi": 1.0
-    },
-    "note_count_per_bar": {
-      "lo": 0.0,
-      "hi": 1.0
-    },
-    "key_fit_ratio": {
-      "lo": 0.0,
-      "hi": 1.0
+      "hi": 1.5000601031503338
     }
   },
   "weights": {

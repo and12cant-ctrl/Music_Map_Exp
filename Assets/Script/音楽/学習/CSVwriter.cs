@@ -8,10 +8,6 @@ using UnityEngine.UI;
 
 public class CSVwriter : MonoBehaviour
 {
-    string Emo = "anxiety";
-    string fear = "fear";
-    string trust = "trust";
-    string path = Path.Combine(FluidSynthPaths.CSVDir,"trust.csv");
     string CsvPy = Path.Combine(FluidSynthPaths.scriptPy, "extract_features.py");
     string trainPy = Path.Combine(FluidSynthPaths.scriptPy, "train_emotion_model.py");
     string MusicXmlPath = Path.Combine(FluidSynthPaths.EmotionDir);
@@ -49,7 +45,6 @@ public class CSVwriter : MonoBehaviour
                     $"python -u \"{CsvPy}\" " +
                     $"\"{EmoXmls}\" --out_csv \"{outCsv}\" " +
                     $"--root_dir \"{FluidSynthPaths.EmotionDir}\"";
-
 
                     var r = PythonReturn.RunWithStdin(
                         exePath: FluidSynthPaths.micromambaExe,

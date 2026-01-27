@@ -233,7 +233,20 @@ def main():
     # 出力
     out_csv = Path(args.out_csv)
     out_csv.parent.mkdir(parents=True, exist_ok=True)
-    df2.to_csv(out_csv, index=False, encoding="utf-8-sig")
+
+    KEEP_COLS = [
+
+        "motion_score", "density_score", "order_score", "rhythm_score",
+        "motion_band", "density_band", "order_band", "rhythm_band",        "source_main_rel",
+    ]
+
+    # 入力側に source_main_rel が無いケースに備えて空列を作る
+    for c in KEEP_COLS:
+        if c not in df2.columns:
+            df2[c] = ""
+
+    df_out = df2[KEEP_COLS]
+    df_out.to_csv(out_csv, index=False, encoding="utf-8-sig")
 
     out_json = Path(args.out_json)
     out_json.parent.mkdir(parents=True, exist_ok=True)
@@ -250,6 +263,7 @@ def main():
     out_json.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
     print(json.dumps({"ok": True, "out_csv": str(out_csv), "out_json": str(out_json)}, ensure_ascii=False))
+
 
 
 if __name__ == "__main__":

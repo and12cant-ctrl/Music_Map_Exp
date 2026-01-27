@@ -578,14 +578,15 @@ def write_json(path: Path, data: Dict[str, Any]) -> None:
 def append_csv(path: Path, row: Dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     exists = path.exists()
+    needs_header = (not exists) or (path.stat().st_size == 0)
     with path.open("a", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=FINAL_COLUMNS)
-        if not exists:
+        if needs_header:
             w.writeheader()
 
         out_row = {}
         for c in FINAL_COLUMNS:
-            if c == "source_main_rel":
+            if c == ("source_main", "source_main_rel"):
                 out_row[c] = row.get(c, "")
             else:
                 out_row[c] = row.get(c, 0.0)

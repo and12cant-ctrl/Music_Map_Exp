@@ -18,7 +18,7 @@ public class PartSelect : MonoBehaviour
         img = Node.GetComponentInChildren<Image>();
         GeneButton.onClick.AddListener(() =>
         {
-            TabClose.OpenTab(partBox);
+            TabClose.OpenTab(partBox);//‚±‚±‚ªnull•Ô‚·‚©‚ç‘‚ß‚É
         });
         //GeneButton.onClick.AddListener(() =>
         //{
