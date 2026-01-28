@@ -9,7 +9,7 @@ public class PartSelect : MonoBehaviour
     [SerializeField] private GameObject partBox;
     [SerializeField] private Button GeneButton;
     [SerializeField] private RectTransform Node;
-    TabOverLayCloser TabClose;
+    [SerializeField] public TabOverLayCloser TabClose;
     public Image img;
     void Start()
     {
@@ -18,7 +18,7 @@ public class PartSelect : MonoBehaviour
         img = Node.GetComponentInChildren<Image>();
         GeneButton.onClick.AddListener(() =>
         {
-            TabClose.OpenTab(partBox);//‚±‚±‚ªnull•Ô‚·‚©‚ç‘‚ß‚É
+            TabClose.OpenTab(partBox);  //‚±‚±‚ªnull•Ô‚·‚©‚ç‘‚ß‚É
         });
         //GeneButton.onClick.AddListener(() =>
         //{
@@ -47,13 +47,4 @@ public class PartSelect : MonoBehaviour
             ui.Init(this, part);
         }
     }
-    private void Clicker()
-    {
-        partBox.SetActive(true);
-    }
-    public void UnClicer()
-    {
-        partBox.SetActive(false);
-    }
-
 }

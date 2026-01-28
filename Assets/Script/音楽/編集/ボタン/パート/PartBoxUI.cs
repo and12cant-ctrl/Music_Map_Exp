@@ -19,7 +19,7 @@ public class PartBoxUI : MonoBehaviour
         {
             Sel.img.color = NodeCol(part);
             Sel.Nodesele(part);
-            Sel.UnClicer();
+            Sel.TabClose.CloseCurrentTab();
         });
 
     }
