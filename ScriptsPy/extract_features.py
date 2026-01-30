@@ -11,7 +11,9 @@ from typing import Dict, Any, Optional, List, Tuple
 from music21 import converter, stream, note, chord, meter, tempo, key, interval
 
 # -----------------------------
-# Basic math utils
+# MusicXMLを特徴量へ
+# 入力、MusicXML
+# 出力、
 # -----------------------------
 def safe_float(x: Any, default: float = 0.0) -> float:
     try:

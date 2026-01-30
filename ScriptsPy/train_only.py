@@ -1,4 +1,19 @@
-# train_only.py
+# 感情ラベル付き特徴量CSVから、LightGBMの感情分類モデルを学習して保存する“学習専用スクリプト
+# 
+# {
+#   "csvByLabel": {
+#     "trust": "trust.csv",
+#     "sad": "sad.csv",
+#     "fear": "fear.csv",
+#     "anxiety": "anxiety.csv"
+#   },
+#   "outputDir": "Models/emotion_lgbm",
+#   "modelName": "emotion_model",
+#   "testSize": 0.2,
+#   "seed": 42,
+#   "fillna": 0.0
+# }
+
 from __future__ import annotations
 
 import json

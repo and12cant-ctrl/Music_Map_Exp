@@ -7,13 +7,37 @@ from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import lightgbm as lgb
+import sys
 
 
 # ======== FINAL_COLUMNS（順番が命）========
 # ここはあなたの元ファイル(train_emotion_model.py)のFINAL_COLUMNSをそのままコピペしてください。
 # 分割後は「ここが唯一の正」として運用します。
 FINAL_COLUMNS: List[str] = [
-    # TODO: ここに既存の FINAL_COLUMNS を丸ごと貼る
+    # basics
+    "time_signature_num","time_signature_den","tempo_bpm_est","bars_len","total_duration_quarter","pickup_flag",
+
+    # MAIN (melody) - transposition-invariant + robust pitch stats
+    "pitch_std_midi","pitch_range_midi",
+    *[f"pc_{i}" for i in range(12)],
+    "interval_abs_mean_semitone","interval_abs_std_semitone",
+    "step_ratio","leap_ratio","direction_up_ratio","direction_change_rate",
+    "note_count_per_bar","onset_count_per_bar",
+    "dur_mean_quarter","dur_std_quarter","short_note_ratio","rest_ratio_time","syncopation_score",
+    "key_fit_ratio","chromatic_ratio","accidental_note_ratio","tonic_ending_flag",
+
+    # ACC (accompaniment) aggregated over matching ACC files
+    "bass_mean_midi","bass_range_midi","bass_step_ratio","bass_leap_ratio",
+    "chord_event_count_per_bar","mean_chord_size","chord_size_std",
+    "polyphony_ratio_time","accomp_density_time",
+    "dissonance_ratio","tritone_ratio","minor_third_ratio","major_third_ratio",
+    "seventh_chord_ratio","sus_ratio",
+    "key_fit_ratio_acc",
+    *[f"pc_acc_{i}" for i in range(12)],
+    "chromatic_ratio_acc","cadence_strength_score",
+    "strongbeat_hit_ratio", "offbeat_ratio",
+        # --- meta (non-numeric) ---
+    "source_main_rel"
 ]
 
 
