@@ -30,13 +30,7 @@ public class EmotionPred
 }
 
 [Serializable]
-public class JudgeResult
-{
-    public bool ok;
-    public EmotionPred emotion_pred;
-    public HintScores scores;
-    public object error; // 失敗時
-}
+
 
 public class JudgeRequest
 {
@@ -56,24 +50,15 @@ public class JudgeRequest
 }
 #endregion
 
-//templateEmotionVec = new List<float> {
-//0.05f,  // trust
-//    0.85f,  // sad
-//    0.05f,  // fear
-//    0.05f   // anxiety
-//};
 public class MusicXMLStart : MonoBehaviour
 {
-    public static JudgeResult AnalyzeEmotionFromMusicXML(
-        string musicXmlPath,
-        Dictionary<string, float> templateFeaturesByName,
-    List<float> templateEmotionVec = null,
-    string difficulty = "normal")
+    public void AnalyzeMusicXML(
+        string musicXmlPath)
     {
         string extractpy = Path.Combine(FluidSynthPaths.scriptPy,"extract_features.py");
-        string judgepy = Path.Combine(FluidSynthPaths.scriptPy, "judge_hints.py");
         string mambaRoot = Path.Combine(FluidSynthPaths.micromambaroot);
         string mambaExe = Path.Combine(FluidSynthPaths.micromambaExe);
+        string CSV = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "Player_Extract.csv");
         string emo_lgbm = Path.Combine(FluidSynthPaths.GBMModelDir, "emotion_lgbm.txt");
         string emo_Json = Path.Combine(FluidSynthPaths.GBMModelDir, "emotion_lgbm_meta.json");
         // -----------------------------
@@ -82,7 +67,8 @@ public class MusicXMLStart : MonoBehaviour
 
         string extractArgs =
             $"run -r \"{mambaRoot}\" -n unitypy " +
-            $"python -u \"{extractpy}\" \"{musicXmlPath}\" --out_json -";
+            $"python -u \"{extractpy}\" \"{musicXmlPath}\" --out_csv -" +
+            $"{CSV} --rootdir {FluidSynthPaths.ProjectRoot}";
 
         var featResult = PythonReturn.Run(
             exePath: mambaExe,
@@ -105,46 +91,6 @@ public class MusicXMLStart : MonoBehaviour
             fillna: 0f
         );
 
-
-        if (templateFeaturesByName == null)
-            throw new ArgumentNullException(nameof(templateFeaturesByName), "テンプレ特徴が必要です。");
-
-        var req = new JudgeRequest
-        {
-            metaPath = emo_Json,
-            modelPath = emo_lgbm,
-            featuresByName = playerFeaturesByName,
-            templateFeaturesByName = templateFeaturesByName,
-            templateEmotionVec = templateEmotionVec,
-            scoreConfig = new Dictionary<string, object>
-        {
-            { "difficulty", difficulty },
-            { "weights", new Dictionary<string, object> {
-                { "move", 0.25 }, { "density", 0.15 }, { "order", 0.20 }, { "rhythm", 0.25 }, { "emotion", 0.15 }
-            }}
-        }
-        };
-
-        string stdinJson = JsonConvert.SerializeObject(req);
-
-        string judgeArgs =
-            $"run -r \"{mambaRoot}\" -n unitypy " +
-            $"python -u \"{judgepy}\" --stdin";
-
-        var judgeResult = PythonReturn.RunWithStdin(
-            exePath: mambaExe,
-            arguments: judgeArgs,
-            stdinText: stdinJson,
-            timeoutMs: 30_000
-        );
-
-        string outJson = ExtractLastJsonObject(judgeResult.Stdout);
-        var res = JsonConvert.DeserializeObject<JudgeResult>(outJson);
-
-        if (res == null || !res.ok)
-            throw new Exception("判定に失敗しました\nSTDOUT:\n" + judgeResult.Stdout + "\nSTDERR:\n" + judgeResult.Stderr);
-
-        return res;
     }
 
     private static string ExtractLastJsonObject(string s)

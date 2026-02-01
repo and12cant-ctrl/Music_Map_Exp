@@ -588,7 +588,7 @@ def append_csv(path: Path, row: Dict[str, Any]) -> None:
 
         out_row = {}
         for c in FINAL_COLUMNS:
-            if c == ("source_main", "source_main_rel"):
+            if c in ("source_main_rel"):
                 out_row[c] = row.get(c, "")
             else:
                 out_row[c] = row.get(c, 0.0)
@@ -635,7 +635,10 @@ def extract_all(main_path: Path,root_dir: Optional[Path] = None) -> Dict[str, An
         **acc_agg
     }
     for c in FINAL_COLUMNS:
-        out.setdefault(c, 0.0)
+        if c == "source_main_rel":
+            out.setdefault(c, "")
+        else:
+            out.setdefault(c, 0.0)
     return out
 
 def main():
@@ -654,8 +657,6 @@ def main():
     if args.out_csv:
         append_csv(Path(args.out_csv), out)
         print(f"CSV_OK\t{args.out_csv}")
-    else:
-        print(json.dumps(out, ensure_ascii=False))
 
     print(json.dumps(out, ensure_ascii=False))
 

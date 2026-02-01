@@ -36,7 +36,7 @@ public class Midi_FulidSynth : MonoBehaviour
     {
         playButton.onClick.AddListener(() =>
         {
-            xmlChenge.Run();
+            xmlChenge.Score_Xml_MIDI();
             midiChenge.RunVeny();
             Play();
         });

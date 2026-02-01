@@ -25,7 +25,6 @@ public class MidiPlayer : MonoBehaviour
 
     public void MidiStart()
     {
-
         #region         Midiì«Ç›çûÇ›
         string path =Path.GetFullPath(Path.Combine((Directory.GetParent(Application.dataPath).FullName), midFileName));
         Debug.Log(path);

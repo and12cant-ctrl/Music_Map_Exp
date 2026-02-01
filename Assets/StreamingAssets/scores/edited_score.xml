@@ -5,7 +5,7 @@
   <identification>
     <creator type="composer">Music21</creator>
     <encoding>
-      <encoding-date>2025-12-07</encoding-date>
+      <encoding-date>2026-02-01</encoding-date>
       <software>music21 v.9.9.1</software>
     </encoding>
   </identification>
@@ -19,14 +19,14 @@
     <score-part id="P8f0431057206e7b52bc81e32d618e87d">
       <part-name />
     </score-part>
-    <score-part id="Pb9233fd34cf26bfb9e83efba4b67ad81">
+    <score-part id="P41bc2b028cf7b6faf32b760703355679">
       <part-name>A</part-name>
       <part-abbreviation>Pno</part-abbreviation>
-      <score-instrument id="Ieac7807a6c19b3443ac739fd892da908">
+      <score-instrument id="I657d5ee87c9943f0010c95aa79a0f4c3">
         <instrument-name>Piano</instrument-name>
         <instrument-abbreviation>Pno</instrument-abbreviation>
       </score-instrument>
-      <midi-instrument id="Ieac7807a6c19b3443ac739fd892da908">
+      <midi-instrument id="I657d5ee87c9943f0010c95aa79a0f4c3">
         <midi-channel>2</midi-channel>
         <midi-program>1</midi-program>
       </midi-instrument>
@@ -46,7 +46,7 @@
     </measure>
   </part>
   <!--=========================== Part 2 ===========================-->
-  <part id="Pb9233fd34cf26bfb9e83efba4b67ad81">
+  <part id="P41bc2b028cf7b6faf32b760703355679">
     <!--========================= Measure 1 ==========================-->
     <measure implicit="no" number="1">
       <attributes>
@@ -55,15 +55,23 @@
       <note>
         <pitch>
           <step>D</step>
-          <octave>5</octave>
+          <octave>6</octave>
         </pitch>
         <duration>5040</duration>
         <type>eighth</type>
       </note>
       <note>
         <pitch>
-          <step>D</step>
-          <octave>5</octave>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>5040</duration>
+        <type>eighth</type>
+      </note>
+      <note>
+        <pitch>
+          <step>B</step>
+          <octave>6</octave>
         </pitch>
         <duration>5040</duration>
         <type>eighth</type>
@@ -71,22 +79,6 @@
       <note>
         <pitch>
           <step>C</step>
-          <octave>5</octave>
-        </pitch>
-        <duration>5040</duration>
-        <type>eighth</type>
-      </note>
-    </measure>
-    <!--========================= Measure 2 ==========================-->
-    <measure implicit="no" number="2">
-      <note print-object="no" print-spacing="yes">
-        <rest />
-        <duration>10080</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>D</step>
           <octave>5</octave>
         </pitch>
         <duration>5040</duration>

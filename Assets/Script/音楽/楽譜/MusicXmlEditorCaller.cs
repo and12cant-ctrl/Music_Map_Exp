@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using UnityEngine;
+using UnityEngine.UI;
 
 [Serializable]
 public class EditCommand
@@ -19,14 +20,21 @@ public class EditCommand
 public class MusicXmlEditorCaller : MonoBehaviour
 {
     [SerializeField] private Node_Place nodes;
+    [SerializeField] private MidiPlayer midiPlayer;
+    [SerializeField] private Xml_to_MIDI xml_to_MIDI;
+    [SerializeField] private MusicXMLStart XMLStart;
+    [SerializeField] private Button But;
     private string basePath;
     void Awake()
     {
-        //Run();
+        But.onClick.AddListener(() =>
+        {
+            Score_Xml_MIDI();
+        });
     }
     [ContextMenu("XML => MIDI(micromamba)")]
 
-    public void Run() {
+    public void Score_Xml_MIDI() {
         #region MyRegion
         var sb = new StringBuilder();
         foreach (var node in nodes._nodes)
@@ -92,12 +100,14 @@ public class MusicXmlEditorCaller : MonoBehaviour
             if (!string.IsNullOrWhiteSpace(stderr))
                 UnityEngine.Debug.LogWarning($"[Python STDERR]\n{stderr}");
 
-            //if (File.Exists(outputXml))UnityEngine.Debug.Log($"出力OK: {outputXml}");
-            //else UnityEngine.Debug.LogError("出力ファイルが見つかりません。パス/権限を確認してください。");
         }
         catch (Exception ex)
         {
             UnityEngine.Debug.LogError(ex);
         }
+        XMLStart.AnalyzeMusicXML(outputXml);
+        xml_to_MIDI.RunVeny();
+        midiPlayer.MidiStart();
+
     }
 }
