@@ -79,11 +79,14 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
         {
             case EditMode.Place:
 
-                PlaceNodeat(NodesFin, nameNumber);
+                PutONNodeat(NodesFin, nameNumber);
+                break;
+            case EditMode.Delete:
+                
                 break;
         }
     }
-    public void PlaceNodeat (Vector2 anchore,string name)
+    public void PutONNodeat (Vector2 anchore,string name)
     {
         RectTransform note = Instantiate(NodePrehab, exBox);
         note.anchoredPosition = anchore;

@@ -14,7 +14,7 @@ public class Xml_to_MIDI : MonoBehaviour
 
     public string scriptargs = "adwadwa ";
 
-    public string scriptPath = Path.Combine(FluidSynthPaths.scriptPy,"convert_xml_to_midi.py");
+    public string scriptPath = Path.Combine(FluidSynthPaths.scriptPy,"Xml_to_Midi.py");
     public string inputXml =Path.Combine( FluidSynthPaths.ScoresDir,"edited_score.xml");
     public string outputMid = Path.Combine(FluidSynthPaths.ScoresDir,"edited_score.mid");
 

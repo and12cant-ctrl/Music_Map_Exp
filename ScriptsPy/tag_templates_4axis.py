@@ -18,6 +18,8 @@ from typing import Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
+import lightgbm as lgb
+import emotion_common
 
 # ====== 4軸で使う列（あなたのFINAL_COLUMNSから流用）======
 MOTION_COLS = [
@@ -209,6 +211,76 @@ def load_inputs(inputs: List[str], from_dir: bool = False) -> pd.DataFrame:
         frames.append(df)
     return pd.concat(frames, ignore_index=True)
 
+def add_emotion_columns(
+    df: pd.DataFrame,
+    model_path: Path,
+    meta_path: Path,
+) -> pd.DataFrame:
+    """
+    df の各行について LightGBM 推論を行い、以下の列を追加して返す：
+      emo_<class>（各クラス確率）
+      emo_max_label, emo_max_score
+      emo_min_label, emo_min_score
+    """
+    df = df.copy()
+
+    meta = emotion_common.load_meta(meta_path)  # :contentReference[oaicite:3]{index=3}
+    final_columns = meta.get("final_columns", emotion_common.FINAL_COLUMNS)
+    classes = meta.get("classes")
+    fillna = float(meta.get("preprocess", {}).get("fillna", 0.0))
+
+    if not isinstance(classes, list) or not classes:
+        raise ValueError("meta に classes がありません。")  # :contentReference[oaicite:4]{index=4}
+
+    booster = lgb.Booster(model_file=str(model_path))
+
+    # 出力列を先に作る（順序安定）
+    for c in classes:
+        col = f"emo_{c}"
+        if col not in df.columns:
+            df[col] = 0.0
+
+    df["emo_max_label"] = ""
+    df["emo_max_score"] = 0.0
+    df["emo_min_label"] = ""
+    df["emo_min_score"] = 0.0
+
+    # 行ごと推論
+    for idx, row in df.iterrows():  # ← indexラベルをそのまま使う
+        by_name = {}
+        for col in final_columns:
+            if col == "source_main_rel":
+                continue
+            v = row.get(col, fillna)
+            by_name[col] = v
+
+        X = emotion_common.vectorize_features(
+            {"featuresByName": by_name},
+            final_columns=[c for c in final_columns if c != "source_main_rel"],
+            fillna_value=fillna,
+        )
+
+        proba = booster.predict(X)
+        import numpy as _np
+        proba = _np.asarray(proba)
+        if proba.ndim == 1:
+            proba = proba.reshape(1, -1)
+        probs = proba[0].tolist()
+
+        # 各感情列へ（idxで書く）
+        for k, cls in enumerate(classes):
+            df.at[idx, f"emo_{cls}"] = float(probs[k])
+
+        max_i = int(_np.argmax(proba[0]))
+        min_i = int(_np.argmin(proba[0]))
+
+        df.at[idx, "emo_max_label"] = str(classes[max_i])
+        df.at[idx, "emo_max_score"] = float(probs[max_i])
+        df.at[idx, "emo_min_label"] = str(classes[min_i])
+        df.at[idx, "emo_min_score"] = float(probs[min_i])
+
+
+    return df
 
 def main():
     ap = argparse.ArgumentParser()
@@ -217,6 +289,9 @@ def main():
     ap.add_argument("--out_json", type=str, default="thresholds_4axis.json", help="出力JSON（閾値など）")
     ap.add_argument("--q1", type=float, default=0.33, help="low/midの境界分位（デフォ0.33）")
     ap.add_argument("--q2", type=float, default=0.66, help="mid/highの境界分位（デフォ0.66）")
+    ap.add_argument("--emo_model", type=str, default="", help="emotion_lgbm.txt（指定すると感情列も付与）")
+    ap.add_argument("--emo_meta", type=str, default="", help="emotion_lgbm_meta.json（指定すると感情列も付与）")
+
     args = ap.parse_args()
 
     df = load_inputs(args.inputs)
@@ -229,16 +304,43 @@ def main():
         bands, t1, t2 = band_by_quantiles(df2[col], q1=args.q1, q2=args.q2)
         df2[f"{axis}_band"] = bands
         thresholds[axis] = {"q1": args.q1, "q2": args.q2, "t1": t1, "t2": t2}
+            # 感情列の付与（オプション）
 
+    print("DEBUG emo cols after add:", [c for c in df2.columns if c.startswith("emo_")])
+    if args.emo_model and args.emo_meta:
+        df2 = add_emotion_columns(df2, Path(args.emo_model), Path(args.emo_meta))
     # 出力
+    print(df2[[c for c in df2.columns if c.startswith("emo_")]].head(3))
     out_csv = Path(args.out_csv)
     out_csv.parent.mkdir(parents=True, exist_ok=True)
 
-    KEEP_COLS = [
+    # KEEP_COLS = [
 
-        "motion_score", "density_score", "order_score", "rhythm_score",
-        "motion_band", "density_band", "order_band", "rhythm_band",        "source_main_rel",
+    #     "motion_score", "density_score", "order_score", "rhythm_score",
+    #     "motion_band", "density_band", "order_band", "rhythm_band",
+    #     "emo_trust", "emo_fear", "emo_sad", "emo_anxiety",
+    #     "emo_max_label", "emo_max_score",
+    #     "emo_min_label", "emo_min_score",
+    #     "source_main_rel",
+    # ]
+    KEEP_COLS = [
+    "motion_score", "density_score", "order_score", "rhythm_score",
+    "motion_band", "density_band", "order_band", "rhythm_band",
     ]
+
+    # 感情列（動的）
+    if args.emo_model and args.emo_meta:
+        import emotion_common
+        meta = emotion_common.load_meta(Path(args.emo_meta))
+        classes = meta.get("classes", [])
+
+        KEEP_COLS += [f"emo_{c}" for c in classes]
+        KEEP_COLS += [
+            "emo_max_label", "emo_max_score",
+            "emo_min_label", "emo_min_score",
+        ]
+
+    KEEP_COLS += ["source_main_rel"]
 
     # 入力側に source_main_rel が無いケースに備えて空列を作る
     for c in KEEP_COLS:
@@ -247,6 +349,8 @@ def main():
 
     df_out = df2[KEEP_COLS]
     df_out.to_csv(out_csv, index=False, encoding="utf-8-sig")
+    print("DEBUG emo cols before output:", [c for c in df2.columns if c.startswith("emo_")])
+    print("DEBUG KEEP_COLS has emo?:", [c for c in KEEP_COLS if str(c).startswith("emo_")]) 
 
     out_json = Path(args.out_json)
     out_json.parent.mkdir(parents=True, exist_ok=True)
@@ -263,8 +367,6 @@ def main():
     out_json.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
     print(json.dumps({"ok": True, "out_csv": str(out_csv), "out_json": str(out_json)}, ensure_ascii=False))
-
-
 
 if __name__ == "__main__":
     main()

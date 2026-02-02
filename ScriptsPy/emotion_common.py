@@ -10,9 +10,9 @@ import lightgbm as lgb
 import sys
 
 
-# ======== FINAL_COLUMNS（順番が命）========
-# ここはあなたの元ファイル(train_emotion_model.py)のFINAL_COLUMNSをそのままコピペしてください。
-# 分割後は「ここが唯一の正」として運用します。
+# ======== FINAL_COLUMNS========
+# 入力:特徴量
+# 出力:感情スコア
 FINAL_COLUMNS: List[str] = [
     # basics
     "time_signature_num","time_signature_den","tempo_bpm_est","bars_len","total_duration_quarter","pickup_flag",
@@ -143,3 +143,68 @@ def read_json_from_stdin() -> Dict[str, Any]:
     if not raw.strip():
         raise ValueError("stdin が空です。")
     return json.loads(raw)
+
+# ======== CLI: CSV + row -> emotion JSON ========
+import argparse
+import csv as _csv
+
+def _read_csv_row_as_features_by_name(csv_path: Path, row_index: int) -> Dict[str, Any]:
+    """
+    CSV(ヘッダあり)から指定行を取り出して featuresByName を作る。
+    row_index:
+      - 0..N-1: その行
+      - -1: 最終行
+    """
+    # Excel互換でutf-8-sigの可能性が高いのでまずこれで読む
+    # （utf-8でも普通に読める）
+    with csv_path.open("r", encoding="utf-8-sig", newline="") as f:
+        reader = _csv.DictReader(f)
+        rows = list(reader)
+
+    if not rows:
+        raise ValueError("CSVが空です。")
+
+    idx = row_index if row_index >= 0 else (len(rows) - 1)
+    if idx < 0 or idx >= len(rows):
+        raise ValueError(f"rowが範囲外です: row={row_index} (len={len(rows)})")
+
+    r = rows[idx]
+
+    # featuresByName：数値列だけ詰める（source_main_rel は非数値なので除外）
+    by_name: Dict[str, Any] = {}
+    for c in FINAL_COLUMNS:
+        if c == "source_main_rel":
+            continue
+        by_name[c] = r.get(c, 0.0)
+
+    return {"featuresByName": by_name}
+
+
+def cli_main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--csv", required=True, help="feature CSV path (header required)")
+    ap.add_argument("--row", type=int, default=-1, help="row index (0-based). -1 means last row.")
+    ap.add_argument("--model", required=True, help="emotion_lgbm.txt path")
+    ap.add_argument("--meta", required=True, help="emotion_lgbm_meta.json path")
+    args = ap.parse_args()
+
+    csv_path = Path(args.csv)
+    model_path = Path(args.model)
+    meta_path = Path(args.meta)
+
+    meta = load_meta(meta_path)
+    feat_obj = _read_csv_row_as_features_by_name(csv_path, args.row)
+
+    out = predict_with_saved_model(
+        model_path=model_path,
+        meta=meta,
+        feat_obj=feat_obj,
+    )
+
+    print(json.dumps(out, ensure_ascii=False))
+
+
+if __name__ == "__main__":
+    # 既存の import 用モジュールとしても使えるように、
+    # 直接実行された時だけ CLI を動かす
+    cli_main()

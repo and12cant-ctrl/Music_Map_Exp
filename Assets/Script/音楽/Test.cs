@@ -29,9 +29,14 @@ public class Test : MonoBehaviour
         string anxiety = Path.Combine(FluidSynthPaths.CSVDir, "anxiety.csv");
         string tagged = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "tagged_templates.csv");
         string Json = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "thresholds_4axis.json");
+        string modelPath = Path.Combine(FluidSynthPaths.GBMModelDir, "emotion_lgbm.txt");
+        string metaPath = Path.Combine(FluidSynthPaths.GBMModelDir, "emotion_lgbm_meta.json");
+
         string AS = $"run -r {FluidSynthPaths.micromambaroot} -n unitypy " +
             $"python -u \"{scPy}\" \"{trsut}\" \"{sad}\" \"{fear}\" \"{anxiety}\" " +
             $"--out_csv \"{tagged}\" " +
+            $"--emo_model \"{modelPath}\" " +
+            $"--emo_meta \"{metaPath}\" " +
             $"--out_json \"{Json}\"";
         //MusicXMLStart.AnalyzeEmotionFromMusicXML(MusicXML,null,,"normal");
         var featResult = PythonReturn.Run(

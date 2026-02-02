@@ -67,8 +67,8 @@ public class MusicXMLStart : MonoBehaviour
 
         string extractArgs =
             $"run -r \"{mambaRoot}\" -n unitypy " +
-            $"python -u \"{extractpy}\" \"{musicXmlPath}\" --out_csv -" +
-            $"{CSV} --rootdir {FluidSynthPaths.ProjectRoot}";
+            $"python -u \"{extractpy}\" \"{musicXmlPath}\" --out_csv " +
+            $"\"{CSV}\" --root_dir {FluidSynthPaths.ProjectRoot}";
 
         var featResult = PythonReturn.Run(
             exePath: mambaExe,

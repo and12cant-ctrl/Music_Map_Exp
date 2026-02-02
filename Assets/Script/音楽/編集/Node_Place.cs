@@ -79,4 +79,32 @@ public class Node_Place : MonoBehaviour
         _nodes.Add(node);
         return true;
     }
+    public bool DeleteNode(float duration, Part part, string pitch, float start, int bars)
+    {
+        foreach (var thisnode in _nodes)
+        {
+            if (thisnode._Part == part && thisnode._pitch == pitch &&
+               Mathf.Max(thisnode._startBar, start) < Mathf.Min(thisnode._startBar + thisnode._duration, start + duration))
+            {
+                thisnode ;
+            }
+        }
+        _nodes.RemoveAll(thisnode =>
+            thisnode._Part == part &&
+            thisnode._pitch == pitch &&
+            Mathf.Max(thisnode._startBar, start) <
+            Mathf.Min(thisnode._startBar + thisnode._duration, start + duration)
+        );
+
+        var node = new Node();
+        node._duration = duration;
+        node._Part = part;
+        node._pitch = pitch;
+        node._startBar = start;
+        node._bar = bars;
+        node._voice = voic;
+
+        _nodes.Add(node);
+        return true;
+    }
 }

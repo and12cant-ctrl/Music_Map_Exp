@@ -9,7 +9,7 @@ using System.IO;
 public class MidiPlayer : MonoBehaviour
 {
 
-    public string midFileName = "Assets/StreamingAssets/scores/edited_score";
+    public string midFileName = "Assets/StreamingAssets/scores/Xml_to_Midi.py";
 
     public float startSeconds = 0f;
     public float volume = 1f;
@@ -27,7 +27,7 @@ public class MidiPlayer : MonoBehaviour
     {
         #region         Midiì«Ç›çûÇ›
         string path =Path.GetFullPath(Path.Combine((Directory.GetParent(Application.dataPath).FullName), midFileName));
-        Debug.Log(path);
+        //Debug.Log(path);
         if (!File. Exists(path))
         {
             Debug.LogError($"MIDI Ç™å©Ç¬Ç©ÇËÇ‹ÇπÇÒ: {path}");

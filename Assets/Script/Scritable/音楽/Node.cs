@@ -3,7 +3,6 @@ using UnityEngine;
 [Serializable]
 public class Node 
 {
-
     public float _duration;     //何拍続くか
     public Part _Part;          //誰のパートか
     public string _pitch;       //どの音階か

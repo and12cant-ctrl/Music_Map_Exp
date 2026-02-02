@@ -25,12 +25,14 @@ public class MusicXmlEditorCaller : MonoBehaviour
     [SerializeField] private MusicXMLStart XMLStart;
     [SerializeField] private Button But;
     private string basePath;
+    public string Json = "";
     void Awake()
     {
         But.onClick.AddListener(() =>
         {
             Score_Xml_MIDI();
         });
+        //emotion_commons = GetComponent<emotion_common>();
     }
     [ContextMenu("XML => MIDI(micromamba)")]
 
@@ -48,7 +50,7 @@ public class MusicXmlEditorCaller : MonoBehaviour
         string pythonPath = Path.Combine(FluidSynthPaths.micromambaroot, "envs/unitypy/python.exe");
         string scriptPath = Path.Combine(FluidSynthPaths.scriptPy, "edit_score_json.py");
         string inputXml = Path.Combine(FluidSynthPaths.ScoresDir, "empty_score.xml");
-        string outputXml = Path.Combine(FluidSynthPaths.ScoresDir, "edited_score.xml");
+        string outputXml = Path.Combine(FluidSynthPaths.ScoresDir, "edited_score_MAIN.xml");
         string partName = Part.A.ToString();
         #region JSON文字列に変換し、標準出力へ
         var cmd = new EditCommand
@@ -108,6 +110,6 @@ public class MusicXmlEditorCaller : MonoBehaviour
         XMLStart.AnalyzeMusicXML(outputXml);
         xml_to_MIDI.RunVeny();
         midiPlayer.MidiStart();
-
+        Json = emotion_common.InferFromCsvRow(outputXml,-1);
     }
 }

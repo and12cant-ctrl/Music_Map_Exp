@@ -26,45 +26,21 @@
     }
   },
   "norm_params": {
-    "key_fit_ratio": {
-      "lo": 0.5,
-      "hi": 1.0
+    "pc_concentration": {
+      "lo": 0.08921568627450978,
+      "hi": 0.9166666666666666
     },
-    "syncopation_score": {
+    "leap_ratio": {
       "lo": 0.0,
       "hi": 1.0
-    },
-    "chromatic_ratio": {
-      "lo": 0.0,
-      "hi": 0.5
     },
     "rest_ratio_time": {
       "lo": 0.0,
       "hi": 0.9625000000000001
     },
-    "strongbeat_hit_ratio": {
-      "lo": 0.0,
-      "hi": 1.0
-    },
-    "note_count_per_bar": {
-      "lo": 0.25,
-      "hi": 13.150000000000006
-    },
-    "pc_concentration": {
-      "lo": 0.08921568627450978,
-      "hi": 0.9166666666666666
-    },
     "direction_change_rate": {
       "lo": 0.0,
       "hi": 0.9139849624060153
-    },
-    "pitch_range_midi": {
-      "lo": 0.0,
-      "hi": 30.600000000000023
-    },
-    "leap_ratio": {
-      "lo": 0.0,
-      "hi": 1.0
     },
     "short_note_ratio": {
       "lo": 0.0,
@@ -73,6 +49,30 @@
     "dur_std_quarter": {
       "lo": 0.0,
       "hi": 1.5000601031503338
+    },
+    "strongbeat_hit_ratio": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "chromatic_ratio": {
+      "lo": 0.0,
+      "hi": 0.5
+    },
+    "key_fit_ratio": {
+      "lo": 0.5,
+      "hi": 1.0
+    },
+    "pitch_range_midi": {
+      "lo": 0.0,
+      "hi": 30.600000000000023
+    },
+    "syncopation_score": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "note_count_per_bar": {
+      "lo": 0.25,
+      "hi": 13.150000000000006
     }
   },
   "weights": {
