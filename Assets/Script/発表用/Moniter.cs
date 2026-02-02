@@ -20,9 +20,18 @@ public class Moniter : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        var (maxKey, maxVal, minKey, minVal) = EmotionPick.GetMaxMin(Happyou.Json);
-        Emo.text = maxKey;
-        ScoreText.text = minKey;
+        if (EmotionPick.TryGetMaxMin(Happyou.Json, out var r))
+        {
+            Emo.text = r.maxKey;
+            ScoreText.text = r.minKey;
+        }
+        else
+        {
+            Emo.text = "-";
+            ScoreText.text = "-";
+        }
+        Emo.text = r.maxKey;
+        ScoreText.text = r.minKey;
         
     }
     [Serializable]
@@ -36,18 +45,34 @@ public class Moniter : MonoBehaviour
 
     public static class EmotionPick
     {
-        public static (string maxKey, float maxVal, string minKey, float minVal) GetMaxMin(string json)
+        public static bool TryGetMaxMin(
+            string json,
+            out (string maxKey, float maxVal, string minKey, float minVal) result)
         {
-            var obj = JsonConvert.DeserializeObject<EmotionResult>(json);
-            if (obj?.proba_by_class == null || obj.proba_by_class.Count == 0)
-                throw new Exception("proba_by_class is missing or empty.");
+            result = default;
 
-            // 最大
+            if (string.IsNullOrWhiteSpace(json))
+                return false;
+
+            EmotionResult obj;
+            try
+            {
+                obj = JsonConvert.DeserializeObject<EmotionResult>(json);
+            }
+            catch
+            {
+                return false; // JSON壊れなどもスキップ
+            }
+
+            if (obj?.proba_by_class == null || obj.proba_by_class.Count == 0)
+                return false;
+
             var maxPair = obj.proba_by_class.Aggregate((a, b) => a.Value >= b.Value ? a : b);
-            // 最小
             var minPair = obj.proba_by_class.Aggregate((a, b) => a.Value <= b.Value ? a : b);
 
-            return (maxPair.Key, maxPair.Value, minPair.Key, minPair.Value);
+            result = (maxPair.Key, maxPair.Value, minPair.Key, minPair.Value);
+            return true;
         }
     }
+
 }
