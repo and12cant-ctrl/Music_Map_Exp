@@ -26,7 +26,10 @@ public class ModeSelect : MonoBehaviour
     }
     void Nodesele(Node_judge.EditMode mode)
     {
+        Debug.Log($"[Nodesele] set mode={mode} on Edi_Score instance={Edi_Score?.GetInstanceID()}");
         Edi_Score.editMode = mode;
+
+        TabClose.CloseCurrentTab();
     }
 
 }

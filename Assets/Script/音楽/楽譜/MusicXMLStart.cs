@@ -84,6 +84,7 @@ public class MusicXMLStart : MonoBehaviour
             throw new Exception("extract_features.py é¿çsé∏îs");
 
         string featJsonText = ExtractLastJsonObject(featResult.Stdout);
+        Debug.Log("UNKO[EXTRACT JSON]\n" + featJsonText);
 
         var playerFeaturesByName = BuildFeaturesByNameFromFlatJson(
             featJsonText,
@@ -149,7 +150,4 @@ public class MusicXMLStart : MonoBehaviour
         }
         return dict;
     }
-
-
-
 }

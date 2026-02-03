@@ -11,48 +11,30 @@ public class Node_Place : MonoBehaviour
     private voice voic;
     public bool CanPlace(float time, Part part, string pitch, float start, int bars)
     {
-        //Debug.Log($"{scale},{beats}");
-        // 1) すでに同じ (X,Y) が存在していないか？
+        // 1) 同一パート・同一小節で時間が重なるなら置けない（voiceは問わない）
         foreach (var node in _nodes)
         {
-            if (node._Part == part && node._pitch == pitch && 
-               Mathf.Max(node._startBar,start)<Mathf.Min(node._startBar+node._duration,start+time))
+            if (node._Part == part && node._bar == bars && node._pitch == pitch &&
+                Mathf.Max(node._startBar, start) < Mathf.Min(node._startBar + node._duration, start + time))
             {
                 return false;
             }
         }
 
-        // 2) 同じ Y(_scale) の Node が何個あるか数える
-        int countSameY = 0;
+        // 2) 同じ(start, bar)に置ける数を制限、かつ空いてるvoiceを決める
+        int countSameSlot = 0;
         foreach (var node in _nodes)
         {
-            if (node._startBar == start && node._bar == bars)
+            if (node._bar == bars && Mathf.Approximately(node._startBar, start))
             {
-                countSameY++;
-                
+                countSameSlot++;
             }
         }
-        switch (countSameY)
-        {
-            case 0:
-               voic = voice.Up;
-                break;
-            case 1:
-                voic= voice.Middle;
-                break;
-            case 2:
-                voic = voice.Down;
-                break;
-            default:
-                break;
-        }
 
-        if (countSameY >= MaxPerY)
-        {
+        if (countSameSlot >= MaxPerY)
             return false;
-        }
 
-        // ここまで来たら置いてOK
+        voic = ChooseVoice(start, bars);
         return true;
     }
 
@@ -79,15 +61,33 @@ public class Node_Place : MonoBehaviour
         _nodes.Add(node);
         return true;
     }
-    public bool DeleteNode(float duration, Part part, string pitch, float start, int bars)
+    public void DeleteNode(float duration, Part part, string pitch, float start, int bars)
     {
-        _nodes.RemoveAll(thisnode =>
-            thisnode._Part == part &&
-            thisnode._pitch == pitch &&
-            Mathf.Max(thisnode._startBar, start) <
-            Mathf.Min(thisnode._startBar + thisnode._duration, start + duration)
+
+        _nodes.RemoveAll(n =>
+            n._Part == part &&
+            n._pitch == pitch &&
+            n._bar == bars &&
+            Mathf.Approximately(n._startBar, start) 
         );
-        
-        return true;
+
+    }
+    private voice ChooseVoice(float start, int bars)
+    {
+        bool usedUp = false, usedMid = false, usedDown = false;
+
+        foreach (var n in _nodes)
+        {
+            if (Mathf.Approximately(n._startBar, start) && n._bar == bars)
+            {
+                if (n._voice == voice.Up) usedUp = true;
+                else if (n._voice == voice.Middle) usedMid = true;
+                else if (n._voice == voice.Down) usedDown = true;
+            }
+        }
+
+        if (!usedUp) return voice.Up;
+        if (!usedMid) return voice.Middle;
+        return voice.Down;
     }
 }

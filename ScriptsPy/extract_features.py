@@ -337,6 +337,29 @@ def extract_main_features(main_part: stream.Part, sc_ref: stream.Score) -> Dict[
 # -----------------------------
 # Feature: ACC
 # -----------------------------
+def pick_main_part(sc: stream.Score, prefer_name: str = "A") -> stream.Part:
+    if not sc.parts:
+        raise RuntimeError("Score has no parts.")
+
+    # 1) partName == "A" かつ音符があるパートを優先
+    for p in sc.parts:
+        pname = (getattr(p, "partName", "") or "").strip()
+        if pname == prefer_name:
+            if len(list(p.recurse().notes)) > 0:
+                return p
+
+    # 2) 音符数が最大のパート
+    best = sc.parts[0]
+    best_n = len(list(best.recurse().notes))
+    for p in sc.parts[1:]:
+        n = len(list(p.recurse().notes))
+        if n > best_n:
+            best = p
+            best_n = n
+
+    # 3) 全部0なら、とりあえず先頭（従来互換）
+    return best
+
 def get_first_part(sc: stream.Score) -> stream.Part:
     if sc.parts:
         return sc.parts[0]
@@ -605,7 +628,7 @@ def extract_all(main_path: Path,root_dir: Optional[Path] = None) -> Dict[str, An
 
     if not sc_main.parts:
         raise RuntimeError(f"MAIN has no parts: {main_path}")
-    main_part = sc_main.parts[0]
+    main_part = pick_main_part(sc_main, prefer_name="A")
 
     common = extract_common_meta(sc_main, main_part)
     main_feats = extract_main_features(main_part, sc_main)

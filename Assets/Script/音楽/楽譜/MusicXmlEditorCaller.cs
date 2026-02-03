@@ -107,6 +107,7 @@ public class MusicXmlEditorCaller : MonoBehaviour
         {
             UnityEngine.Debug.LogError(ex);
         }
+
         XMLStart.AnalyzeMusicXML(outputXml);
         xml_to_MIDI.RunVeny();
         midiPlayer.MidiStart();

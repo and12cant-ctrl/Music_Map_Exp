@@ -9,6 +9,20 @@ public class Node
     public float _startBar;    //‰½”–Ú‚É‚¨‚¢‚Ä‚ ‚é‚©
     public int _bar;            //‰½¬ß–Ú‚©
     public voice _voice;
+
+    public bool OverlapsIgnoreVoice(Node other)
+    {
+        if (_Part != other._Part) return false;
+        if (_pitch != other._pitch) return false;
+        if (_bar != other._bar) return false;
+
+        float a0 = _startBar;
+        float a1 = _startBar + _duration;
+        float b0 = other._startBar;
+        float b1 = other._startBar + other._duration;
+
+        return Mathf.Max(a0, b0) < Mathf.Min(a1, b1);
+    }
 }
 
 public enum Part

@@ -9,7 +9,7 @@ using System.IO;
 public class MidiPlayer : MonoBehaviour
 {
 
-    public string midFileName = "Assets/StreamingAssets/scores/Xml_to_Midi.py";
+    public string midFileName = "Assets/StreamingAssets/scores/edited_score_MAIN.mid";
 
     public float startSeconds = 0f;
     public float volume = 1f;
@@ -20,14 +20,15 @@ public class MidiPlayer : MonoBehaviour
     private MidiFile _midi;
     private void Start()
     {
-        MidiStart();
+        //MidiStart();
     }
 
     public void MidiStart()
     {
+        StopInternal();
         #region         Midi読み込み
-        string path =Path.GetFullPath(Path.Combine((Directory.GetParent(Application.dataPath).FullName), midFileName));
-        //Debug.Log(path);
+        string path =Path.GetFullPath(Path.Combine(Directory.GetParent(Application.dataPath).FullName, midFileName));
+        Debug.Log(path);
         if (!File. Exists(path))
         {
             Debug.LogError($"MIDI が見つかりません: {path}");
@@ -36,11 +37,15 @@ public class MidiPlayer : MonoBehaviour
         _midi = MidiFile.Read(path);
         #endregion
         #region 出力デバイス確認
-        _device = GetWindowsSynthOrFirst();
         if (_device == null)
         {
-            Debug.LogError("MIDI 出力デバイスがありません。");
-            return;
+            var name = GetWindowsSynthOrFirstName();
+            if (string.IsNullOrEmpty(name))
+            {
+                Debug.LogError("MIDI 出力デバイスがありません。");
+                return;
+            }
+            _device = OutputDevice.GetByName(name);
         }
         #endregion
 
@@ -67,35 +72,38 @@ public class MidiPlayer : MonoBehaviour
         else
         {
             // 末尾で停止
-            _playback.Stop();
+            StopInternal();
         }
     }
-    private OutputDevice GetWindowsSynthOrFirst()
-    {
-        // "Microsoft GS Wavetable Synth" を優先
-        foreach (var info in OutputDevice.GetAll())
-        {
-            if (info.Name.ToLower().Contains("microsoft gs wavetable"))
-                return OutputDevice.GetByName(info.Name);
-        }
 
-        // 見つからない場合は先頭
-        var all = OutputDevice.GetAll();
-        var first = all.FirstOrDefault();
-        return first != null ? OutputDevice.GetByName(first.Name) : null;
-    }
     public void OnDestroy()
     {
-        if (_playback != null)
-        {
-            try { _playback.Stop(); } catch { }
-            _playback.Finished -= OnPlaybackFinished;
-            _playback.Dispose();
-            _playback = null;
-        }
+        StopInternal();
+
         _device?.Dispose();
         _device = null;
         _midi = null;
+    }
+    private void StopInternal()
+    {
+        if (_playback != null)
+        {
+            try { if (_playback.IsRunning) _playback.Stop(); } catch { }
+            try { _playback.Finished -= OnPlaybackFinished; } catch { }
+            try { _playback.Dispose(); } catch { }
+            _playback = null;
+        }
+    }
+    private string GetWindowsSynthOrFirstName()
+    {
+        foreach (var info in OutputDevice.GetAll())
+        {
+            if (info.Name.ToLower().Contains("microsoft gs wavetable"))
+                return info.Name;
+        }
+
+        var first = OutputDevice.GetAll().FirstOrDefault();
+        return first?.Name;
     }
 }
 

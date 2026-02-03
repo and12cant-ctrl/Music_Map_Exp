@@ -49,18 +49,22 @@ public class RythomSelect : MonoBehaviour
             case LengthNode.Harf:
                 ChangeImage(Edi_Score.NodePrehab,1);
                 LenNo = 0.5f;
+                TabClose.CloseCurrentTab();
                 break;
             case LengthNode.One:
                 ChangeImage(Edi_Score.NodePrehab,2);
                 LenNo = 1f;
+                TabClose.CloseCurrentTab();
                 break;
             case LengthNode.Two:
                 ChangeImage(Edi_Score.NodePrehab, 4);
                 LenNo = 2f;
+                TabClose.CloseCurrentTab();
                 break;
             case LengthNode.all:
                 ChangeImage(Edi_Score.NodePrehab, 8);
                 LenNo = Edi_Score.beat;
+                TabClose.CloseCurrentTab();
                 break;
         }
         Edi_Score.nodeLength = LenNo;

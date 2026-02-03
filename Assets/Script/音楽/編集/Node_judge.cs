@@ -1,9 +1,10 @@
 using System;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Node_judge : MonoBehaviour,IPointerClickHandler
+public class Node_judge : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private RectTransform staffRect; // クリック対象のエリア（五線譜など）
     [SerializeField] private RectTransform exBox;
@@ -11,23 +12,33 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
     [SerializeField] private Camera uiCamera;         // Screen Space - Camera / World Space のときに使用
     [SerializeField] public RectTransform NodePrehab;
     [SerializeField] private Node_Place NodeCheak;
-    [SerializeField] public EditMode editMode = EditMode.Place;
+    private EditMode _editMode;
+    public EditMode editMode
+    {
+        get => _editMode;
+        set
+        {
+            if (_editMode == value) return;
+            Debug.Log($"[editMode SET] {_editMode} -> {value} (this={GetInstanceID()})\n{Environment.StackTrace}");
+            _editMode = value;
+        }
+    }
     public float beat = 4.0f;           //小節の拍数
     private int scale = 20;             //音階の下から上までの数
     private string nameNumber = "1";    //音符の名付け
     public Part part = Part.A;         //パート名
-    [HideInInspector]public float nodeLength = 0.5f;        //選択した音符の拍数（現在八分音符）
+    [HideInInspector] public float nodeLength = 0.5f;        //選択した音符の拍数（現在八分音符）
     [HideInInspector] public int currentBar = 1;            //現在小節数
     [HideInInspector] public float maxBar = 4;               //最大小節数
-    [HideInInspector]public harfNode hafeN =harfNode.None;
-    [HideInInspector]public LengthNode Leng = LengthNode.One;
-    private string[] Gcode = {  "A", "B", "C", "D", "E", "F", "G", };
+    [HideInInspector] public harfNode hafeN = harfNode.None;
+    [HideInInspector] public LengthNode Leng = LengthNode.One;
+    private string[] Gcode = { "A", "B", "C", "D", "E", "F", "G", };
 
     public void OnPointerClick(PointerEventData eventData)
     {
 
-        double[] Nodes = Enumerable.Range(0,(int)(2*beat)).Select(i =>i*nodeLength*(1.0/beat)).ToArray();
-        Debug.Log(Nodes.Length);
+        double[] Nodes = Enumerable.Range(0, (int)(2 * beat)).Select(i => i * nodeLength * (1.0 / beat)).ToArray();
+        //Debug.Log(Nodes.Length);
         double[] Scales = Enumerable.Range(0, scale).Select(i => (double)i / scale).ToArray();
         // Canvasの種類に応じてカメラを選ぶ
         Camera cam = null;
@@ -54,36 +65,40 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
 
             #region 変換
             //int ScaleX = Mathf.RoundToInt(snappedX * 100);
-            int BeatY= Mathf.RoundToInt(snappedY * 100);
+            int BeatY = Mathf.RoundToInt(snappedY * 100);
 
             string hafeNodes =
                 hafeN == harfNode.Shape ? "#" :
                 hafeN == harfNode.Flat ? "♭" : "";
 
-            string num = $"{Gcode[(BeatY / 5 ) % Gcode.Length]}{hafeNodes}{(((BeatY / 5) + 6) / Gcode.Length) + 3}";
-            float start =(snappedX * Mathf.Clamp(currentBar - 1,1,currentBar-1) * 2);
-            int truebars =(int)(currentBar+ (snappedX * Mathf.Clamp(currentBar - 1, 1, currentBar - 1) * maxBar * 2) / maxBar);
+            string num = $"{Gcode[(BeatY / 5) % Gcode.Length]}{hafeNodes}{(((BeatY / 5) + 6) / Gcode.Length) + 3}";
+            float start = (snappedX * Mathf.Clamp(currentBar - 1, 1, currentBar - 1) * 2);
+            int truebars = (int)(currentBar + (snappedX * Mathf.Clamp(currentBar - 1, 1, currentBar - 1) * maxBar * 2) / maxBar);
             Debug.Log($"num [{num}]& start[{start}] &[{truebars}]");
 
             #endregion
-            if (!NodeCheak.PlaceNode(nodeLength,part,num,start,truebars)) return;
+
 
             //Debug.Log(staffRect.rect.height);
             float ansX = Mathf.Lerp(0, staffRect.rect.width, snappedX); //割合で×して返す
             float ansY = Mathf.Lerp(0, staffRect.rect.height, snappedY);
 
-            NodesFin = new Vector2(ansX+((currentBar-1)*330), ansY);
+            NodesFin = new Vector2(ansX + ((currentBar - 1) * 330), ansY);
             #endregion
-        }
-        switch (editMode)
-        {
-            case EditMode.Place:
-
-                PutONNodeat(NodesFin, nameNumber);
-                break;
-            case EditMode.Delete:
-                
-                break;
+            Debug.Log($"[Switch] this={GetInstanceID()} editMode={editMode}");
+            switch (editMode)
+            {
+                case EditMode.Place:
+                    if (!NodeCheak.PlaceNode(nodeLength, part, num, start, truebars)) return;
+                    Debug.Log("Place");
+                    PutONNodeat(NodesFin, nameNumber);
+                    break;
+                case EditMode.Delete:
+                    Debug.Log("Delete");
+                    NodeCheak.DeleteNode(nodeLength, part, num, start, truebars);
+                    DelNode(NodesFin, nameNumber);
+                    break;
+                }
         }
     }
     public void PutONNodeat (Vector2 anchore,string name)
@@ -91,6 +106,19 @@ public class Node_judge : MonoBehaviour,IPointerClickHandler
         RectTransform note = Instantiate(NodePrehab, exBox);
         note.anchoredPosition = anchore;
         note.name = name;
+    }
+    private void DelNode(Vector2 anchore, string name)
+    {
+        float eps = 0.1f; // UIなので少し余裕を持たせる
+
+        foreach (RectTransform child in exBox)
+        {
+            if (Vector2.Distance(child.anchoredPosition, anchore) < eps)
+            {
+                Destroy(child.gameObject);
+                return; // 1個消したら終了
+            }
+        }
     }
 
     private Vector2 XmltoNode(string Code,float sta,int bar)
