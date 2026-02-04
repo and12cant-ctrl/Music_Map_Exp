@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class PartSelect : MonoBehaviour
 {
-    [SerializeField] private Node_judge Edi_Score;
+    [SerializeField] private Node_judge_re Edi_Score;
     [SerializeField] private GameManager gameManager;
     [SerializeField] private GameObject partPrehabBox;
     [SerializeField] private GameObject partBox;
@@ -18,12 +18,8 @@ public class PartSelect : MonoBehaviour
         img = Node.GetComponentInChildren<Image>();
         GeneButton.onClick.AddListener(() =>
         {
-            TabClose.OpenTab(partBox);  //‚±‚±‚ªnull•Ô‚·‚©‚ç‘‚ß‚É
+            TabClose.OpenTab(partBox); 
         });
-        //GeneButton.onClick.AddListener(() =>
-        //{
-        //    Clicker();
-        //});
     }
     public void Nodesele(Part part)
     {

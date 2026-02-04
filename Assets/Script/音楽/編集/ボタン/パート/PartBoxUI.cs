@@ -13,24 +13,28 @@ public class PartBoxUI : MonoBehaviour
     {
         _part = part;
         _text.text = part.ToString();
-        // ŒÃ‚¢ƒŠƒXƒi[‚ðÁ‚µ‚Ä‚©‚ç“o˜^i”O‚Ì‚½‚ßj
         _button.onClick.RemoveAllListeners();
         _button.onClick.AddListener(() =>
         {
-            Sel.img.color = NodeCol(part);
+            Sel.img.color = PartColorUtil.GetNodeColor(part);
             Sel.Nodesele(part);
             Sel.TabClose.CloseCurrentTab();
         });
 
     }
 
-    private Color NodeCol(Part part)
-    {
-        Color Ncolor =
-        part == Part.A ? Color.white :
-        part == Part.B ? Color.red:
-        part == Part.C ?Color.blue :Color.black ;
 
-        return Ncolor;
+}
+public static class PartColorUtil
+{
+    public static Color GetNodeColor(Part part)
+    {
+        return part switch
+        {
+            Part.A => Color.white,
+            Part.B => Color.red,
+            Part.C => Color.blue,
+            _ => Color.black
+        };
     }
 }

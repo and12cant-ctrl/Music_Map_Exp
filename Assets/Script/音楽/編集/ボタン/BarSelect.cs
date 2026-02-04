@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class BarSelect : MonoBehaviour
 {
-    [SerializeField] private Node_judge Edi_Score;
+    [SerializeField] private Node_judge_re Edi_Score;
     [SerializeField] private RectTransform score;
     [SerializeField] private Button btnOne;
     [SerializeField] private Button btnTwo;
@@ -31,6 +31,6 @@ public class BarSelect : MonoBehaviour
     void Barsele(int Bar)
     {
         Edi_Score.currentBar = Bar;
-        score.anchoredPosition = new Vector2 ((Bar - 1 )* -330,0);
+        score.anchoredPosition = new Vector2 ((Bar - 1 )* -330,5);
     }
 }

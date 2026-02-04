@@ -4,7 +4,7 @@ using static Node_judge;
 
 public class RythomSelect : MonoBehaviour
 {
-    [SerializeField] private Node_judge Edi_Score;
+    [SerializeField] private Node_judge_re Edi_Score;
     [SerializeField] private TabOverLayCloser TabClose;
     [SerializeField] private Button OpenTab;
     [SerializeField] private GameObject RhyhomTab;

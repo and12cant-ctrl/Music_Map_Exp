@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class ModeSelect : MonoBehaviour
 {
-    [SerializeField] private Node_judge Edi_Score;
+    [SerializeField] private Node_judge_re Edi_Score;
     [SerializeField] private Button btnOpen;
     [SerializeField] private Button btnGene;
     [SerializeField] private Button btnDel;

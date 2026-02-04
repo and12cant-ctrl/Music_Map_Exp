@@ -13,6 +13,7 @@ public class Node_judge : MonoBehaviour, IPointerClickHandler
     [SerializeField] public RectTransform NodePrehab;
     [SerializeField] private Node_Place NodeCheak;
     private EditMode _editMode;
+    private float scoreWidth = 330;
     public EditMode editMode
     {
         get => _editMode;
@@ -38,13 +39,12 @@ public class Node_judge : MonoBehaviour, IPointerClickHandler
     {
 
         double[] Nodes = Enumerable.Range(0, (int)(2 * beat)).Select(i => i * nodeLength * (1.0 / beat)).ToArray();
-        //Debug.Log(Nodes.Length);
         double[] Scales = Enumerable.Range(0, scale).Select(i => (double)i / scale).ToArray();
-        // Canvasの種類に応じてカメラを選ぶ
         Camera cam = null;
         if (canvas.renderMode == RenderMode.ScreenSpaceCamera || canvas.renderMode == RenderMode.WorldSpace)
             cam = uiCamera != null ? uiCamera : canvas.worldCamera;
         Vector2 NodesFin = new Vector2();
+
         // 画面座標（スクリーン）→ RectTransformローカル座標 に変換
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 staffRect, eventData.position, cam, out Vector2 localPoint))
@@ -83,7 +83,7 @@ public class Node_judge : MonoBehaviour, IPointerClickHandler
             float ansX = Mathf.Lerp(0, staffRect.rect.width, snappedX); //割合で×して返す
             float ansY = Mathf.Lerp(0, staffRect.rect.height, snappedY);
 
-            NodesFin = new Vector2(ansX + ((currentBar - 1) * 330), ansY);
+            NodesFin = new Vector2(ansX + ((currentBar - 1) * scoreWidth), ansY);
             #endregion
             Debug.Log($"[Switch] this={GetInstanceID()} editMode={editMode}");
             switch (editMode)
@@ -98,7 +98,7 @@ public class Node_judge : MonoBehaviour, IPointerClickHandler
                     NodeCheak.DeleteNode(nodeLength, part, num, start, truebars);
                     DelNode(NodesFin, nameNumber);
                     break;
-                }
+            }
         }
     }
     public void PutONNodeat (Vector2 anchore,string name)
@@ -121,18 +121,6 @@ public class Node_judge : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    private Vector2 XmltoNode(string Code,float sta,int bar)
-    {
-        Vector2 a = new Vector2(0,0);
-        return a;
-    }
-
-    public void xml(float x,float y)
-    {
-        float xmlbrats = x/(float)(1.0/beat);
-        float xmlscale = y/(float)(1.0 / scale);
-        Debug.Log($"XML!!{xmlbrats},{xmlscale}");
-    }
 
     public float Normalize(double[] separator, float ans)
     {
@@ -168,5 +156,18 @@ public class Node_judge : MonoBehaviour, IPointerClickHandler
     {
         Harf,One,Two,all
     }
-    
+
+    //private Vector2 XmltoNode(string Code,float sta,int bar)
+    //{
+    //    Vector2 a = new Vector2(0,0);
+    //    return a;
+    //}
+
+    //public void xml(float x,float y)
+    //{
+    //    float xmlbrats = x/(float)(1.0/beat);
+    //    float xmlscale = y/(float)(1.0 / scale);
+    //    Debug.Log($"XML!!{xmlbrats},{xmlscale}");
+    //}
+
 }

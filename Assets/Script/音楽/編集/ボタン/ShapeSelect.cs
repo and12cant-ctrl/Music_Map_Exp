@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class ShapeSelect : MonoBehaviour
 {
-    [SerializeField] private Node_judge Edi_Score;
+    [SerializeField] private Node_judge_re Edi_Score;
     [SerializeField] private Button btnShape;
     [SerializeField] private Button btnFlat;
     [SerializeField] private Button btnNone;
