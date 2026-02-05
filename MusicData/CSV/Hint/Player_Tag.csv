@@ -1,0 +1,2 @@
+﻿motion_score,density_score,order_score,rhythm_score,motion_band,density_band,order_band,rhythm_band,emo_anxiety,emo_fear,emo_sad,emo_trust,emo_max_label,emo_max_score,emo_min_label,emo_min_score,source_main_rel
+0.0,0.35,0.25,0.55,mid,mid,mid,mid,0.010148444958030212,0.9820640503388517,0.0003013790762834138,0.007486125626834817,fear,0.9820640503388517,sad,0.0003013790762834138,Assets\StreamingAssets\scores\edited_score_MAIN.xml

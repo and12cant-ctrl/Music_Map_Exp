@@ -8,31 +8,21 @@ using System.Linq;
 public class Moniter : MonoBehaviour
 {
     [SerializeField] private TMP_Text Score;
-    [SerializeField] private TMP_Text ScoreText;
-    [SerializeField] private TMP_Text Emo;
+    [SerializeField] private TMP_Text MinEmo;
+    [SerializeField] private TMP_Text MaxEmo;
     [SerializeField] private MusicXmlEditorCaller Happyou;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
     void Update()
     {
         if (EmotionPick.TryGetMaxMin(Happyou.Json, out var r))
         {
-            Emo.text = r.maxKey;
-            ScoreText.text = r.minKey;
+            MaxEmo.text = r.maxKey;
+            MinEmo.text = r.minKey;
         }
         else
         {
-            Emo.text = "-";
-            ScoreText.text = "-";
-        }
-        Emo.text = r.maxKey;
-        ScoreText.text = r.minKey;
-        
+            MaxEmo.text = "-";
+            MinEmo.text = "-";
+        }        
     }
     [Serializable]
     public class EmotionResult
@@ -66,7 +56,7 @@ public class Moniter : MonoBehaviour
 
             if (obj?.proba_by_class == null || obj.proba_by_class.Count == 0)
                 return false;
-
+            //Debug.Log(json);
             var maxPair = obj.proba_by_class.Aggregate((a, b) => a.Value >= b.Value ? a : b);
             var minPair = obj.proba_by_class.Aggregate((a, b) => a.Value <= b.Value ? a : b);
 

@@ -617,6 +617,15 @@ def append_csv(path: Path, row: Dict[str, Any]) -> None:
                 out_row[c] = row.get(c, 0.0)
         w.writerow(out_row)
 
+def overwrite_csv(path: Path, row: Dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    out_row = {c: row.get(c, 0.0) for c in FINAL_COLUMNS}
+
+    with path.open("w", newline="", encoding="utf-8-sig") as f:
+        w = csv.DictWriter(f, fieldnames=FINAL_COLUMNS)
+        w.writeheader()
+        w.writerow(out_row)
 
 # -----------------------------
 # Main
@@ -670,6 +679,12 @@ def main():
     ap.add_argument("--out_json", type=str, default="")
     ap.add_argument("--out_csv", type=str, default="")
     ap.add_argument("--root_dir", type=str, default="", help="root directory to make relative path")
+    ap.add_argument(
+    "--mode",
+    choices=["append", "overwrite"],
+    default="append",
+    help="CSV write mode"
+)
     args = ap.parse_args()
 
     root_dir = Path(args.root_dir) if args.root_dir else None
@@ -678,8 +693,12 @@ def main():
     if args.out_json:
         write_json(Path(args.out_json), out)
     if args.out_csv:
-        append_csv(Path(args.out_csv), out)
-        print(f"CSV_OK\t{args.out_csv}")
+        csv_path = Path(args.out_csv)
+        if args.mode == "overwrite":
+            overwrite_csv(csv_path, out)
+        else:
+            append_csv(csv_path, out)
+            print(f"CSV_OK\t{args.out_csv}")
 
     print(json.dumps(out, ensure_ascii=False))
 

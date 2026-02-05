@@ -7,7 +7,6 @@ using System.Text;
 using UnityEngine;
 
 using UnityEngine.UI;
-using UnityEngine.WSA;
 public class EmoJson
 {
     public string MusicXML;
@@ -80,7 +79,7 @@ public class EmoSortMIDI : MonoBehaviour
         });
         btnExRun.onClick.AddListener(() =>
         {
-            PlayXml(Test.MusicXML, Sf2Path);
+            //PlayXml(Tagged_template.MusicXML, Sf2Path);
         });
         #endregion
     }

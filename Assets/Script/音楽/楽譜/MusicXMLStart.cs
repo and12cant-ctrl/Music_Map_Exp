@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using System.Globalization;
+
 
 #region 判定用クラス
 [Serializable]
@@ -52,15 +52,33 @@ public class JudgeRequest
 
 public class MusicXMLStart : MonoBehaviour
 {
+    string extractpy = Path.Combine(FluidSynthPaths.scriptPy, "extract_features.py");
+    string mambaRoot = Path.Combine(FluidSynthPaths.micromambaroot);
+    string mambaExe = Path.Combine(FluidSynthPaths.micromambaExe);
+    string CSV = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "Player_Extract.csv");
+    string emo_lgbm = Path.Combine(FluidSynthPaths.GBMModelDir, "emotion_lgbm.txt");
+    string emo_Json = Path.Combine(FluidSynthPaths.GBMModelDir, "emotion_lgbm_meta.json");
+
+    string mamba = FluidSynthPaths.micromambaExe;
+    string scPy = Path.Combine(FluidSynthPaths.scriptPy, "tag_templates_4axis.py");
+    #region MyRegion
+    string trsut = Path.Combine(FluidSynthPaths.CSVDir, "trust.csv");
+    string sad = Path.Combine(FluidSynthPaths.CSVDir, "sad.csv");
+    string fear = Path.Combine(FluidSynthPaths.CSVDir, "fear.csv");
+    string anxiety = Path.Combine(FluidSynthPaths.CSVDir, "anxiety.csv");
+    string Player = Path.Combine(FluidSynthPaths.CSVDir, "Player_tag.csv");
+    #endregion
+
+    string tagged = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "tagged_templates.csv");
+    string Json = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "thresholds_4axis.json");
+    //string emo_lgbm = Path.Combine(FluidSynthPaths.GBMModelDir, "emotion_lgbm.txt");
+    //string metaPath = Path.Combine(FluidSynthPaths.GBMModelDir, "emotion_lgbm_meta.json");
+
+
     public void AnalyzeMusicXML(
         string musicXmlPath)
     {
-        string extractpy = Path.Combine(FluidSynthPaths.scriptPy,"extract_features.py");
-        string mambaRoot = Path.Combine(FluidSynthPaths.micromambaroot);
-        string mambaExe = Path.Combine(FluidSynthPaths.micromambaExe);
-        string CSV = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "Player_Extract.csv");
-        string emo_lgbm = Path.Combine(FluidSynthPaths.GBMModelDir, "emotion_lgbm.txt");
-        string emo_Json = Path.Combine(FluidSynthPaths.GBMModelDir, "emotion_lgbm_meta.json");
+       
         // -----------------------------
         // MusicXML → featuresRow
         // -----------------------------
@@ -68,7 +86,8 @@ public class MusicXMLStart : MonoBehaviour
         string extractArgs =
             $"run -r \"{mambaRoot}\" -n unitypy " +
             $"python -u \"{extractpy}\" \"{musicXmlPath}\" --out_csv " +
-            $"\"{CSV}\" --root_dir {FluidSynthPaths.ProjectRoot}";
+            $"\"{CSV}\" --root_dir {FluidSynthPaths.ProjectRoot} "+
+            $"--mode overwrite";
 
         var featResult = PythonReturn.Run(
             exePath: mambaExe,
@@ -84,7 +103,6 @@ public class MusicXMLStart : MonoBehaviour
             throw new Exception("extract_features.py 実行失敗");
 
         string featJsonText = ExtractLastJsonObject(featResult.Stdout);
-        Debug.Log("UNKO[EXTRACT JSON]\n" + featJsonText);
 
         var playerFeaturesByName = BuildFeaturesByNameFromFlatJson(
             featJsonText,
@@ -150,4 +168,26 @@ public class MusicXMLStart : MonoBehaviour
         }
         return dict;
     }
+
+    public void Extract_to_Tag(string outCSV, string InCSV)
+    {
+        //public static string MusicXML = Path.Combine(FluidSynthPaths.EmotionDir, "UnClass", "Chop-28-2_Intro", "Chop-28-2_INTRO_m1-4_ts4_4_E0.230_S0.875_MAIN.musicxml");
+
+
+        string AS = $"run -r {FluidSynthPaths.micromambaroot} -n unitypy " +
+            $"python -u \"{scPy}\" \"{InCSV}\" " +
+            $"--out_csv \"{outCSV}\" " +
+            $"--out_json \"{Json}\" " +
+            $"--emo_model \"{emo_lgbm}\" " +
+            $"--emo_meta \"{emo_Json}\" ";
+        //MusicXMLStart.AnalyzeEmotionFromMusicXML(MusicXML,null,,"normal");
+        var featResult = PythonReturn.Run(
+            exePath: mamba,
+            arguments: AS,
+            timeoutMs: 60_000,
+            encoding: Encoding.UTF8
+        );
+
+    }
+
 }

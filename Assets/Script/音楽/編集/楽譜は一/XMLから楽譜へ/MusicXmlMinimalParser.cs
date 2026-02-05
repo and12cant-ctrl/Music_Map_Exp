@@ -57,59 +57,107 @@ public static class MusicXmlMinimalParser
                     }
                 }
 
+                //foreach (var noteEl in measureEl.Elements(ns + "note"))
+                //{
+                //    bool isRest = noteEl.Element(ns + "rest") != null;
+                //    bool isChord = noteEl.Element(ns + "chord") != null;
+
+                //    var durEl = noteEl.Element(ns + "duration");
+                //    if (durEl == null) continue;
+                //    if (!float.TryParse(durEl.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var durDiv))
+                //        continue;
+
+                //    float durBeats = durDiv / divisions;
+                //    float start = cursorBeats;
+                //    int voiceNumber = 1;
+                //    var voiceEl = noteEl.Element(ns + "voice");
+                //    if (voiceEl != null && int.TryParse(voiceEl.Value, out var vn) && vn > 0)
+                //        voiceNumber = vn;
+
+                //    // ★ここで「voiceが違うなら別Part」を実現
+                //    Part partForThisNote = GetOrAssignPart(partVoiceToPart, partId, voiceNumber);
+
+                //    string pitch = "REST";
+                //    if (!isRest)
+                //    {
+                //        var pitchEl = noteEl.Element(ns + "pitch");
+                //        if (pitchEl != null)
+                //        {
+                //            var step = pitchEl.Element(ns + "step")?.Value;
+                //            var alter = pitchEl.Element(ns + "alter")?.Value;
+                //            var octave = pitchEl.Element(ns + "octave")?.Value;
+
+                //            if (!string.IsNullOrEmpty(step) && !string.IsNullOrEmpty(octave))
+                //            {
+                //                string accidental = "";
+                //                if (alter == "1") accidental = "#";
+                //                else if (alter == "-1") accidental = "♭";
+                //                pitch = $"{step}{accidental}{octave}";
+                //            }
+                //        }
+                //    }
+
+                //    results.Add(new ScoreEvent
+                //    {
+                //        part = partForThisXmlPart,
+                //        voice = voice.Up,     // ← あとで同時刻3音制限の割り当てをするなら仮
+                //        pitch = pitch,
+                //        duration = durBeats,
+                //        bar = bar,
+                //        start = start
+                //    });
+
+                //    if (!isChord) cursorBeats += durBeats;
+                //}
                 float cursorBeats = 0f;
 
-                foreach (var noteEl in measureEl.Elements(ns + "note"))
+                foreach (var child in measureEl.Elements())
                 {
-                    bool isRest = noteEl.Element(ns + "rest") != null;
-                    bool isChord = noteEl.Element(ns + "chord") != null;
-
-                    var durEl = noteEl.Element(ns + "duration");
-                    if (durEl == null) continue;
-                    if (!float.TryParse(durEl.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var durDiv))
-                        continue;
-
-                    float durBeats = durDiv / divisions;
-                    float start = cursorBeats;
-                    int voiceNumber = 1;
-                    var voiceEl = noteEl.Element(ns + "voice");
-                    if (voiceEl != null && int.TryParse(voiceEl.Value, out var vn) && vn > 0)
-                        voiceNumber = vn;
-
-                    // ★ここで「voiceが違うなら別Part」を実現
-                    Part partForThisNote = GetOrAssignPart(partVoiceToPart, partId, voiceNumber);
-
-                    string pitch = "REST";
-                    if (!isRest)
+                    if (child.Name == ns + "note")
                     {
-                        var pitchEl = noteEl.Element(ns + "pitch");
-                        if (pitchEl != null)
-                        {
-                            var step = pitchEl.Element(ns + "step")?.Value;
-                            var alter = pitchEl.Element(ns + "alter")?.Value;
-                            var octave = pitchEl.Element(ns + "octave")?.Value;
+                        var noteEl = child;
 
-                            if (!string.IsNullOrEmpty(step) && !string.IsNullOrEmpty(octave))
-                            {
-                                string accidental = "";
-                                if (alter == "1") accidental = "#";
-                                else if (alter == "-1") accidental = "♭";
-                                pitch = $"{step}{accidental}{octave}";
-                            }
-                        }
+                        bool isRest = noteEl.Element(ns + "rest") != null;
+                        bool isChord = noteEl.Element(ns + "chord") != null;
+
+                        var durEl = noteEl.Element(ns + "duration");
+                        if (durEl == null) continue;
+
+                        float durDiv = float.Parse(durEl.Value, CultureInfo.InvariantCulture);
+                        float durBeats = durDiv / divisions;
+
+                        float start = cursorBeats;
+
+                        // pitch処理（省略）
+                        string pitch = "REST";
+                        results.Add(new ScoreEvent
+                        {
+                            part = partForThisXmlPart,
+                            voice = targetVoice,
+                            pitch = pitch,
+                            duration = durBeats,
+                            bar = bar,
+                            start = start
+                        });
+
+                        // chord の場合は時間進めない
+                        if (!isChord)
+                            cursorBeats += durBeats;
                     }
 
-                    results.Add(new ScoreEvent
+                    else if (child.Name == ns + "backup")
                     {
-                        part = partForThisXmlPart,
-                        voice = voice.Up,     // ← あとで同時刻3音制限の割り当てをするなら仮
-                        pitch = pitch,
-                        duration = durBeats,
-                        bar = bar,
-                        start = start
-                    });
+                        var durEl = child.Element(ns + "duration");
+                        float durDiv = float.Parse(durEl.Value, CultureInfo.InvariantCulture);
+                        cursorBeats -= durDiv / divisions;
+                    }
 
-                    if (!isChord) cursorBeats += durBeats;
+                    else if (child.Name == ns + "forward")
+                    {
+                        var durEl = child.Element(ns + "duration");
+                        float durDiv = float.Parse(durEl.Value, CultureInfo.InvariantCulture);
+                        cursorBeats += durDiv / divisions;
+                    }
                 }
                 #region MyRegion
                 //int minMidi = int.MaxValue, maxMidi = int.MinValue;
@@ -156,29 +204,4 @@ public static class MusicXmlMinimalParser
         return assigned;
     }
 }
-public static class VoiceMapping
-{
-    public static Part ToPart(int voiceNumber)
-    {
-        return voiceNumber switch
-        {
-            1 => Part.A,
-            2 => Part.B,
-            3 => Part.C,
-            4 => Part.D,
-            _ => Part.A
-        };
-    }
 
-    public static voice ToVoiceEnum(int voiceNumber)
-    {
-        return voiceNumber switch
-        {
-            1 => voice.Up,
-            2 => voice.Down,
-            _ => voice.Middle
-        };
-    }
-
-
-}

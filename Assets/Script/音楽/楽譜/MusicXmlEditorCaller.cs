@@ -52,6 +52,9 @@ public class MusicXmlEditorCaller : MonoBehaviour
         string inputXml = Path.Combine(FluidSynthPaths.ScoresDir, "empty_score.xml");
         string outputXml = Path.Combine(FluidSynthPaths.ScoresDir, "edited_score_MAIN.xml");
         string partName = Part.A.ToString();
+        string InCSV = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "Player_Extract.csv");
+        string OutCSV = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "Player_Tag.csv");
+
         #region JSON文字列に変換し、標準出力へ
         var cmd = new EditCommand
         {
@@ -111,6 +114,8 @@ public class MusicXmlEditorCaller : MonoBehaviour
         XMLStart.AnalyzeMusicXML(outputXml);
         xml_to_MIDI.RunVeny();
         midiPlayer.MidiStart();
+        //Tagged_template.Extract_to_Tag(OutCSV, InCSV);
+        XMLStart.Extract_to_Tag(OutCSV, InCSV);
         Json = emotion_common.InferFromCsvRow(outputXml,-1);
     }
 }
