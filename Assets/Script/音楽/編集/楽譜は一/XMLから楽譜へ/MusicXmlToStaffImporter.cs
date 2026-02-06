@@ -30,14 +30,12 @@ public class MusicXmlToStaffImporter : MonoBehaviour
     }
     public void ImportFromMusic21(string musicXmlPath)
     {
-        // 1) Pythonを呼んでJSONをもらう（ここはあなたのPythonReturnに置換）
-        // string json = PythonReturn.Run("music21_to_scoreevents.py", musicXmlPath);
+
         string json = "";
 
         var payload = JsonUtility.FromJson<ScoreEventsPayload>(json);
         var events = payload.events.Select(ToScoreEvent).ToList();
 
-        // 2) beatsPerBar は Pythonの結果を採用（ここ超重要）
         var coord = new StaffCoordinateConverter(staffRect, payload.beatsPerBar, pixelsPerBar, scaleSteps);
         var applier = new ScoreEventApplier(nodeCheak, staffRenderer);
 

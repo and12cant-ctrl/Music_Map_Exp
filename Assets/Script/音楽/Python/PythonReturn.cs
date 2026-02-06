@@ -13,7 +13,6 @@ public struct PyRunResult
 
 public static class PythonReturn
 {
-
     public static PyRunResult Run(
     string exePath,
     string arguments,

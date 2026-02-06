@@ -19,8 +19,8 @@ public sealed class StaffCoordinateConverter
         _pixelsPerBar = pixelsPerBar;
         _scaleSteps = Mathf.Max(1, scaleSteps);
 
-        _minMidi = PitchStringToMidi("G2"); // 57
-        _maxMidi = PitchStringToMidi("F5"); // 89
+        _minMidi = PitchStringToMidi("G2"); // 43
+        _maxMidi = PitchStringToMidi("F5"); // 77
     }
 
     public Vector2 ToAnchoredPosition(ScoreEvent e)
@@ -67,7 +67,7 @@ public sealed class StaffCoordinateConverter
     }
 
     /// <summary>
-    /// "C#4", "D♭5", "A3" をMIDI番号へ。解析できなければ例外。
+    /// "C#4", "D♭5", "A3" などをMIDI番号へ。解析できなければ例外。
     /// </summary>
     public static int PitchStringToMidi(string pitch)
     {

@@ -39,7 +39,6 @@ public class Node_judge_re : MonoBehaviour, IPointerClickHandler
         set
         {
             if (_editMode == value) return;
-            //Debug.Log($"[editMode SET] {_editMode} -> {value} (this={GetInstanceID()})\n{Environment.StackTrace}");
             _editMode = value;
         }
     }
@@ -51,7 +50,7 @@ public class Node_judge_re : MonoBehaviour, IPointerClickHandler
         if (nodeCheak == null) Debug.LogError("nodeCheak (Node_Place) is null");
         if (staffRenderer == null) Debug.LogWarning("staffRenderer is null (UI”½‰f‚µ‚È‚¢‚È‚çOK)");
 
-        _applier = new ScoreEventApplier(nodeCheak, staffRenderer);
+        _applier = new ScoreEventApplier(nodeCheak, staffRenderer,);
         NodePrehab = staffRenderer.nodePrefab;
     }
 

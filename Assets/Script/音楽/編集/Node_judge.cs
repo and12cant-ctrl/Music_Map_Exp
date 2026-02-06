@@ -12,6 +12,7 @@ public class Node_judge : MonoBehaviour, IPointerClickHandler
     [SerializeField] private Camera uiCamera;         // Screen Space - Camera / World Space ÇÃÇ∆Ç´Ç…égóp
     [SerializeField] public RectTransform NodePrehab;
     [SerializeField] private Node_Place NodeCheak;
+    [SerializeField] private float beatsPerBar = 4f;
     private EditMode _editMode;
     private float scoreWidth = 330;
     public EditMode editMode
@@ -72,7 +73,9 @@ public class Node_judge : MonoBehaviour, IPointerClickHandler
                 hafeN == harfNode.Flat ? "ÅÛ" : "";
 
             string num = $"{Gcode[(BeatY / 5) % Gcode.Length]}{hafeNodes}{(((BeatY / 5) + 6) / Gcode.Length) + 3}";
-            float start = (snappedX * Mathf.Clamp(currentBar - 1, 1, currentBar - 1) * 2);
+            //float start = (snappedX * Mathf.Clamp(currentBar - 1, 1, currentBar - 1) * 2);
+            float start = snappedX * beatsPerBar;
+            int bar = currentBar;
             int truebars = (int)(currentBar + (snappedX * Mathf.Clamp(currentBar - 1, 1, currentBar - 1) * maxBar * 2) / maxBar);
             Debug.Log($"num [{num}]& start[{start}] &[{truebars}]");
 

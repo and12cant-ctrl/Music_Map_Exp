@@ -61,6 +61,26 @@ public class Node_Place : MonoBehaviour
         _nodes.Add(node);
         return true;
     }
+
+    public bool PlaceXMLNode(float duration, Part part, string pitch, float start, int bars)
+    {
+        if (!CanPlace(duration, part, pitch, start, bars))
+        {
+            Debug.LogWarning($"この位置には置けません: {bars}小節、{start * 4}拍、{pitch}");
+            return false;
+        }
+
+        var node = new Node();
+        node._duration = duration;
+        node._Part = part;
+        node._pitch = pitch;
+        node._startBar = start;
+        node._bar = bars;
+        node._voice = voic;
+
+        _nodes.Add(node);
+        return true;
+    }
     public void DeleteNode(float duration, Part part, string pitch, float start, int bars)
     {
 

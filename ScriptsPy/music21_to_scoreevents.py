@@ -43,7 +43,8 @@ def voice_number_from_context(el) -> int:
 
 def pitch_to_string(n: note.Note) -> str:
     # "C#4" 形式で返す（UnityのPitchStringToMidiが読める）
-    return n.pitch.nameWithOctave  # 例: C#4, Bb3
+    s = n.pitch.nameWithOctave  # 例: "B-4"
+    return s.replace("-", "b")
 
 def main():
     if len(sys.argv) < 2:

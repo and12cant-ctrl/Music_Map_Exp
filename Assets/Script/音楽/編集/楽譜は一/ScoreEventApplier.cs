@@ -26,20 +26,13 @@ public sealed class ScoreEventApplier
 {
     private readonly Node_Place _nodePlace;
     private readonly IStaffRenderer _renderer;
-
-    public ScoreEventApplier(Node_Place nodePlace, IStaffRenderer renderer)
+    private readonly StaffCoordinateConverter _coord;
+    public ScoreEventApplier(Node_Place nodePlace, IStaffRenderer renderer, StaffCoordinateConverter coord)
     {
         _nodePlace = nodePlace;
         _renderer = renderer;
-    }
+        _coord = coord;
 
-    public bool ApplyPlace(ScoreEvent e, Vector2 anchoredPos, string nodeName)
-    {
-        if (!_nodePlace.PlaceNode(e.duration, e.part, e.pitch, e.start, e.bar))
-            return false;
-
-        _renderer?.RenderPlace(e, anchoredPos, nodeName);
-        return true;
     }
 
     public void ApplyDelete(ScoreEvent e, Vector2 anchoredPos)
@@ -47,4 +40,25 @@ public sealed class ScoreEventApplier
         _nodePlace.DeleteNode(e.duration, e.part, e.pitch, e.start, e.bar);
         _renderer?.RenderDelete(e, anchoredPos);
     }
+    private float SnapBeat(float beat, float gridPerQuarter = 4f)
+    {
+        // gridPerQuarter=4 なら 16分単位（1/4拍）
+        float step = 1f / gridPerQuarter;
+        return Mathf.Round(beat / step) * step;
+    }
+
+    public bool ApplyPlace(ScoreEvent e, Vector2 anchoredPos, string nodeName)
+    {
+        float snappedStart = SnapBeat(e.start, 4f); // 16分にスナップ
+
+        if (!_nodePlace.PlaceNode(e.duration, e.part, e.pitch, snappedStart, e.bar))
+            return false;
+
+        var snappedEvent = e;
+        snappedEvent.start = snappedStart;
+
+        _renderer?.RenderPlace(snappedEvent, anchoredPos, nodeName);
+        return true;
+    }
+
 }
