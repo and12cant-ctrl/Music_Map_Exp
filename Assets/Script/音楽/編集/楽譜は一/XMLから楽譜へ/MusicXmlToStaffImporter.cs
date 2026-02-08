@@ -14,6 +14,7 @@ public class MusicXmlToStaffImporter : MonoBehaviour
     [SerializeField] private RectTransform staffRect;
     [SerializeField] private Node_Place nodeCheak;
     [SerializeField] private SimpleStaffRenderer staffRenderer;
+    private StaffCoordinateConverter coord;
 
     [Header("Mapping")]
     [SerializeField] private Part part = Part.A;
@@ -37,7 +38,7 @@ public class MusicXmlToStaffImporter : MonoBehaviour
         var events = payload.events.Select(ToScoreEvent).ToList();
 
         var coord = new StaffCoordinateConverter(staffRect, payload.beatsPerBar, pixelsPerBar, scaleSteps);
-        var applier = new ScoreEventApplier(nodeCheak, staffRenderer);
+        var applier = new ScoreEventApplier(nodeCheak, staffRenderer,coord);
 
         int placed = 0;
         foreach (var e in events)
@@ -45,7 +46,7 @@ public class MusicXmlToStaffImporter : MonoBehaviour
             if (skipRests && e.pitch == "REST") continue;
 
             var pos = coord.ToAnchoredPosition(e);
-            applier.ApplyPlace(e, pos, $"m21_{placed++}");
+            applier.ApplyPlace(e, $"m21_{placed++}");
         }
 
         Debug.Log($"Import done (music21): placed {placed} notes. beatsPerBar={payload.beatsPerBar}, total={events.Count}");

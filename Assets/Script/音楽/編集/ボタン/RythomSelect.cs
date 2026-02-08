@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
-using static Node_judge;
+using static Node_judge_re;
 
 public class RythomSelect : MonoBehaviour
 {
@@ -36,7 +36,7 @@ public class RythomSelect : MonoBehaviour
         });
         btnAll.onClick.AddListener(() =>
         {
-            NodeLen(LengthNode.all);
+            NodeLen(LengthNode.All);
         });
         #endregion
         ChangeImage(Edi_Score.NodePrehab, 1);
@@ -61,7 +61,7 @@ public class RythomSelect : MonoBehaviour
                 LenNo = 2f;
                 TabClose.CloseCurrentTab();
                 break;
-            case LengthNode.all:
+            case LengthNode.All:
                 ChangeImage(Edi_Score.NodePrehab, 8);
                 LenNo = Edi_Score.beat;
                 TabClose.CloseCurrentTab();
@@ -80,4 +80,5 @@ public class RythomSelect : MonoBehaviour
             img.rectTransform.sizeDelta =new Vector2(60 * n,sizeY);
 ;        }
     }
+
 }

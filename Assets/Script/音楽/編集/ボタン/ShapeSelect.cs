@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
 using UnityEngine.UI;
+using static Node_judge_re;
 
 public class ShapeSelect : MonoBehaviour
 {
@@ -11,16 +12,16 @@ public class ShapeSelect : MonoBehaviour
     void Start()
     {
         btnShape.onClick.AddListener(() =>
-            SetAccidental(Node_judge.harfNode.Shape)
+            SetAccidental(harfNode.Shape)
         );
         btnFlat.onClick.AddListener(() =>
-            SetAccidental(Node_judge.harfNode.Flat)
+            SetAccidental(harfNode.Flat)
         );
         btnNone.onClick.AddListener(() =>
-            SetAccidental(Node_judge.harfNode.None)
+            SetAccidental(harfNode.None)
         );
     }
-    private void SetAccidental(Node_judge.harfNode accidental)
+    private void SetAccidental(harfNode accidental)
     {
         Edi_Score.hafeN = accidental;
     }

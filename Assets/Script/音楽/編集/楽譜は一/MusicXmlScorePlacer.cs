@@ -21,22 +21,4 @@ public class MusicXmlScorePlacer : MonoBehaviour
         return 0.5f;
     }
 
-    public void PlaceFromScoreEvents(List<ScoreEvent> events, int baseBarForUI = 1)
-    {
-        var applier = new ScoreEventApplier(nodeCheak, staffRenderer);
-
-        foreach (var e in events)
-        {
-            // UI座標を作る（クリックと同じルールに寄せる）
-            float globalBeat = (e.bar - baseBarForUI) * beatsPerBar + e.start;
-            float x = globalBeat * (pixelsPerBar / beatsPerBar);
-
-            float ny = PitchToNormalizedY(e.pitch);
-            float y = ny * staffRenderer.GetComponent<RectTransform>().rect.height; // 必要なら staffRect を参照するように修正
-
-            var anchored = new Vector2(x, y);
-
-            applier.ApplyPlace(e, anchored, "xml");
-        }
-    }
 }

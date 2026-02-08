@@ -24,6 +24,7 @@ public class MusicXmlEditorCaller : MonoBehaviour
     [SerializeField] private Xml_to_MIDI xml_to_MIDI;
     [SerializeField] private MusicXMLStart XMLStart;
     [SerializeField] private Button But;
+    [SerializeField]private Moniter _moniter;
     private string basePath;
     public string Json = "";
     void Awake()
@@ -32,7 +33,7 @@ public class MusicXmlEditorCaller : MonoBehaviour
         {
             Score_Xml_MIDI();
         });
-        //emotion_commons = GetComponent<emotion_common>();
+
     }
     [ContextMenu("XML => MIDI(micromamba)")]
 
@@ -65,7 +66,6 @@ public class MusicXmlEditorCaller : MonoBehaviour
         };
         string json = JsonUtility.ToJson(cmd);
         #endregion
-        //UnityEngine.Debug.Log(json);
 
         #region Pythonプロセス起動
         var psi = new ProcessStartInfo
@@ -114,8 +114,22 @@ public class MusicXmlEditorCaller : MonoBehaviour
         XMLStart.AnalyzeMusicXML(outputXml);
         xml_to_MIDI.RunVeny();
         midiPlayer.MidiStart();
-        //Tagged_template.Extract_to_Tag(OutCSV, InCSV);
+        Tagged_template.Extract_to_Tag(OutCSV, InCSV);
         XMLStart.Extract_to_Tag(OutCSV, InCSV);
-        Json = emotion_common.InferFromCsvRow(outputXml,-1);
+        var result = GetValue(OutCSV);
+        _moniter.LetsGO(result.MaxM,result.MinO);
+    }
+
+    public (string MaxM, string MinO) GetValue(string csvPath)
+    {
+        var lines = File.ReadAllLines(csvPath);
+
+        string lastLine = lines[lines.Length - 1];
+
+        var cols = lastLine.Split(',');
+
+        string valueM = cols[12]; 
+        string valueO = cols[14];
+        return (valueM, valueO);
     }
 }

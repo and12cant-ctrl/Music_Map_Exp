@@ -8,9 +8,6 @@ public sealed class StaffCoordinateConverter
     private readonly float _pixelsPerBar;
     private readonly int _scaleSteps;
 
-    // 音域（固定）
-    private readonly int _minMidi; // A3
-    private readonly int _maxMidi; // F6
 
     public StaffCoordinateConverter(RectTransform staffRect, float beatsPerBar, float pixelsPerBar, int scaleSteps)
     {
@@ -19,8 +16,6 @@ public sealed class StaffCoordinateConverter
         _pixelsPerBar = pixelsPerBar;
         _scaleSteps = Mathf.Max(1, scaleSteps);
 
-        _minMidi = PitchStringToMidi("G2"); // 43
-        _maxMidi = PitchStringToMidi("F5"); // 77
     }
 
     public Vector2 ToAnchoredPosition(ScoreEvent e)
@@ -45,9 +40,9 @@ public sealed class StaffCoordinateConverter
         int midi = PitchStringToMidi(pitch);
 
         // 範囲外はクランプ
-        midi = Mathf.Clamp(midi, _minMidi, _maxMidi);
+        midi = Mathf.Clamp(midi, PitchRange.MinMidi, PitchRange.MaxMidi);
 
-        float ny = Mathf.InverseLerp(_minMidi, _maxMidi, midi);
+        float ny = Mathf.InverseLerp(PitchRange.MinMidi, PitchRange.MaxMidi, midi);
 
         // scaleStepsにスナップ（クリック側の「段」に合わせる）
         return Snap01(ny);
@@ -78,7 +73,7 @@ public sealed class StaffCoordinateConverter
         string note = pitch.Substring(0, cutIndex);
 
         // ♭/# 対応（ASCIIに寄せる）
-        note = note.Replace("♭", "b");
+        note = note.Replace("♭", "b").Replace("-","b");
 
         int pc = note switch
         {

@@ -42,11 +42,11 @@ public class Node_Place : MonoBehaviour
     /// 置けるなら Node を作って登録する
     /// duration=拍子,pitch=音階,bar=小節
     /// </summary>
-    public bool PlaceNode(float duration, Part part,string pitch,float start,int bars)
+    public bool PlaceNode(float duration, Part part, string pitch, float start, int bars)
     {
-        if (!CanPlace( duration,part, pitch, start, bars))
+        if (!CanPlace(duration, part, pitch, start, bars))
         {
-            Debug.LogWarning($"この位置には置けません: {bars}小節、{start*4}拍、{pitch}");
+            Debug.LogWarning($"この位置には置けません: {bars}小節、{start * 4}拍、{pitch}");
             return false;
         }
 
@@ -61,6 +61,7 @@ public class Node_Place : MonoBehaviour
         _nodes.Add(node);
         return true;
     }
+
 
     public bool PlaceXMLNode(float duration, Part part, string pitch, float start, int bars)
     {

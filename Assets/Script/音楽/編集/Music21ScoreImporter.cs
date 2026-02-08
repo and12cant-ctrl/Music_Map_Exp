@@ -1,10 +1,8 @@
 using Newtonsoft.Json;
-using NUnit;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
 [Serializable]
@@ -41,12 +39,15 @@ public class Music21ScoreImporter : MonoBehaviour
     [Header("Options")]
     [SerializeField] private bool skipRests = true;
 
-    [Header("Input")]
-    [SerializeField]public string musicXmlFilePath; // 読みたいMusicXMLのフルパス
+
+    public string musicXmlFilePath; 
 
     private void Start()
     {
+        musicXmlFilePath = Path.Combine(FluidSynthPaths.EmotionDir,"fear","bach-invention-02_Intro"
+            , "bach-invention-02_INTRO_m1-4_ts4_4_E0.735_S0.553_FULL.musicxml");
         ImportWithMusic21();
+
     }
     public void ImportWithMusic21()
     {
@@ -112,7 +113,7 @@ public class Music21ScoreImporter : MonoBehaviour
 
         //  beatsPerBar は Python結果を採用（ズレ防止）
         var coord = new StaffCoordinateConverter(staffRect, payload.beatsPerBar, pixelsPerBar, scaleSteps);
-        var applier = new ScoreEventApplier(nodeCheak, staffRenderer);
+        var applier = new ScoreEventApplier(nodeCheak, staffRenderer,coord);
 
         int placed = 0;
         int minBar = payload.events.Min(E => E.bar);
@@ -130,9 +131,7 @@ public class Music21ScoreImporter : MonoBehaviour
                 bar = d.bar - minBar +1,
                 start = d.start
             };
-
-            var pos = coord.ToAnchoredPosition(e);
-            applier.ApplyPlace(e, pos, $"{placed++}");
+            applier.ApplyPlace(e, $"{placed++}");
         }
 
         Debug.Log($"Import done (music21): placed {placed} notes. total={payload.events.Count}, beatsPerBar={payload.beatsPerBar}");

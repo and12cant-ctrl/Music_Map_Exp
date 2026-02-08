@@ -6,11 +6,11 @@ public class ScoreButton : MonoBehaviour
     [SerializeField] private GameObject NodeButton;
     [SerializeField] private Button PartButton;
     [SerializeField] private GameObject TabPrehab;
-    public Node_judge nodeJudge;
+    public Node_judge_re nodeJudge;
     
     void Start()
     {
-        nodeJudge = GetComponent<Node_judge>();
+        nodeJudge = GetComponent<Node_judge_re>();
 
     }
 

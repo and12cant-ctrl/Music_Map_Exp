@@ -1,121 +1,128 @@
-import json
-import sys
-from music21 import converter, note, chord, stream, meter
+# music21_to_scoreevents.py
 
-# Unityの Part/voice enum に合わせて文字列で返す（Unity側でEnum.Parseできる）
+import sys
+import json
+from music21 import converter, stream, note, chord
+
+# ========= 設定 =========
+
 PART_NAMES = ["A", "B", "C", "D"]
 VOICE_NAMES = {
     1: "Up",
     2: "Middle",
-    3: "Down",
+    3: "Down"
 }
 
-def get_beats_per_bar(score) -> float:
-    # まず全体のTimeSignatureを探す
-    ts = score.recurse().getElementsByClass(meter.TimeSignature).first()
-    if ts is None:
-        return 4.0
-    # music21は (分子/分母) を持つ。quarterLengthベースの小節長は ts.barDuration.quarterLength
-    return float(ts.barDuration.quarterLength)
+# ========= util =========
 
-def iter_part_like_streams(score):
-    """
-    Piano譜などで PartStaff がある場合はそれを優先。
-    無い場合は通常の part をそのまま扱う。
-    """
-    parts = list(score.parts)
-    # PartStaffが存在するケース（ピアノ二段譜など）
-    partstaffs = list(score.recurse().getElementsByClass(stream.PartStaff))
-    if partstaffs:
-        # score内のPartStaffを出現順に採用（概ね上段→下段）
-        return partstaffs
-    return parts
-
-def voice_number_from_context(el) -> int:
+def voice_number_from_context(el):
     v = el.getContextByClass(stream.Voice)
     if v is None:
         return 1
-    # Voice.id が "1" "2" だったりする
     try:
         return int(v.id)
-    except Exception:
+    except:
         return 1
 
-def pitch_to_string(n: note.Note) -> str:
-    # "C#4" 形式で返す（UnityのPitchStringToMidiが読める）
-    s = n.pitch.nameWithOctave  # 例: "B-4"
-    return s.replace("-", "b")
+
+def pitch_to_string(p):
+    s = p.nameWithOctave  # "E-5", "B--3", "F#4"
+    s = s.replace("---", "bbb").replace("--", "bb").replace("-", "b")
+    return p.nameWithOctave
+
+
+# ========= main =========
 
 def main():
+
     if len(sys.argv) < 2:
-        print(json.dumps({"error": "Usage: python music21_to_scoreevents.py <musicxml_path>"}))
+        print("usage: script.py music.xml")
         sys.exit(1)
 
-    path = sys.argv[1]
-    score = converter.parse(path)
+    xml_path = sys.argv[1]
 
-    beats_per_bar = get_beats_per_bar(score)
+    score = converter.parse(xml_path)
+
+    # beatsPerBar（Unityに渡す）
+    ts = score.recurse().getElementsByClass("TimeSignature")[0]
+    beats_per_bar = float(ts.numerator)
+
+    streams = score.parts
 
     events = []
-    streams = iter_part_like_streams(score)
 
     for si, p in enumerate(streams):
+
         part_name = PART_NAMES[si] if si < len(PART_NAMES) else "A"
 
-        # notesAndRests で Restも拾える（Unity側でskipRestsできる）
-        for el in p.recurse().notesAndRests:
-            m = el.getContextByClass(stream.Measure)
-            if m is None or m.number is None:
-                # 小節が取れない要素は無視（念のため）
+        # ⭐ Measure基準で回す（これが最重要）
+        for m in p.recurse().getElementsByClass(stream.Measure):
+
+            if m.number is None:
                 continue
 
             bar = int(m.number)
-            start_in_bar = float(el.offset - m.offset)   # 小節内 start（拍）
-            dur = float(el.quarterLength)                # 長さ（拍）
 
-            vno = voice_number_from_context(el)
-            voice_name = VOICE_NAMES.get(vno, "Up")
+            # ⭐ Measure内のnotesAndRestsを使う
+            for el in m.notesAndRests:
 
-            if isinstance(el, note.Rest):
-                pitch = "REST"
-                events.append({
-                    "part": part_name,
-                    "voice": voice_name,
-                    "pitch": pitch,
-                    "duration": dur,
-                    "bar": bar,
-                    "start": start_in_bar,
-                })
+                # 小節内offset（これなら負にならない）
+                start_in_bar = float(el.offset)
 
-            elif isinstance(el, note.Note):
-                pitch = pitch_to_string(el)
-                events.append({
-                    "part": part_name,
-                    "voice": voice_name,
-                    "pitch": pitch,
-                    "duration": dur,
-                    "bar": bar,
-                    "start": start_in_bar,
-                })
+                dur = float(el.quarterLength)
 
-            elif isinstance(el, chord.Chord):
-                # 和音は同じstart/durで複数Noteに展開
-                for n in el.notes:
-                    pitch = pitch_to_string(n)
+                vno = voice_number_from_context(el)
+                voice_name = VOICE_NAMES.get(vno, "Up")
+
+                # ---- REST ----
+                if isinstance(el, note.Rest):
+
                     events.append({
                         "part": part_name,
                         "voice": voice_name,
-                        "pitch": pitch,
+                        "pitch": "REST",
                         "duration": dur,
                         "bar": bar,
-                        "start": start_in_bar,
+                        "start": start_in_bar
                     })
 
-    out = {
+                # ---- NOTE ----
+                elif isinstance(el, note.Note):
+
+                    # ⭐ tie継続/終端は除外（開始だけ欲しい場合）
+                    if el.tie is not None and el.tie.type in ("stop", "continue"):
+                        continue
+
+                    events.append({
+                        "part": part_name,
+                        "voice": voice_name,
+                        "pitch": pitch_to_string(el.pitch),
+                        "duration": dur,
+                        "bar": bar,
+                        "start": start_in_bar
+                    })
+
+                # ---- CHORD ----
+                elif isinstance(el, chord.Chord):
+
+                    for pch in el.pitches:
+
+                        events.append({
+                            "part": part_name,
+                            "voice": voice_name,
+                            "pitch": pitch_to_string(pch),
+                            "duration": dur,
+                            "bar": bar,
+                            "start": start_in_bar
+                        })
+
+    payload = {
         "beatsPerBar": beats_per_bar,
         "events": events
     }
-    print(json.dumps(out, ensure_ascii=False))
+
+    print(json.dumps(payload, ensure_ascii=False))
+
 
 if __name__ == "__main__":
     main()

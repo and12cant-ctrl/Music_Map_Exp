@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using static Node_judge_re;
 
 public class ModeSelect : MonoBehaviour
 {
@@ -17,14 +18,14 @@ public class ModeSelect : MonoBehaviour
         });
         btnGene.onClick.AddListener(() =>
         {
-            Nodesele(Node_judge.EditMode.Place);
+            Nodesele(EditMode.Place);
         });
         btnDel.onClick.AddListener(() =>
         {
-            Nodesele(Node_judge.EditMode.Delete);
+            Nodesele(EditMode.Delete);
         });
     }
-    void Nodesele(Node_judge.EditMode mode)
+    void Nodesele(EditMode mode)
     {
         Debug.Log($"[Nodesele] set mode={mode} on Edi_Score instance={Edi_Score?.GetInstanceID()}");
         Edi_Score.editMode = mode;

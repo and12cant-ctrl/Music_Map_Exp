@@ -11,20 +11,25 @@ public class Moniter : MonoBehaviour
     [SerializeField] private TMP_Text MinEmo;
     [SerializeField] private TMP_Text MaxEmo;
     [SerializeField] private MusicXmlEditorCaller Happyou;
-    void Update()
+    void Start()
     {
-        if (EmotionPick.TryGetMaxMin(Happyou.Json, out var r))
-        {
-            MaxEmo.text = r.maxKey;
-            MinEmo.text = r.minKey;
-        }
-        else
-        {
-            MaxEmo.text = "-";
-            MinEmo.text = "-";
-        }        
+
+        MaxEmo.text = "-";
+        MinEmo.text = "-";
+        
     }
+
+    public void LetsGO(string maxEmo,string minEmo)
+    {
+
+        MaxEmo.text = maxEmo;
+        MinEmo.text = minEmo;
+        
+
+    }
+
     [Serializable]
+
     public class EmotionResult
     {
         public string label;
@@ -39,6 +44,7 @@ public class Moniter : MonoBehaviour
             string json,
             out (string maxKey, float maxVal, string minKey, float minVal) result)
         {
+            Debug.Log(json);
             result = default;
 
             if (string.IsNullOrWhiteSpace(json))
@@ -64,5 +70,6 @@ public class Moniter : MonoBehaviour
             return true;
         }
     }
+
 
 }
