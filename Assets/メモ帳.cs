@@ -16,4 +16,10 @@ public class メモ帳 : MonoBehaviour
     //音の秩序（スケール・和声感）
     //時間の安定性（リズム構造）
     //感情
+
+//      軸 プレイヤーの操作感
+//      move 音程を変える
+//      density 音数を変える
+//      order パターン作る
+//      rhythm 拍を整える
 }

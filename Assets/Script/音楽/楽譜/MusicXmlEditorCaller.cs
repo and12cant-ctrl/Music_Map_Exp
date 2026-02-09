@@ -117,7 +117,7 @@ public class MusicXmlEditorCaller : MonoBehaviour
         Tagged_template.Extract_to_Tag(OutCSV, InCSV);
         XMLStart.Extract_to_Tag(OutCSV, InCSV);
         var result = GetValue(OutCSV);
-        _moniter.LetsGO(result.MaxM,result.MinO);
+        _moniter.EmoTextChenge(result.MaxM,result.MinO);
     }
 
     public (string MaxM, string MinO) GetValue(string csvPath)
