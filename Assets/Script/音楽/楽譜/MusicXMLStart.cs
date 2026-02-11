@@ -1,4 +1,4 @@
-
+ï»¿
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -6,9 +6,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Animations;
 
 
-#region ”»’è—pƒNƒ‰ƒX
+#region åˆ¤å®šç”¨ã‚¯ãƒ©ã‚¹
 [Serializable]
 public class HintScores
 {
@@ -37,13 +38,13 @@ public class JudgeRequest
     public string metaPath;
     public string modelPath;
 
-    // ƒvƒŒƒCƒ„[“Á’¥iextract_featureso—Í‚©‚çì‚éj
+    // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ç‰¹å¾´ï¼ˆextract_featureså‡ºåŠ›ã‹ã‚‰ä½œã‚‹ï¼‰
     public Dictionary<string, float> featuresByName;
 
-    // ƒeƒ“ƒvƒŒ“Á’¥i“¯‚¶—ñ–¼‚Å‚ÂB‚Ü‚¾–³‚¯‚ê‚Î null ‚Å‚àOK‚É‚µ‚Ä‚¨‚­j
+    // ãƒ†ãƒ³ãƒ—ãƒ¬ç‰¹å¾´ï¼ˆåŒã˜åˆ—åã§æŒã¤ã€‚ã¾ã ç„¡ã‘ã‚Œã° null ã§ã‚‚OKã«ã—ã¦ãŠãï¼‰
     public Dictionary<string, float> templateFeaturesByName;
 
-    // ƒeƒ“ƒvƒŒŠ´îi‚ ‚ê‚Îj
+    // ãƒ†ãƒ³ãƒ—ãƒ¬æ„Ÿæƒ…ï¼ˆã‚ã‚Œã°ï¼‰
     public List<float> templateEmotionVec;
 
     public Dictionary<string, object> scoreConfig;
@@ -66,19 +67,35 @@ public class MusicXMLStart : MonoBehaviour
     string sad = Path.Combine(FluidSynthPaths.CSVDir, "sad.csv");
     string fear = Path.Combine(FluidSynthPaths.CSVDir, "fear.csv");
     string anxiety = Path.Combine(FluidSynthPaths.CSVDir, "anxiety.csv");
-    string Player = Path.Combine(FluidSynthPaths.CSVDir, "Player_tag.csv");
+    string AllEmo = Path.Combine(FluidSynthPaths.CSVDir, "all_emotions.csv");
+    string Player = Path.Combine(FluidSynthPaths.CSVDir, "Hint","Player_tag.csv");
     #endregion
 
     string tagged = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "tagged_templates.csv");
-    string Json = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "thresholds_4axis.json");
+    string axis4 = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "thresholds_4axis.json");
+    private string PlayRes = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "player_result.json");
 
-
-    public void AnalyzeMusicXML(
-        string musicXmlPath)
+    public void Start()
     {
-       
+        #region ä¸€å›ãã‚Š
+        //Debug.Log("koko");
+        //string[] emotionCsvs =
+        //{
+        //    Path.Combine(FluidSynthPaths.CSVDir, "trust.csv"),
+        //    Path.Combine(FluidSynthPaths.CSVDir, "sad.csv"),
+        //    Path.Combine(FluidSynthPaths.CSVDir, "fear.csv"),
+        //    Path.Combine(FluidSynthPaths.CSVDir, "anxiety.csv")
+        //};
+
+        //MergeCsvFiles(emotionCsvs, AllEmo);
+        //Extract_to_Tag(tagged,AllEmo);
+        #endregion
+
+    }
+    public void AnalyzeMusicXML(string musicXmlPath)
+    {
         // -----------------------------
-        // MusicXML ¨ featuresRow
+        // MusicXML â†’ featuresRow
         // -----------------------------
 
         string extractArgs =
@@ -98,7 +115,7 @@ public class MusicXMLStart : MonoBehaviour
         Debug.Log("[PY extract STDERR]\n" + featResult.Stderr);
 
         if (featResult.ExitCode != 0)
-            throw new Exception("extract_features.py Às¸”s");
+            throw new Exception("extract_features.py å®Ÿè¡Œå¤±æ•—");
 
         string featJsonText = ExtractLastJsonObject(featResult.Stdout);
 
@@ -113,7 +130,7 @@ public class MusicXMLStart : MonoBehaviour
     private static string ExtractLastJsonObject(string s)
     {
         if (string.IsNullOrEmpty(s))
-            throw new Exception("stdout ‚ª‹ó‚Å‚·");
+            throw new Exception("stdout ãŒç©ºã§ã™");
 
         int start = s.LastIndexOf("\"ok\"");
         if (start < 0)
@@ -128,13 +145,13 @@ public class MusicXMLStart : MonoBehaviour
                 depth--;
                 if (depth == 0)
                 {
-                    // start..i ‚ª1‚Â‚ÌJSONƒIƒuƒWƒFƒNƒg
+                    // start..i ãŒ1ã¤ã®JSONã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
                     return s.Substring(start, i - start + 1).Trim();
                 }
             }
         }
 
-        throw new Exception("JSON‚Ì '}' ‚ª•Â‚¶‚Ü‚¹‚ñ:\n" + s.Substring(start));
+        throw new Exception("JSONã® '}' ãŒé–‰ã˜ã¾ã›ã‚“:\n" + s.Substring(start));
     }
 
     private static Dictionary<string, float> BuildFeaturesByNameFromFlatJson(
@@ -175,7 +192,7 @@ public class MusicXMLStart : MonoBehaviour
         string AS = $"run -r {FluidSynthPaths.micromambaroot} -n unitypy " +
             $"python -u \"{scPy}\" \"{InCSV}\" " +
             $"--out_csv \"{outCSV}\" " +
-            $"--out_json \"{Json}\" " +
+            $"--out_json \"{axis4}\" " +
             $"--emo_model \"{emo_lgbm}\" " +
             $"--emo_meta \"{emo_Json}\" ";
         //MusicXMLStart.AnalyzeEmotionFromMusicXML(MusicXML,null,,"normal");
@@ -185,7 +202,68 @@ public class MusicXMLStart : MonoBehaviour
             timeoutMs: 60_000,
             encoding: Encoding.UTF8
         );
-
     }
 
+    public void Extract_to_Tag_Ply(string outCSV, string InCSV)
+    {
+        string AS = $"run -r {FluidSynthPaths.micromambaroot} -n unitypy " +
+            $"python -u \"{scPy}\" \"{InCSV}\" " +
+            $"--out_csv \"{outCSV}\" " +
+            $"--out_json \"{axis4}\" " +
+            $"--emo_model \"{emo_lgbm}\" " +
+            $"--emo_meta \"{emo_Json}\" " +
+            $"--tag_meta \"{axis4}\" ";
+        //MusicXMLStart.AnalyzeEmotionFromMusicXML(MusicXML,null,,"normal");
+        var featResult = PythonReturn.Run(
+            exePath: mamba,
+            arguments: AS,
+            timeoutMs: 60_000,
+            encoding: Encoding.UTF8
+        );
+    }
+
+    public void MergeCsvFiles(string[] inputCsvs, string outputCsv)
+    {
+        if (inputCsvs == null || inputCsvs.Length == 0)
+        {
+            Debug.LogError("CSV list is empty");
+            return;
+        }
+
+        bool headerWritten = false;
+
+        using (var writer = new StreamWriter(outputCsv, false)) // false = overwrite
+        {
+            foreach (var csv in inputCsvs)
+            {
+                if (!File.Exists(csv))
+                {
+                    Debug.LogWarning($"CSV not found: {csv}");
+                    continue;
+                }
+
+                var lines = File.ReadAllLines(csv);
+
+                if (lines.Length == 0)
+                    continue;
+
+                // æœ€åˆã ã‘ãƒ˜ãƒƒãƒ€ã‚’æ›¸ã
+                if (!headerWritten)
+                {
+                    writer.WriteLine(lines[0]);
+                    headerWritten = true;
+                }
+
+                //ãƒ‡ãƒ¼ã‚¿è¡Œã ã‘è¿½åŠ ï¼ˆãƒ˜ãƒƒãƒ€é™¤å¤–ï¼‰
+                for (int i = 1; i < lines.Length; i++)
+                {
+                    if (!string.IsNullOrWhiteSpace(lines[i]))
+                        writer.WriteLine(lines[i]);
+                }
+            }
+        }
+
+        Debug.Log($"CSV merged â†’ {outputCsv}");
+    }
+    
 }

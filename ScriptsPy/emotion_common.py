@@ -205,6 +205,4 @@ def cli_main() -> None:
 
 
 if __name__ == "__main__":
-    # 既存の import 用モジュールとしても使えるように、
-    # 直接実行された時だけ CLI を動かす
     cli_main()

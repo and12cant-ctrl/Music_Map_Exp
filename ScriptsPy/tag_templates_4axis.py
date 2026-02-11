@@ -1,19 +1,22 @@
-# tag_templates_4axis.py
+# tag_templates_4axis.py (完成版)
 # 既存の特徴量CSV（FINAL_COLUMNSを含む）から、
-# 4軸（motion/density/order/rhythm）のスコアを作り、分位(q33/q66)で Low/Mid/High を付与して出力する。
+# 4軸（motion/density/order/rhythm）のスコアを作り、
+#   - 通常モード: 入力CSV内で閾値/正規化を計算して band を付与（テンプレ作成用）
+#   - 固定基準モード: --tag_meta で与えた thresholds_4axis.json の基準で
+#                     正規化(lo/hi)と閾値(t1/t2)を固定して band を付与（Player判定用）
 #
 # 入力：
 #   1) 単一CSV もしくは 2) フォルダ内のCSV全て もしくは 3) 複数CSV指定
 # 出力：
-#   - tagged_templates.csv（元列 + axis_score + axis_band）
-#   - thresholds_4axis.json（各軸のq33/q66と正規化レンジ等）
+#   - tagged_templates.csv（KEEP_COLS）
+#   - thresholds_4axis.json（通常モードのみ「生成」推奨。固定基準モードでは「参照」情報を出力）
 
 from __future__ import annotations
 
 import argparse
 import json
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any
 
 import numpy as np
 import pandas as pd
@@ -45,7 +48,6 @@ RHYTHM_COLS = [
     "syncopation_score",   # 逆向き
     "dur_std_quarter",     # 逆向き
 ]
-
 
 # ====== 重み（必要なら後で調整）======
 WEIGHTS = {
@@ -104,11 +106,11 @@ def norm01(x: pd.Series, lo: float, hi: float) -> pd.Series:
     return v.clip(0.0, 1.0)
 
 
-def compute_axis_scores(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict]:
+def compute_axis_scores(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """
     df に以下を追加：
       motion_score, density_score, order_score, rhythm_score （0..1）
-    返り値の params には正規化レンジ等を入れる
+    返り値の params には正規化レンジ等を入れる（= テンプレ基準として保存する用）
     """
     df = df.copy()
 
@@ -121,7 +123,7 @@ def compute_axis_scores(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict]:
     # 派生：pc集中度
     df["pc_concentration"] = df.apply(pc_concentration_from_row, axis=1)
 
-    # 正規化レンジ（軸ごとではなく列ごとに持つ）
+    # 正規化レンジ（列ごと）
     all_cols = list(set(MOTION_COLS + DENSITY_COLS + ORDER_COLS + RHYTHM_COLS + ["pc_concentration"]))
     norm_params: Dict[str, Dict[str, float]] = {}
 
@@ -172,6 +174,70 @@ def compute_axis_scores(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict]:
     return df, params
 
 
+def load_tag_meta(tag_meta_path: str) -> Dict[str, Any]:
+    p = Path(tag_meta_path)
+    if not p.exists():
+        raise FileNotFoundError(f"tag_meta が見つかりません: {p}")
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
+def compute_axis_scores_with_meta(df: pd.DataFrame, tag_meta: Dict[str, Any]) -> pd.DataFrame:
+    """
+    tag_meta の norm_params(lo/hi) を使って正規化し、4軸スコアを計算する（= Player判定用）
+    """
+    df = df.copy()
+
+    df = ensure_columns(df, MOTION_COLS + DENSITY_COLS + ORDER_COLS + RHYTHM_COLS)
+    for i in range(12):
+        if f"pc_{i}" not in df.columns:
+            df[f"pc_{i}"] = 0.0
+
+    df["pc_concentration"] = df.apply(pc_concentration_from_row, axis=1)
+
+    norm_params = tag_meta.get("norm_params", {})
+    if not isinstance(norm_params, dict) or not norm_params:
+        raise ValueError("tag_meta に norm_params がありません。テンプレ生成側の thresholds_4axis.json を渡してください。")
+
+    all_cols = list(set(MOTION_COLS + DENSITY_COLS + ORDER_COLS + RHYTHM_COLS + ["pc_concentration"]))
+
+    normed: Dict[str, pd.Series] = {}
+    for c in all_cols:
+        if c not in norm_params:
+            raise ValueError(f"tag_meta の norm_params に列がありません: {c}")
+        lo = float(norm_params[c]["lo"])
+        hi = float(norm_params[c]["hi"])
+        v = norm01(df[c], lo, hi)
+        if c in INVERT_COLS:
+            v = 1.0 - v
+        normed[c] = v
+
+    df["motion_score"] = (
+        WEIGHTS["motion"]["leap_ratio"] * normed["leap_ratio"]
+        + WEIGHTS["motion"]["direction_change_rate"] * normed["direction_change_rate"]
+        + WEIGHTS["motion"]["pitch_range_midi"] * normed["pitch_range_midi"]
+    )
+
+    df["density_score"] = (
+        WEIGHTS["density"]["note_count_per_bar"] * normed["note_count_per_bar"]
+        + WEIGHTS["density"]["rest_ratio_time"] * normed["rest_ratio_time"]
+        + WEIGHTS["density"]["short_note_ratio"] * normed["short_note_ratio"]
+    )
+
+    df["order_score"] = (
+        WEIGHTS["order"]["key_fit_ratio"] * normed["key_fit_ratio"]
+        + WEIGHTS["order"]["chromatic_ratio"] * normed["chromatic_ratio"]
+        + WEIGHTS["order"]["pc_concentration"] * normed["pc_concentration"]
+    )
+
+    df["rhythm_score"] = (
+        WEIGHTS["rhythm"]["strongbeat_hit_ratio"] * normed["strongbeat_hit_ratio"]
+        + WEIGHTS["rhythm"]["syncopation_score"] * normed["syncopation_score"]
+        + WEIGHTS["rhythm"]["dur_std_quarter"] * normed["dur_std_quarter"]
+    )
+
+    return df
+
+
 def band_by_quantiles(scores: pd.Series, q1: float = 0.33, q2: float = 0.66) -> Tuple[pd.Series, float, float]:
     s = pd.to_numeric(scores, errors="coerce").fillna(0.0)
     t1 = float(s.quantile(q1))
@@ -192,7 +258,39 @@ def band_by_quantiles(scores: pd.Series, q1: float = 0.33, q2: float = 0.66) -> 
     return bands, t1, t2
 
 
-def load_inputs(inputs: List[str], from_dir: bool = False) -> pd.DataFrame:
+def band_by_rank(scores: pd.Series, q1: float = 0.33, q2: float = 0.66) -> Tuple[pd.Series, float, float]:
+    s = pd.to_numeric(scores, errors="coerce").fillna(0.0)
+    # 0..1 の順位（同値でも順位が割れる方式）
+    r = s.rank(method="average", pct=True)
+
+    def _band(p: float) -> str:
+        if p < q1:
+            return "low"
+        elif p < q2:
+            return "mid"
+        else:
+            return "high"
+
+    bands = r.apply(_band)
+    # t1/t2 は「スコア閾値」ではなくなるので、参考値で返す
+    return bands, float(s.quantile(q1)), float(s.quantile(q2))
+
+
+def band_by_thresholds(scores: pd.Series, t1: float, t2: float) -> pd.Series:
+    s = pd.to_numeric(scores, errors="coerce").fillna(0.0)
+
+    def _band(v: float) -> str:
+        if v < t1:
+            return "low"
+        elif v < t2:
+            return "mid"
+        else:
+            return "high"
+
+    return s.apply(_band)
+
+
+def load_inputs(inputs: List[str]) -> pd.DataFrame:
     paths: List[Path] = []
     for inp in inputs:
         p = Path(inp)
@@ -211,6 +309,7 @@ def load_inputs(inputs: List[str], from_dir: bool = False) -> pd.DataFrame:
         frames.append(df)
     return pd.concat(frames, ignore_index=True)
 
+
 def add_emotion_columns(
     df: pd.DataFrame,
     model_path: Path,
@@ -224,17 +323,16 @@ def add_emotion_columns(
     """
     df = df.copy()
 
-    meta = emotion_common.load_meta(meta_path)  # :contentReference[oaicite:3]{index=3}
+    meta = emotion_common.load_meta(meta_path)
     final_columns = meta.get("final_columns", emotion_common.FINAL_COLUMNS)
     classes = meta.get("classes")
     fillna = float(meta.get("preprocess", {}).get("fillna", 0.0))
 
     if not isinstance(classes, list) or not classes:
-        raise ValueError("meta に classes がありません。")  # :contentReference[oaicite:4]{index=4}
+        raise ValueError("meta に classes がありません。")
 
     booster = lgb.Booster(model_file=str(model_path))
 
-    # 出力列を先に作る（順序安定）
     for c in classes:
         col = f"emo_{c}"
         if col not in df.columns:
@@ -245,8 +343,7 @@ def add_emotion_columns(
     df["emo_min_label"] = ""
     df["emo_min_score"] = 0.0
 
-    # 行ごと推論
-    for idx, row in df.iterrows():  # ← indexラベルをそのまま使う
+    for idx, row in df.iterrows():
         by_name = {}
         for col in final_columns:
             if col == "source_main_rel":
@@ -261,28 +358,26 @@ def add_emotion_columns(
         )
 
         proba = booster.predict(X)
-        import numpy as _np
-        proba = _np.asarray(proba)
+        proba = np.asarray(proba)
         if proba.ndim == 1:
             proba = proba.reshape(1, -1)
         probs = proba[0].tolist()
 
-        # 各感情列へ（idxで書く）
         for k, cls in enumerate(classes):
             df.at[idx, f"emo_{cls}"] = float(probs[k])
 
-        max_i = int(_np.argmax(proba[0]))
-        min_i = int(_np.argmin(proba[0]))
+        max_i = int(np.argmax(proba[0]))
+        min_i = int(np.argmin(proba[0]))
 
         df.at[idx, "emo_max_label"] = str(classes[max_i])
         df.at[idx, "emo_max_score"] = float(probs[max_i])
         df.at[idx, "emo_min_label"] = str(classes[min_i])
         df.at[idx, "emo_min_score"] = float(probs[min_i])
 
-
     return df
 
-def main():
+
+def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("inputs", nargs="+", help="CSVファイル or CSVフォルダ を指定（複数OK）")
     ap.add_argument("--out_csv", type=str, default="tagged_templates.csv", help="出力CSV")
@@ -292,48 +387,74 @@ def main():
     ap.add_argument("--emo_model", type=str, default="", help="emotion_lgbm.txt（指定すると感情列も付与）")
     ap.add_argument("--emo_meta", type=str, default="", help="emotion_lgbm_meta.json（指定すると感情列も付与）")
 
+    # ★追加：テンプレ基準JSONを固定して使う（Player判定用）
+    ap.add_argument("--tag_meta", type=str, default="", help="thresholds_4axis.json（指定すると正規化/閾値を固定してband判定）")
+
+    # ★オプション：テンプレ作成時に rank を使うか quantile を使うか
+    ap.add_argument("--band_mode", choices=["rank", "quantile"], default="rank",
+                    help="テンプレ生成時のband付与方法（デフォrank）。tag_meta指定時は常にthresholds固定。")
+
     args = ap.parse_args()
 
     df = load_inputs(args.inputs)
-    df2, params = compute_axis_scores(df)
 
-    # Low/Mid/High の付与（軸ごと）
-    thresholds = {}
-    for axis in ["motion", "density", "order", "rhythm"]:
-        col = f"{axis}_score"
-        bands, t1, t2 = band_by_quantiles(df2[col], q1=args.q1, q2=args.q2)
-        df2[f"{axis}_band"] = bands
-        thresholds[axis] = {"q1": args.q1, "q2": args.q2, "t1": t1, "t2": t2}
-            # 感情列の付与（オプション）
+    tag_meta_obj: Dict[str, Any] | None = None
+    params: Dict[str, Any] = {}
+    thresholds: Dict[str, Any] = {}
 
-    print("DEBUG emo cols after add:", [c for c in df2.columns if c.startswith("emo_")])
+    # ===== 固定基準モード（Player判定） =====
+    if args.tag_meta:
+        tag_meta_obj = load_tag_meta(args.tag_meta)
+        df2 = compute_axis_scores_with_meta(df, tag_meta_obj)
+
+        meta_thresholds = tag_meta_obj.get("thresholds", {})
+        if not isinstance(meta_thresholds, dict) or not meta_thresholds:
+            raise ValueError("tag_meta に thresholds がありません。テンプレ生成側の thresholds_4axis.json を渡してください。")
+
+        for axis in ["motion", "density", "order", "rhythm"]:
+            col = f"{axis}_score"
+            th = meta_thresholds.get(axis, {})
+            if not th:
+                raise ValueError(f"tag_meta の thresholds に {axis} がありません。")
+            t1 = float(th["t1"])
+            t2 = float(th["t2"])
+            df2[f"{axis}_band"] = band_by_thresholds(df2[col], t1, t2)
+            thresholds[axis] = {"t1": t1, "t2": t2, "q1": th.get("q1"), "q2": th.get("q2")}
+
+        # params は参照情報として保存（欲しければ）
+        params = {
+            "norm_params": tag_meta_obj.get("norm_params", {}),
+            "weights": tag_meta_obj.get("weights", WEIGHTS),
+            "invert_cols": tag_meta_obj.get("invert_cols", sorted(list(INVERT_COLS))),
+            "tag_meta_used": str(Path(args.tag_meta)),
+        }
+
+    # ===== 通常モード（テンプレ作成） =====
+    else:
+        df2, params = compute_axis_scores(df)
+
+        for axis in ["motion", "density", "order", "rhythm"]:
+            col = f"{axis}_score"
+            if args.band_mode == "quantile":
+                bands, t1, t2 = band_by_quantiles(df2[col], q1=args.q1, q2=args.q2)
+            else:
+                bands, t1, t2 = band_by_rank(df2[col], q1=args.q1, q2=args.q2)
+            df2[f"{axis}_band"] = bands
+            thresholds[axis] = {"q1": args.q1, "q2": args.q2, "t1": t1, "t2": t2}
+
+    # ===== 感情列の付与（オプション） =====
     if args.emo_model and args.emo_meta:
         df2 = add_emotion_columns(df2, Path(args.emo_model), Path(args.emo_meta))
-    # 出力
-    print(df2[[c for c in df2.columns if c.startswith("emo_")]].head(3))
-    out_csv = Path(args.out_csv)
-    out_csv.parent.mkdir(parents=True, exist_ok=True)
 
-    # KEEP_COLS = [
-
-    #     "motion_score", "density_score", "order_score", "rhythm_score",
-    #     "motion_band", "density_band", "order_band", "rhythm_band",
-    #     "emo_trust", "emo_fear", "emo_sad", "emo_anxiety",
-    #     "emo_max_label", "emo_max_score",
-    #     "emo_min_label", "emo_min_score",
-    #     "source_main_rel",
-    # ]
+    # ===== 出力CSV（必要列だけ） =====
     KEEP_COLS = [
-    "motion_score", "density_score", "order_score", "rhythm_score",
-    "motion_band", "density_band", "order_band", "rhythm_band",
+        "motion_score", "density_score", "order_score", "rhythm_score",
+        "motion_band", "density_band", "order_band", "rhythm_band",
     ]
 
-    # 感情列（動的）
     if args.emo_model and args.emo_meta:
-        import emotion_common
         meta = emotion_common.load_meta(Path(args.emo_meta))
         classes = meta.get("classes", [])
-
         KEEP_COLS += [f"emo_{c}" for c in classes]
         KEEP_COLS += [
             "emo_max_label", "emo_max_score",
@@ -342,31 +463,34 @@ def main():
 
     KEEP_COLS += ["source_main_rel"]
 
-    # 入力側に source_main_rel が無いケースに備えて空列を作る
     for c in KEEP_COLS:
         if c not in df2.columns:
             df2[c] = ""
 
     df_out = df2[KEEP_COLS]
-    df_out.to_csv(out_csv, index=False, encoding="utf-8-sig")
-    print("DEBUG emo cols before output:", [c for c in df2.columns if c.startswith("emo_")])
-    print("DEBUG KEEP_COLS has emo?:", [c for c in KEEP_COLS if str(c).startswith("emo_")]) 
 
+    out_csv = Path(args.out_csv)
+    out_csv.parent.mkdir(parents=True, exist_ok=True)
+    df_out.to_csv(out_csv, index=False, encoding="utf-8-sig")
+
+    # ===== 出力JSON（基準の保存/参照情報） =====
     out_json = Path(args.out_json)
     out_json.parent.mkdir(parents=True, exist_ok=True)
+
     payload = {
         "thresholds": thresholds,
         **params,
         "notes": {
-            "bands": {"low": f"< q{args.q1}", "mid": f"q{args.q1}..q{args.q2}", "high": f">= q{args.q2}"},
             "axis_scores_range": "0..1",
             "pc_concentration": "max(pc_0..11)-mean(pc_0..11)",
             "normalization": "robust minmax by quantiles (2%..98%), then clip 0..1",
+            "band_mode_when_generating": args.band_mode if not args.tag_meta else "fixed_by_tag_meta",
         },
     }
     out_json.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
     print(json.dumps({"ok": True, "out_csv": str(out_csv), "out_json": str(out_json)}, ensure_ascii=False))
+
 
 if __name__ == "__main__":
     main()

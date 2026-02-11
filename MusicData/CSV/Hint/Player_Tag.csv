@@ -1,2 +1,2 @@
 ﻿motion_score,density_score,order_score,rhythm_score,motion_band,density_band,order_band,rhythm_band,emo_anxiety,emo_fear,emo_sad,emo_trust,emo_max_label,emo_max_score,emo_min_label,emo_min_score,source_main_rel
-0.0,0.35,0.25,0.55,mid,mid,mid,mid,0.1022936640052574,0.8890388791621977,0.001542143790711963,0.007125313041832951,fear,0.8890388791621977,sad,0.001542143790711963,Assets\StreamingAssets\scores\edited_score_MAIN.xml
+0.09999999999999999,0.35,0.2583333333333333,0.49674378518351997,high,high,high,low,0.21729220412446176,0.7799053832413104,6.261031435483892e-05,0.0027398023198728235,fear,0.7799053832413104,sad,6.261031435483892e-05,Assets\StreamingAssets\scores\edited_score_MAIN.xml

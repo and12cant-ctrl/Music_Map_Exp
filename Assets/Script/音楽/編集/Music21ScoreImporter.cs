@@ -39,14 +39,13 @@ public class Music21ScoreImporter : MonoBehaviour
     [Header("Options")]
     [SerializeField] private bool skipRests = true;
 
-
     public string musicXmlFilePath; 
 
     private void Start()
     {
         musicXmlFilePath = Path.Combine(FluidSynthPaths.EmotionDir,"fear","bach-invention-02_Intro"
             , "bach-invention-02_INTRO_m1-4_ts4_4_E0.735_S0.553_FULL.musicxml");
-        ImportWithMusic21();
+        //ImportWithMusic21();
 
     }
     public void ImportWithMusic21()
@@ -121,7 +120,6 @@ public class Music21ScoreImporter : MonoBehaviour
         {
             if (skipRests && d.pitch == "REST") continue;
 
-            // ScoreEventÅiÇ†Ç»ÇΩÇÃstructÅjÇ…ïœä∑
             var e = new ScoreEvent
             {
                 part = Enum.Parse<Part>(d.part),

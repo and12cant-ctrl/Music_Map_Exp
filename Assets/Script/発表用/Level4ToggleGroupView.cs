@@ -13,7 +13,7 @@ public class Level4ToggleGroupView : MonoBehaviour
     {
         Wire(none, Level4.None);
         Wire(low, Level4.Low);
-        Wire(middle, Level4.Middle);
+        Wire(middle, Level4.Mid);
         Wire(high, Level4.High);
     }
 
@@ -32,7 +32,7 @@ public class Level4ToggleGroupView : MonoBehaviour
         suppress = true;
         none.isOn = (v == Level4.None);
         low.isOn = (v == Level4.Low);
-        middle.isOn = (v == Level4.Middle);
+        middle.isOn = (v == Level4.Mid);
         high.isOn = (v == Level4.High);
         suppress = false;
     }

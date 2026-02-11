@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-CSV_PATH = r"G:\Unity\Product\Music_Map_Exp\MusicData\CSV\features.csv"  # ←ここだけ自分のCSVに変更
+CSV_PATH = r"G:\Unity\Product\Music_Map_Exp\MusicData\CSV\features.csv"
 
 df = pd.read_csv(CSV_PATH)
 

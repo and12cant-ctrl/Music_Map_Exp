@@ -111,4 +111,5 @@ public class Node_Place : MonoBehaviour
         if (!usedMid) return voice.Middle;
         return voice.Down;
     }
+
 }

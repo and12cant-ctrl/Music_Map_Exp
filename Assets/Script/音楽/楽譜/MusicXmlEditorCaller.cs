@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,7 +13,6 @@ public class EditCommand
     public string inputXml;
     public string outputXml;
     public string partName ;
-    //public string instrument;
     public string voice;
     public Node[] nodes;
 }
@@ -23,15 +23,29 @@ public class MusicXmlEditorCaller : MonoBehaviour
     [SerializeField] private MidiPlayer midiPlayer;
     [SerializeField] private Xml_to_MIDI xml_to_MIDI;
     [SerializeField] private MusicXMLStart XMLStart;
-    [SerializeField] private Button But;
-    [SerializeField]private Moniter _moniter;
+    [SerializeField] private Button Judge;
+    [SerializeField] private Button Arrangement;
+    [SerializeField] private Moniter _moniter;
+    [SerializeField] private HintSelectionManager HintManager;
+    [SerializeField] private Music21ScoreImporter ScoreImporter;
+    [SerializeField] private RectTransform NodesParent;
     private string basePath;
     public string Json = "";
     void Awake()
     {
-        But.onClick.AddListener(() =>
+        Judge.onClick.AddListener(() =>
         {
             Score_Xml_MIDI();
+        });
+        Arrangement.onClick.AddListener(() =>
+        {
+            ClearAllNode(NodesParent);
+            string A = TaggedTemplatesCsvMatcher.FindAllMatches(HintManager.state);
+            UnityEngine. Debug.Log(A);
+            if (A != "") {
+                ScoreImporter.musicXmlFilePath = Path.Combine(FluidSynthPaths.EmotionDir, A);
+                ScoreImporter.ImportWithMusic21();    
+            }
         });
 
     }
@@ -45,7 +59,6 @@ public class MusicXmlEditorCaller : MonoBehaviour
             sb.Append(node._pitch.ToString());
         }
         string ans = sb.ToString();
-        //UnityEngine.Debug.Log(ans);
         #endregion
 
         string pythonPath = Path.Combine(FluidSynthPaths.micromambaroot, "envs/unitypy/python.exe");
@@ -114,13 +127,15 @@ public class MusicXmlEditorCaller : MonoBehaviour
         XMLStart.AnalyzeMusicXML(outputXml);
         xml_to_MIDI.RunVeny();
         midiPlayer.MidiStart();
-        Tagged_template.Extract_to_Tag(OutCSV, InCSV);
-        XMLStart.Extract_to_Tag(OutCSV, InCSV);
+        //Tagged_template.Extract_to_Tag(OutCSV, InCSV);
+        XMLStart.Extract_to_Tag_Ply(OutCSV, InCSV);
+
         var result = GetValue(OutCSV);
-        _moniter.EmoTextChenge(result.MaxM,result.MinO);
+        _moniter.EmoTextChenge(result.MaxM,result.MinO,result.Move,result.Dens,result.order,result.rhythm);
     }
 
-    public (string MaxM, string MinO) GetValue(string csvPath)
+    public (string MaxM, string MinO,string Move, string Dens,string order,string rhythm)
+        GetValue(string csvPath)
     {
         var lines = File.ReadAllLines(csvPath);
 
@@ -130,6 +145,27 @@ public class MusicXmlEditorCaller : MonoBehaviour
 
         string valueM = cols[12]; 
         string valueO = cols[14];
-        return (valueM, valueO);
+        string valMove = cols[5];
+        string valDens = cols[6];
+        string valOrde = cols[7];
+        string valRhty = cols[8];
+        return (valueM, valueO,valMove,valDens,valOrde,valRhty);
+    }
+
+
+    public void ClearAllNode(RectTransform parent)
+    {
+        if (parent == null) return;
+
+        for (int i = parent.childCount - 1; i >= 0; i--)
+        {
+            Destroy(parent.GetChild(i).gameObject);
+        }
+        nodes._nodes.Clear();
+    }
+    public string Find_Xml()
+    {
+        string a = "";
+        return a;
     }
 }

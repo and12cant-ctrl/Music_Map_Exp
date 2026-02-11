@@ -20,8 +20,8 @@ public class CSVwriter : MonoBehaviour
     {
         Example.onClick.AddListener(() =>
         {
-            ChengeCSV(Path.Combine(MusicXmlPath));
-            //trainToCSV(Path.Combine(FluidSynthPaths.CSVDir));
+            //ChengeCSV(Path.Combine(MusicXmlPath));
+            trainToCSV(Path.Combine(FluidSynthPaths.CSVDir));
         });
     }
     void ChengeCSV(string EmoFolderName)
@@ -30,21 +30,26 @@ public class CSVwriter : MonoBehaviour
         {
             string emo = Path.GetFileName(EmoFolder).ToLowerInvariant(); 
             string outCsv = Path.Combine(FluidSynthPaths.CSVDir, $"{emo}.csv");
-            Debug.Log(EmoFolder);
-            foreach(string XMLFile in Directory.GetDirectories(EmoFolder)){
+            bool first = true; 
+
+            foreach (string XMLFile in Directory.GetDirectories(EmoFolder)){
                 foreach (string EmoXmls in Directory.EnumerateFiles(XMLFile, "*.musicxml"))
                 {
                     Debug.Log("Start!!");
                     var stemUpper = Path.GetFileNameWithoutExtension(EmoXmls);
-                    if (stemUpper.Contains("FULL")) continue;
-                    if (!stemUpper.Contains("MAIN")) continue;
+                    string su = stemUpper.ToUpperInvariant();
+                    if (su.Contains("FULL")) continue;
+                    if (!su.Contains("MAIN")) continue;
+                    string mode = first ? "overwrite" : "append";
+                    first = false;
 
                     string arguments =
                     $"run -r \"{FluidSynthPaths.micromambaroot}\" " +
                     $"-n unitypy " +
                     $"python -u \"{CsvPy}\" " +
                     $"\"{EmoXmls}\" --out_csv \"{outCsv}\" " +
-                    $"--root_dir \"{FluidSynthPaths.EmotionDir}\"";
+                    $"--root_dir \"{FluidSynthPaths.EmotionDir}\" "+
+                    $"--mode {mode}";
 
                     var r = PythonReturn.RunWithStdin(
                         exePath: FluidSynthPaths.micromambaExe,
@@ -75,7 +80,7 @@ public class CSVwriter : MonoBehaviour
 
         var root = new Dictionary<string, object>
         {
-            ["csvByLabel"] = csvByLabel,   // Dictionary ‚ð‚»‚Ì‚Ü‚Ü“ü‚ê‚ÄOK
+            ["csvByLabel"] = csvByLabel,
             ["outputDir"] = ModelFile,
             ["modelName"] = "emotion_lgbm",
             ["testSize"] = 0.2,

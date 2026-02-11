@@ -101,7 +101,7 @@ public class EmoSortMIDI : MonoBehaviour
                 if (Directory.GetFiles(str).Length > 0)
                 {
                     var Fullfile = Directory.GetFiles(str).
-        FirstOrDefault(f => Path.GetFileName(f).Contains(KeyWord));
+                    FirstOrDefault(f => Path.GetFileName(f).Contains(KeyWord));
 
                     XMLName = str;
                     XmlPath = Path.Combine(TRYfolderPath, Fullfile);

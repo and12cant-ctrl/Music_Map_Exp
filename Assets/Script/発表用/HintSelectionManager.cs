@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 public class HintSelectionManager : MonoBehaviour
@@ -17,6 +18,7 @@ public class HintSelectionManager : MonoBehaviour
 
     // 「None以外」の選択履歴（古い順 → 新しい順）
     private readonly List<HintKey> _pickedOrder = new();
+    private int LimmitFPS = 2;
 
     void Awake()
     {
@@ -28,18 +30,19 @@ public class HintSelectionManager : MonoBehaviour
         maxEmoView.OnUserChanged += v => RequestSet(HintKey.MaxEmo, v);
         minEmoView.OnUserChanged += v => RequestSet(HintKey.MinEmo, v);
 
-        // 初期状態反映（全部NoneでもOK）
+
         RebuildPickedOrderFromState();
         ApplyAllToUI();
     }
 
-    // ---- RequestSet (overloads) ----
+
     void RequestSet(HintKey key, Level4 v)
     {
         SetLevel4(key, v);
         EnforceConstraints(key); // ここで自動調整
         ApplyAllToUI();
     }
+
 
     void RequestSet(HintKey key, Emo5 v)
     {
@@ -48,10 +51,9 @@ public class HintSelectionManager : MonoBehaviour
         ApplyAllToUI();
     }
 
-    // ---- Core rules (B仕様) ----
     void EnforceConstraints(HintKey changedKey)
     {
-        // 1) MaxEmo と MinEmo 排他：後から触った方を優先して、もう片方をNoneへ
+        //  MaxEmo と MinEmo 排他：後から触った方を優先して、もう片方をNoneへ
         if (changedKey == HintKey.MaxEmo && state.maxEmo != Emo5.None && state.minEmo != Emo5.None)
         {
             state.minEmo = Emo5.None;
@@ -63,12 +65,12 @@ public class HintSelectionManager : MonoBehaviour
             RemoveFromOrder(HintKey.MaxEmo);
         }
 
-        // 2) 選択履歴の更新（changedKeyがNone以外なら「最新」に、Noneなら履歴から消す）
+        //  選択履歴の更新（changedKeyがNone以外なら「最新」に、Noneなら履歴から消す）
         if (IsNonNone(changedKey)) TouchAsLatest(changedKey);
         else RemoveFromOrder(changedKey);
 
-        // 3) None以外は最大3つ：超えたら「一番古い選択」をNoneに落とす
-        while (state.CountNonNone() > 3)
+        //  None以外は最大3つ：超えたら「一番古い選択」をNoneに落とす
+        while (state.CountNonNone() > LimmitFPS)
         {
             if (_pickedOrder.Count == 0) break;
 
@@ -84,11 +86,11 @@ public class HintSelectionManager : MonoBehaviour
             ForceNone(oldest);
         }
 
-        // 4) 念のため履歴と状態の整合性を軽く修正（Noneになったものが残ってたら消す）
+        //  念のため履歴と状態の整合性を軽く修正（Noneになったものが残ってたら消す）
         CleanupOrder();
     }
 
-    // ---- helpers: order ----
+
     void TouchAsLatest(HintKey key)
     {
         _pickedOrder.Remove(key);
@@ -118,7 +120,7 @@ public class HintSelectionManager : MonoBehaviour
         if (state.minEmo != Emo5.None) _pickedOrder.Add(HintKey.MinEmo);
     }
 
-    // ---- helpers: state read/write ----
+
     bool IsNonNone(HintKey key) => key switch
     {
         HintKey.Move => state.move != Level4.None,
@@ -170,7 +172,7 @@ public class HintSelectionManager : MonoBehaviour
         }
     }
 
-    // ---- UI apply ----
+    //  UI
     void ApplyAllToUI()
     {
         moveView.Apply(state.move);
@@ -181,4 +183,6 @@ public class HintSelectionManager : MonoBehaviour
         maxEmoView.Apply(state.maxEmo);
         minEmoView.Apply(state.minEmo);
     }
+
+
 }

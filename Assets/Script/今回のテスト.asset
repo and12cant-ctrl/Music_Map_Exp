@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76686271eb6df9544a818a22f1b4b95f, type: 3}
+  m_Name: "\u4ECA\u56DE\u306E\u30C6\u30B9\u30C8"
+  m_EditorClassIdentifier: Assembly-CSharp::AnserMoniter
+  move: 2
+  density: 3
+  order: 2
+  rhythm: 2
+  maxEmo: 2
+  minEmo: 1
