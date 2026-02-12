@@ -25,7 +25,7 @@ public class Moniter : MonoBehaviour
         MaxEmo.text = maxEmo;
         MinEmo.text = minEmo;
         Debug.Log($"{a}_{b}");
-        Score.text = (a * 10 + b * 15).ToString();
+        Score.text = (a * 15 + b * 20).ToString();
     }
 
     [Serializable]

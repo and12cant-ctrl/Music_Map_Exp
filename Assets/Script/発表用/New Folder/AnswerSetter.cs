@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class AnswerSetter : MonoBehaviour
 {
-    [SerializeField] private AnswerSet answer;
+    [SerializeField] private MusicXmlEditorCaller Caller;
 
     [Header("Hint Views")]
     [SerializeField] private Level4ToggleGroupView move;
@@ -12,10 +12,13 @@ public class AnswerSetter : MonoBehaviour
 
     [SerializeField] private Emo5ToggleGroupView maxEmo;
     [SerializeField] private Emo5ToggleGroupView minEmo;
+    private AnswerSet answer;
 
     private void Start()
     {
+        answer = Caller.Answer;
         Apply();
+
     }
 
     public void Apply()

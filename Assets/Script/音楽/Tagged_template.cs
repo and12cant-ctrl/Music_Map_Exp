@@ -12,7 +12,6 @@ public static class Tagged_template
 //ƒŠƒYƒ€ —h‚ê‚é ‚â‚âˆÀ’è ˆÀ’è‚µ‚Ä‚¢‚é
     public static void Extract_to_Tag(string outCSV,string InCSV)
     {
-    //public static string MusicXML = Path.Combine(FluidSynthPaths.EmotionDir, "UnClass", "Chop-28-2_Intro", "Chop-28-2_INTRO_m1-4_ts4_4_E0.230_S0.875_MAIN.musicxml");
 
     string mamba = FluidSynthPaths.micromambaExe;
     string scPy = Path.Combine(FluidSynthPaths.scriptPy, "tag_templates_4axis.py");
@@ -33,6 +32,7 @@ public static class Tagged_template
             $"python -u \"{scPy}\" \"{InCSV}\" " +
             $"--out_csv \"{outCSV}\" " +
             $"--out_json \"{Json}\" " +
+            $"--band_mode rank " +
             $"--emo_model \"{modelPath}\" " +
             $"--emo_meta \"{metaPath}\" ";
     //MusicXMLStart.AnalyzeEmotionFromMusicXML(MusicXML,null,,"normal");

@@ -13,6 +13,8 @@ public class CSVwriter : MonoBehaviour
     string MusicXmlPath = Path.Combine(FluidSynthPaths.EmotionDir);
     string ModelFile = Path.Combine(FluidSynthPaths.ModelDir, "GBM_Model");
 
+    string AllEmo = Path.Combine(FluidSynthPaths.CSVDir,"AllEmo", "all_emotions.csv");
+    string Template = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "tagged_templates.csv");
 
     [SerializeField] Button Example;
 
@@ -20,8 +22,9 @@ public class CSVwriter : MonoBehaviour
     {
         Example.onClick.AddListener(() =>
         {
-            ChengeCSV(Path.Combine(MusicXmlPath));
+            //ChengeCSV(Path.Combine(MusicXmlPath));
             //trainToCSV(Path.Combine(FluidSynthPaths.CSVDir));
+            Tagged_template.Extract_to_Tag(AllEmo, Template);
         });
     }
     void ChengeCSV(string EmoFolderName)

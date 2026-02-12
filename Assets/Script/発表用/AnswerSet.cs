@@ -19,8 +19,18 @@ public class AnswerSet : ScriptableObject
         HintKey.Density => density,
         HintKey.Order => order,
         HintKey.Rhythm => rhythm,
+
         _ => Level4.None
     };
+    public Emo5 GetEmo(HintKey key) => key switch
+    {
+        HintKey.MaxEmo => maxEmo,
+        HintKey.MinEmo => minEmo,
+
+        _ => Emo5.None
+    };
+
+
 
 
 }

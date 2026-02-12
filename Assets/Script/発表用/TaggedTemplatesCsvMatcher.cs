@@ -1,3 +1,4 @@
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -84,7 +85,7 @@ public static class TaggedTemplatesCsvMatcher
     }
 
 
-    public static List<string[]> returnCSV(HintSelectionState state, string CsvPath, out int level4MatchCount,
+    public static string[] returnCSV(AnswerSet Answe, string CsvPath, out int level4MatchCount,
     out int emo5MatchCount)
     {
         level4MatchCount = 0; 
@@ -92,15 +93,12 @@ public static class TaggedTemplatesCsvMatcher
 
         var lines = File.ReadAllLines(CsvPath);
 
-        if (lines.Length == 0) return new List<string[]>();
-
-
         var header = SplitCsvLine(lines[0]);
         var indexByKey = ResolveIndexes(header);
 
         var allKeys = (HintKey[])Enum.GetValues(typeof(HintKey));
 
-        var result = new List<string[]>();
+        string[] result = new string[4];
 
         for (int i = 1; i < lines.Length; i++)
         {
@@ -111,6 +109,8 @@ public static class TaggedTemplatesCsvMatcher
 
             int level4Count = 0;
             int emo5Count = 0;
+            string MaxEmos = "";
+            string MinEmos = "";
             bool ok = true;
 
             foreach (var key in allKeys)
@@ -121,18 +121,21 @@ public static class TaggedTemplatesCsvMatcher
 
                 if (idx < 0 || idx >= cols.Length) { ok = false; break; }
 
-                if (!MatchCell(state, key, cols[idx], ref level4Count, ref emo5Count))
+                if (!MatchCell2(Answe, key, cols[idx],
+                    ref level4Count, ref emo5Count,
+                    ref MaxEmos,ref MinEmos))
                 {
                     ok = false;
-                    break;
+
+                    level4MatchCount += level4Count;
+                    emo5MatchCount += emo5Count;
                 }
             }
-            if (ok) result.Add(cols);
-
-            level4MatchCount += level4Count;
-            emo5MatchCount += emo5Count;
+            result[0] = level4MatchCount.ToString();
+            result[1] = emo5MatchCount.ToString();
+            result[2] = MaxEmos;
+            result[3] = MinEmos;
         }
-
         return result;
     }
 
@@ -182,6 +185,42 @@ public static class TaggedTemplatesCsvMatcher
             return false;
         }
         return false;
+    }
+
+    public static bool MatchCell2(AnswerSet Ans, HintKey key, string csvCell,
+        ref int level4MatchCount,ref int emo5MatchCount,
+        ref string MaxEmo,ref string MinEmo)
+    {
+        csvCell = csvCell.Trim();
+        var expectedLv = Ans.GetHint(key);
+
+        if (expectedLv != Level4.None)
+        {
+            if (Enum.TryParse(csvCell, true, out Level4 v) && v == expectedLv)
+            {
+
+                level4MatchCount++;
+                return true;
+            }
+            return false;
+        }
+
+        var expectedEmo = Ans.GetEmo(key);
+        if (expectedEmo != Emo5.None)
+        {
+            if(Enum.TryParse(csvCell, true, out Emo5 v))
+            {
+                UnityEngine.Debug.Log(v);
+                MaxEmo = v.ToString();
+                if (v == expectedEmo)
+                {
+                    emo5MatchCount++;
+                    return true;
+                }
+            }
+            return false;
+        }
+        return true;
     }
 
 }

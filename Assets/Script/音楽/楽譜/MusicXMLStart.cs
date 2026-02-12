@@ -74,7 +74,7 @@ public class MusicXMLStart : MonoBehaviour
             throw new Exception("extract_features.py 実行失敗");
 
         string featJsonText = ExtractLastJsonObject(featResult.Stdout);
-        Debug.Log($"featJsonTest =_ {featJsonText}");
+
         var playerFeaturesByName = BuildFeaturesByNameFromFlatJson(
             featJsonText,
             CSVwriter.FINAL_COLUMNS.ToList(),

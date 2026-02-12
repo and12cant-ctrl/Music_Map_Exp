@@ -29,7 +29,7 @@ public class MusicXmlEditorCaller : MonoBehaviour
     [SerializeField] private HintSelectionManager HintManager;
     [SerializeField] private Music21ScoreImporter ScoreImporter;
     [SerializeField] private RectTransform NodesParent;
-    [SerializeField] private AnswerSet Answer;
+    [SerializeField] public AnswerSet Answer;
     private string basePath;
     public string Json = "";
     void Awake()
@@ -128,7 +128,6 @@ public class MusicXmlEditorCaller : MonoBehaviour
         XMLStart.AnalyzeMusicXML(outputXml);
         xml_to_MIDI.RunVeny();
         midiPlayer.MidiStart();
-        //Tagged_template.Extract_to_Tag(OutCSV, InCSV);
         XMLStart.Extract_to_Tag_Ply(OutCSV, InCSV);
 
         var result = GetValue(OutCSV);
@@ -138,9 +137,7 @@ public class MusicXmlEditorCaller : MonoBehaviour
 
 
         TaggedTemplatesCsvMatcher.returnCSV(
-            HintManager.state ,
-            OutCSV,out LV4,out EMO5);
-        UnityEngine.Debug.Log($"{LV4},{EMO5}");
+            Answer ,OutCSV,out LV4,out EMO5);
         _moniter.EmoTextChenge(result.MaxM, result.MinO,LV4,EMO5);
     }
 

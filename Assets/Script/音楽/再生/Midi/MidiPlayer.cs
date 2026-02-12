@@ -28,7 +28,6 @@ public class MidiPlayer : MonoBehaviour
         StopInternal();
         #region         Midiì«Ç›çûÇ›
         string path =Path.GetFullPath(Path.Combine(Directory.GetParent(Application.dataPath).FullName, midFileName));
-        Debug.Log(path);
         if (!File. Exists(path))
         {
             Debug.LogError($"MIDI Ç™å©Ç¬Ç©ÇËÇ‹ÇπÇÒ: {path}");

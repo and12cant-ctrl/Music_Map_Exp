@@ -1,78 +1,78 @@
 {
   "thresholds": {
     "motion": {
-      "t1": 0.0,
-      "t2": 0.0,
       "q1": 0.33,
-      "q2": 0.66
+      "q2": 0.66,
+      "t1": 0.0,
+      "t2": 0.0
     },
     "density": {
-      "t1": 0.35,
-      "t2": 0.35,
       "q1": 0.33,
-      "q2": 0.66
+      "q2": 0.66,
+      "t1": 0.35,
+      "t2": 0.35
     },
     "order": {
-      "t1": 0.25,
-      "t2": 0.25,
       "q1": 0.33,
-      "q2": 0.66
+      "q2": 0.66,
+      "t1": 0.25,
+      "t2": 0.25
     },
     "rhythm": {
-      "t1": 0.55,
-      "t2": 0.55,
       "q1": 0.33,
-      "q2": 0.66
+      "q2": 0.66,
+      "t1": 0.55,
+      "t2": 0.55
     }
   },
   "norm_params": {
-    "key_fit_ratio": {
-      "lo": 0.9,
-      "hi": 1.9
-    },
-    "chromatic_ratio": {
-      "lo": 0.0999999999999999,
-      "hi": 1.0999999999999999
-    },
-    "strongbeat_hit_ratio": {
-      "lo": 0.1,
-      "hi": 1.1
-    },
-    "leap_ratio": {
-      "lo": 0.2222222222222222,
-      "hi": 1.2222222222222223
-    },
-    "dur_std_quarter": {
-      "lo": 0.3574601764921203,
-      "hi": 1.3574601764921204
+    "rest_ratio_time": {
+      "lo": 0.0,
+      "hi": 1.0
     },
     "direction_change_rate": {
       "lo": 0.0,
       "hi": 1.0
     },
-    "rest_ratio_time": {
-      "lo": 0.1875,
-      "hi": 1.1875
+    "strongbeat_hit_ratio": {
+      "lo": 0.0,
+      "hi": 1.0
     },
     "short_note_ratio": {
-      "lo": 0.4,
-      "hi": 1.4
-    },
-    "pc_concentration": {
-      "lo": 0.21666666666666667,
-      "hi": 1.2166666666666668
+      "lo": 0.0,
+      "hi": 1.0
     },
     "pitch_range_midi": {
-      "lo": 22.0,
-      "hi": 23.0
+      "lo": 0.0,
+      "hi": 1.0
     },
     "syncopation_score": {
-      "lo": 0.4,
-      "hi": 1.4
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "dur_std_quarter": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "key_fit_ratio": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "leap_ratio": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "chromatic_ratio": {
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "pc_concentration": {
+      "lo": 0.0,
+      "hi": 1.0
     },
     "note_count_per_bar": {
-      "lo": 5.0,
-      "hi": 6.0
+      "lo": 0.0,
+      "hi": 1.0
     }
   },
   "weights": {
@@ -103,11 +103,10 @@
     "rest_ratio_time",
     "syncopation_score"
   ],
-  "tag_meta_used": "C:\\Music_Map_Exp\\MusicData\\CSV\\Hint\\thresholds_4axis.json",
   "notes": {
     "axis_scores_range": "0..1",
     "pc_concentration": "max(pc_0..11)-mean(pc_0..11)",
     "normalization": "robust minmax by quantiles (2%..98%), then clip 0..1",
-    "band_mode_when_generating": "fixed_by_tag_meta"
+    "band_mode_when_generating": "rank"
   }
 }
