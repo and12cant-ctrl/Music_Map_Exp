@@ -1,55 +1,11 @@
-﻿
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using UnityEngine.Animations;
 
-
-#region 判定用クラス
-[Serializable]
-public class HintScores
-{
-    public float move;
-    public float density;
-    public float order;
-    public float rhythm;
-    public float emotion;
-    public float total;
-}
-
-[Serializable]
-public class EmotionPred
-{
-    public string label;
-    public Dictionary<string, float> proba_by_class;
-    public List<float> proba_vec;
-    public List<string> classes;
-}
-
-[Serializable]
-
-
-public class JudgeRequest
-{
-    public string metaPath;
-    public string modelPath;
-
-    // プレイヤー特徴（extract_features出力から作る）
-    public Dictionary<string, float> featuresByName;
-
-    // テンプレ特徴（同じ列名で持つ。まだ無ければ null でもOKにしておく）
-    public Dictionary<string, float> templateFeaturesByName;
-
-    // テンプレ感情（あれば）
-    public List<float> templateEmotionVec;
-
-    public Dictionary<string, object> scoreConfig;
-}
-#endregion
 
 public class MusicXMLStart : MonoBehaviour
 {
@@ -67,7 +23,7 @@ public class MusicXMLStart : MonoBehaviour
     string sad = Path.Combine(FluidSynthPaths.CSVDir, "sad.csv");
     string fear = Path.Combine(FluidSynthPaths.CSVDir, "fear.csv");
     string anxiety = Path.Combine(FluidSynthPaths.CSVDir, "anxiety.csv");
-    string AllEmo = Path.Combine(FluidSynthPaths.CSVDir, "all_emotions.csv");
+    string AllEmo = Path.Combine(FluidSynthPaths.CSVDir,"Hint", "all_emotions.csv");
     string Player = Path.Combine(FluidSynthPaths.CSVDir, "Hint","Player_tag.csv");
     #endregion
 
@@ -78,7 +34,7 @@ public class MusicXMLStart : MonoBehaviour
     public void Start()
     {
         #region 一回きり
-        //Debug.Log("koko");
+        Debug.Log("koko");
         //string[] emotionCsvs =
         //{
         //    Path.Combine(FluidSynthPaths.CSVDir, "trust.csv"),
@@ -118,7 +74,7 @@ public class MusicXMLStart : MonoBehaviour
             throw new Exception("extract_features.py 実行失敗");
 
         string featJsonText = ExtractLastJsonObject(featResult.Stdout);
-
+        Debug.Log($"featJsonTest =_ {featJsonText}");
         var playerFeaturesByName = BuildFeaturesByNameFromFlatJson(
             featJsonText,
             CSVwriter.FINAL_COLUMNS.ToList(),

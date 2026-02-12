@@ -103,7 +103,7 @@
     "rest_ratio_time",
     "syncopation_score"
   ],
-  "tag_meta_used": "G:\\Unity\\Product\\Music_Map_Exp\\MusicData\\CSV\\Hint\\thresholds_4axis.json",
+  "tag_meta_used": "C:\\Music_Map_Exp\\MusicData\\CSV\\Hint\\thresholds_4axis.json",
   "notes": {
     "axis_scores_range": "0..1",
     "pc_concentration": "max(pc_0..11)-mean(pc_0..11)",

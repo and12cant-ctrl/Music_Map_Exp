@@ -1,6 +1,6 @@
 {
   "model_name": "emotion_lgbm",
-  "model_path": "G:\\Unity\\Product\\Music_Map_Exp\\MusicData\\Model\\GBM_Model\\emotion_lgbm.txt",
+  "model_path": "C:\\Music_Map_Exp\\MusicData\\Model\\GBM_Model\\emotion_lgbm.txt",
   "final_columns": [
     "time_signature_num",
     "time_signature_den",
@@ -76,7 +76,8 @@
     "anxiety",
     "fear",
     "sad",
-    "trust"
+    "trust",
+    "unclass"
   ],
   "preprocess": {
     "fillna": 0.0
@@ -91,72 +92,90 @@
         "anxiety",
         "fear",
         "sad",
-        "trust"
+        "trust",
+        "unclass"
       ],
       "matrix": [
         [
+          2,
           1,
-          1,
-          4,
+          3,
+          0,
           0
         ],
         [
+          1,
           2,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
           1,
           1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          2,
           0
         ],
         [
           1,
           0,
-          2,
-          0
-        ],
-        [
-          1,
           0,
-          1,
-          2
+          0,
+          1
         ]
       ]
     },
     "report": {
       "anxiety": {
-        "precision": 0.2,
-        "recall": 0.16666666666666666,
-        "f1-score": 0.18181818181818182,
+        "precision": 0.5,
+        "recall": 0.3333333333333333,
+        "f1-score": 0.4,
         "support": 6.0
       },
       "fear": {
         "precision": 0.5,
-        "recall": 0.25,
-        "f1-score": 0.3333333333333333,
+        "recall": 0.5,
+        "f1-score": 0.5,
         "support": 4.0
       },
       "sad": {
-        "precision": 0.25,
-        "recall": 0.6666666666666666,
-        "f1-score": 0.36363636363636365,
+        "precision": 0.2,
+        "recall": 0.3333333333333333,
+        "f1-score": 0.25,
         "support": 3.0
       },
       "trust": {
-        "precision": 1.0,
-        "recall": 0.5,
+        "precision": 0.6666666666666666,
+        "recall": 0.6666666666666666,
         "f1-score": 0.6666666666666666,
-        "support": 4.0
+        "support": 3.0
       },
-      "accuracy": 0.35294117647058826,
+      "unclass": {
+        "precision": 0.5,
+        "recall": 0.5,
+        "f1-score": 0.5,
+        "support": 2.0
+      },
+      "accuracy": 0.4444444444444444,
       "macro avg": {
-        "precision": 0.4875,
-        "recall": 0.3958333333333333,
-        "f1-score": 0.38636363636363635,
-        "support": 17.0
+        "precision": 0.47333333333333333,
+        "recall": 0.4666666666666666,
+        "f1-score": 0.46333333333333326,
+        "support": 18.0
       },
       "weighted avg": {
-        "precision": 0.4676470588235294,
-        "recall": 0.35294117647058826,
-        "f1-score": 0.36363636363636365,
-        "support": 17.0
+        "precision": 0.47777777777777775,
+        "recall": 0.4444444444444444,
+        "f1-score": 0.4527777777777778,
+        "support": 18.0
       }
     }
   }

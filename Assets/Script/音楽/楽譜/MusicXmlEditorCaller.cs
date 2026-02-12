@@ -29,6 +29,7 @@ public class MusicXmlEditorCaller : MonoBehaviour
     [SerializeField] private HintSelectionManager HintManager;
     [SerializeField] private Music21ScoreImporter ScoreImporter;
     [SerializeField] private RectTransform NodesParent;
+    [SerializeField] private AnswerSet Answer;
     private string basePath;
     public string Json = "";
     void Awake()
@@ -131,11 +132,19 @@ public class MusicXmlEditorCaller : MonoBehaviour
         XMLStart.Extract_to_Tag_Ply(OutCSV, InCSV);
 
         var result = GetValue(OutCSV);
-        _moniter.EmoTextChenge(result.MaxM,result.MinO,result.Move,result.Dens,result.order,result.rhythm);
+ 
+        int LV4 =0;
+        int EMO5= 0;
+
+
+        TaggedTemplatesCsvMatcher.returnCSV(
+            HintManager.state ,
+            OutCSV,out LV4,out EMO5);
+        UnityEngine.Debug.Log($"{LV4},{EMO5}");
+        _moniter.EmoTextChenge(result.MaxM, result.MinO,LV4,EMO5);
     }
 
-    public (string MaxM, string MinO,string Move, string Dens,string order,string rhythm)
-        GetValue(string csvPath)
+    public (string MaxM, string MinO)GetValue(string csvPath)
     {
         var lines = File.ReadAllLines(csvPath);
 
@@ -143,15 +152,10 @@ public class MusicXmlEditorCaller : MonoBehaviour
 
         var cols = lastLine.Split(',');
 
-        string valueM = cols[12]; 
-        string valueO = cols[14];
-        string valMove = cols[5];
-        string valDens = cols[6];
-        string valOrde = cols[7];
-        string valRhty = cols[8];
-        return (valueM, valueO,valMove,valDens,valOrde,valRhty);
+        string valueM = cols[13]; 
+        string valueO = cols[15];
+        return (valueM, valueO);
     }
-
 
     public void ClearAllNode(RectTransform parent)
     {

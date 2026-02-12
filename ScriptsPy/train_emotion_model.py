@@ -62,7 +62,9 @@ FINAL_COLUMNS = [
 #   "modelName": "emotion_lgbm",           # emotion_lgbm.txt / emotion_lgbm_meta.json
 #   "testSize": 0.2,                       # 任意
 #   "seed": 42,                            # 任意
-#   "fillna": 0                            # 任意（既定0）
+#   "fillna": 0 ,
+#   "mainOnly" : true
+                           # 任意（既定0）
 # }
 #
 # 互換： "csv_paths": [{"label":"trust","path":"..."} ...] でも可
@@ -291,7 +293,6 @@ def _read_json_from_path_or_stdin(args: List[str]) -> Dict[str, Any]:
         return _read_json_from_file(json_path)
 
     raise ValueError("入力JSONが必要です。--stdin か JSONファイルパスを指定してください。")
-
 
 def _load_meta(meta_path: Path) -> Dict[str, Any]:
     if not meta_path.exists():

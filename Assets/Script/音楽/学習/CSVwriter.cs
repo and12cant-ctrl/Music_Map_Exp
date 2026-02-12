@@ -20,8 +20,8 @@ public class CSVwriter : MonoBehaviour
     {
         Example.onClick.AddListener(() =>
         {
-            //ChengeCSV(Path.Combine(MusicXmlPath));
-            trainToCSV(Path.Combine(FluidSynthPaths.CSVDir));
+            ChengeCSV(Path.Combine(MusicXmlPath));
+            //trainToCSV(Path.Combine(FluidSynthPaths.CSVDir));
         });
     }
     void ChengeCSV(string EmoFolderName)
@@ -85,11 +85,12 @@ public class CSVwriter : MonoBehaviour
             ["modelName"] = "emotion_lgbm",
             ["testSize"] = 0.2,
             ["seed"] = 42,
-            ["fillna"] = 0
+            ["fillna"] = 0,
+            ["mainOnly"] = true
         };
 
         string json = JsonConvert.SerializeObject(root,Formatting.Indented);
-        Debug.Log("[JSON TO PY]\n" + json);
+        //Debug.Log("[JSON TO PY]\n" + json);
         string arguments =
                 $"run -r \"{FluidSynthPaths.micromambaroot}\" " +
                 $"-n unitypy " +
@@ -138,15 +139,15 @@ public class CSVwriter : MonoBehaviour
     "key_fit_ratio","chromatic_ratio","accidental_note_ratio","tonic_ending_flag",
 
     // ACC
-    "bass_mean_midi","bass_range_midi","bass_step_ratio","bass_leap_ratio",
-    "chord_event_count_per_bar","mean_chord_size","chord_size_std",
-    "polyphony_ratio_time","accomp_density_time",
-    "dissonance_ratio","tritone_ratio","minor_third_ratio","major_third_ratio",
-    "seventh_chord_ratio","sus_ratio",
-    "key_fit_ratio_acc",
-    "pc_acc_0","pc_acc_1","pc_acc_2","pc_acc_3","pc_acc_4","pc_acc_5",
-    "pc_acc_6","pc_acc_7","pc_acc_8","pc_acc_9","pc_acc_10","pc_acc_11",
-    "chromatic_ratio_acc","cadence_strength_score",
-    "strongbeat_hit_ratio","offbeat_ratio",   "strongbeat_hit_ratio","offbeat_ratio"
+    //"bass_mean_midi","bass_range_midi","bass_step_ratio","bass_leap_ratio",
+    //"chord_event_count_per_bar","mean_chord_size","chord_size_std",
+    //"polyphony_ratio_time","accomp_density_time",
+    //"dissonance_ratio","tritone_ratio","minor_third_ratio","major_third_ratio",
+    //"seventh_chord_ratio","sus_ratio",
+    //"key_fit_ratio_acc",
+    //"pc_acc_0","pc_acc_1","pc_acc_2","pc_acc_3","pc_acc_4","pc_acc_5",
+    //"pc_acc_6","pc_acc_7","pc_acc_8","pc_acc_9","pc_acc_10","pc_acc_11",
+    //"chromatic_ratio_acc","cadence_strength_score",
+    //"strongbeat_hit_ratio","offbeat_ratio",
 };
 }

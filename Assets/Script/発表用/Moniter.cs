@@ -20,20 +20,11 @@ public class Moniter : MonoBehaviour
         Score.text = "-";
     }
 
-    public void EmoTextChenge(string maxEmo,string minEmo,
-        string Move,string Dens,string order,string rhythm)
+    public void EmoTextChenge(string maxEmo,string minEmo,int a,int b)
     {
-        int a =0;
-        int b =0;
         MaxEmo.text = maxEmo;
         MinEmo.text = minEmo;
-        if (Ans.move.ToString() == Move) a++;
-        if (Ans.density.ToString() == Dens) a++;
-        if (Ans.order.ToString() == order) a++;
-        if (Ans.rhythm.ToString() == rhythm) a++;
-
-        if (Ans.maxEmo.ToString() == maxEmo) b++;
-        if (Ans.minEmo.ToString() == minEmo) b++;
+        Debug.Log($"{a}_{b}");
         Score.text = (a * 10 + b * 15).ToString();
     }
 

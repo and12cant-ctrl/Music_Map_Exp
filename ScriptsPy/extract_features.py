@@ -581,16 +581,16 @@ FINAL_COLUMNS = [
     "dur_mean_quarter","dur_std_quarter","short_note_ratio","rest_ratio_time","syncopation_score",
     "key_fit_ratio","chromatic_ratio","accidental_note_ratio","tonic_ending_flag",
 
-    # ACC (accompaniment) aggregated over matching ACC files
-    "bass_mean_midi","bass_range_midi","bass_step_ratio","bass_leap_ratio",
-    "chord_event_count_per_bar","mean_chord_size","chord_size_std",
-    "polyphony_ratio_time","accomp_density_time",
-    "dissonance_ratio","tritone_ratio","minor_third_ratio","major_third_ratio",
-    "seventh_chord_ratio","sus_ratio",
-    "key_fit_ratio_acc",
-    *[f"pc_acc_{i}" for i in range(12)],
-    "chromatic_ratio_acc","cadence_strength_score",
-    "strongbeat_hit_ratio", "offbeat_ratio",
+    # # ACC (accompaniment) aggregated over matching ACC files
+    # "bass_mean_midi","bass_range_midi","bass_step_ratio","bass_leap_ratio",
+    # "chord_event_count_per_bar","mean_chord_size","chord_size_std",
+    # "polyphony_ratio_time","accomp_density_time",
+    # "dissonance_ratio","tritone_ratio","minor_third_ratio","major_third_ratio",
+    # "seventh_chord_ratio","sus_ratio",
+    # "key_fit_ratio_acc",
+    # *[f"pc_acc_{i}" for i in range(12)],
+    # "chromatic_ratio_acc","cadence_strength_score",
+    # "strongbeat_hit_ratio", "offbeat_ratio",
         # --- meta (non-numeric) ---
     "source_main_rel"
 ]
@@ -630,7 +630,8 @@ def overwrite_csv(path: Path, row: Dict[str, Any]) -> None:
 # -----------------------------
 # Main
 # -----------------------------
-def extract_all(main_path: Path,root_dir: Optional[Path] = None) -> Dict[str, Any]:
+def extract_all(main_path: Path, root_dir: Optional[Path] = None, main_only: bool = False) -> Dict[str, Any]:
+
     if not is_main_file(main_path):
         raise ValueError("Input must be a MAIN file (stem contains 'MAIN').")
     sc_main: stream.Score = converter.parse(str(main_path))
@@ -642,13 +643,18 @@ def extract_all(main_path: Path,root_dir: Optional[Path] = None) -> Dict[str, An
     common = extract_common_meta(sc_main, main_part)
     main_feats = extract_main_features(main_part, sc_main)
 
-    acc_paths = resolve_acc_list_from_main(main_path)
-    acc_feat_list: List[Dict[str, float]] = []
-    for ap in acc_paths:
-        sc_acc = converter.parse(str(ap))
-        acc_feat_list.append(extract_acc_features(sc_acc, sc_main))
+    acc_agg: Dict[str, float]
+    if main_only:
+        # ACC列は0で埋める（関数は残すがここでは使わない）
+        acc_agg = {k: 0.0 for k in ACC_KEYS}
+    else:
+        acc_paths = resolve_acc_list_from_main(main_path)
+        acc_feat_list: List[Dict[str, float]] = []
+        for ap in acc_paths:
+            sc_acc = converter.parse(str(ap))
+            acc_feat_list.append(extract_acc_features(sc_acc, sc_main))
+        acc_agg = aggregate_acc_features_mean(acc_feat_list)
 
-    acc_agg = aggregate_acc_features_mean(acc_feat_list)
 
     if root_dir:
         try:
@@ -679,16 +685,14 @@ def main():
     ap.add_argument("--out_json", type=str, default="")
     ap.add_argument("--out_csv", type=str, default="")
     ap.add_argument("--root_dir", type=str, default="", help="root directory to make relative path")
-    ap.add_argument(
-    "--mode",
-    choices=["append", "overwrite"],
-    default="append",
-    help="CSV write mode"
-)
+    ap.add_argument("--mode",choices=["append", "overwrite"],default="append",help="CSV write mode")
+    ap.add_argument("--main_only", action="store_true", help="extract MAIN only (skip ACC aggregation)")
+
     args = ap.parse_args()
 
     root_dir = Path(args.root_dir) if args.root_dir else None
-    out = extract_all(Path(args.main), root_dir=root_dir)
+    out = extract_all(Path(args.main), root_dir=root_dir, main_only=args.main_only)
+
 
     if args.out_json:
         write_json(Path(args.out_json), out)

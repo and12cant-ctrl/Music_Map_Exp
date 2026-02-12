@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using UnityEngine.InputSystem;
 
 public static class TaggedTemplatesCsvMatcher
 {
-    private static readonly Dictionary<string, HintKey> HeaderMap =
+    public static readonly Dictionary<string, HintKey> HeaderMap =
     new(StringComparer.OrdinalIgnoreCase)
     {
             { "motion_band",  HintKey.Move },
@@ -83,13 +84,13 @@ public static class TaggedTemplatesCsvMatcher
     }
 
 
-    private static List<string[]> returnCSV(HintSelectionState state, string CsvPath)
+    public static List<string[]> returnCSV(HintSelectionState state, string CsvPath, out int level4MatchCount,
+    out int emo5MatchCount)
     {
-        int level4Count = 0;
-        int emo5Count = 0;
-        string csvPath = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "tagged_templates.csv");
+        level4MatchCount = 0; 
+        emo5MatchCount = 0;
 
-        var lines = File.ReadAllLines(csvPath);
+        var lines = File.ReadAllLines(CsvPath);
 
         if (lines.Length == 0) return new List<string[]>();
 
@@ -97,12 +98,7 @@ public static class TaggedTemplatesCsvMatcher
         var header = SplitCsvLine(lines[0]);
         var indexByKey = ResolveIndexes(header);
 
-        foreach (var key in RequiredKeys)
-        {
-            if (!indexByKey.ContainsKey(key))
-                throw new InvalidOperationException(
-                    $"CSV header に必要列が見つかりません: {key}. ヘッダ: {string.Join(",", header)}");
-        }
+        var allKeys = (HintKey[])Enum.GetValues(typeof(HintKey));
 
         var result = new List<string[]>();
 
@@ -112,14 +108,29 @@ public static class TaggedTemplatesCsvMatcher
             if (string.IsNullOrWhiteSpace(line)) continue;
 
             var cols = SplitCsvLine(line);
-            bool Cheker = RequiredKeys.All(key =>
-            {
-                int idx = indexByKey[key];
-                return MatchCell(state, key, cols[idx],
-                ref level4Count, ref emo5Count);
-            });
 
-            if (Cheker) result.Add(cols);
+            int level4Count = 0;
+            int emo5Count = 0;
+            bool ok = true;
+
+            foreach (var key in allKeys)
+            {
+
+                if (!indexByKey.TryGetValue(key, out int idx))
+                    continue;
+
+                if (idx < 0 || idx >= cols.Length) { ok = false; break; }
+
+                if (!MatchCell(state, key, cols[idx], ref level4Count, ref emo5Count))
+                {
+                    ok = false;
+                    break;
+                }
+            }
+            if (ok) result.Add(cols);
+
+            level4MatchCount += level4Count;
+            emo5MatchCount += emo5Count;
         }
 
         return result;
@@ -145,7 +156,7 @@ public static class TaggedTemplatesCsvMatcher
 
     private static string[] SplitCsvLine(string line) => line.Split(',');
 
-    private static bool MatchCell(HintSelectionState state, HintKey key, string csvCell,ref int level4MatchCount,
+    public static bool MatchCell(HintSelectionState state, HintKey key, string csvCell,ref int level4MatchCount,
     ref int emo5MatchCount)
     {
         if (state.IsWildcard(key)) return true;
