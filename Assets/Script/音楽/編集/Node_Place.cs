@@ -4,14 +4,14 @@ using UnityEngine;
 public class Node_Place : MonoBehaviour
 {
     // 今配置されている Node の一覧
-    public List<Node> _nodes = new List<Node>();
+    public List<NodeMapView> _nodes = new List<NodeMapView>();
 
     // 同じY(_scale)に置ける最大数
     private const int MaxPerY = 3;
     private voice voic;
     public bool CanPlace(float time, Part part, string pitch, float start, int bars)
     {
-        // 1) 同一パート・同一小節で時間が重なるなら置けない（voiceは問わない）
+        //  同一パート・同一小節で時間が重なるなら置けない（voiceは問わない）
         foreach (var node in _nodes)
         {
             if (node._Part == part && node._bar == bars && node._pitch == pitch &&
@@ -21,7 +21,7 @@ public class Node_Place : MonoBehaviour
             }
         }
 
-        // 2) 同じ(start, bar)に置ける数を制限、かつ空いてるvoiceを決める
+        //  同じ(start, bar)に置ける数を制限、かつ空いてるvoiceを決める
         int countSameSlot = 0;
         foreach (var node in _nodes)
         {
@@ -50,7 +50,7 @@ public class Node_Place : MonoBehaviour
             return false;
         }
 
-        var node = new Node();
+        var node = new NodeMapView();
         node._duration = duration;
         node._Part = part;
         node._pitch = pitch;
@@ -71,7 +71,7 @@ public class Node_Place : MonoBehaviour
             return false;
         }
 
-        var node = new Node();
+        var node = new NodeMapView();
         node._duration = duration;
         node._Part = part;
         node._pitch = pitch;

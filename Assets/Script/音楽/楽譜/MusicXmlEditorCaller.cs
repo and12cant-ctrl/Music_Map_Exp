@@ -1,5 +1,6 @@
 ﻿using Sirenix.Serialization;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -14,7 +15,7 @@ public class EditCommand
     public string outputXml;
     public string partName ;
     public string voice;
-    public Node[] nodes;
+    public NodeMapView[] nodes;
 }
 
 public class MusicXmlEditorCaller : MonoBehaviour
@@ -29,28 +30,33 @@ public class MusicXmlEditorCaller : MonoBehaviour
     [SerializeField] private HintSelectionManager HintManager;
     [SerializeField] private Music21ScoreImporter ScoreImporter;
     [SerializeField] private RectTransform NodesParent;
+    [SerializeField] private SimpleStaffRenderer StafeRend;
     [SerializeField] public AnswerSet Answer;
+    [SerializeField] private bool IsTest =true;
     private string basePath;
-    public string Json = "";
+    public string Json => "";
     void Awake()
     {
-        Judge.onClick.AddListener(() =>
+        if (IsTest)
         {
-            Score_Xml_MIDI();
-        });
-        Arrangement.onClick.AddListener(() =>
-        {
-            ClearAllNode(NodesParent);
-            string A = TaggedTemplatesCsvMatcher.FindAllMatches(HintManager.state);
-            UnityEngine. Debug.Log(A);
-            if (A != "") {
-                ScoreImporter.musicXmlFilePath = Path.Combine(FluidSynthPaths.EmotionDir, A);
-                ScoreImporter.ImportWithMusic21();    
-            }
-        });
+            Judge.onClick.AddListener(() =>
+            {
+                Score_Xml_MIDI();
+            });
+            Arrangement.onClick.AddListener(() =>
+            {
+                ClearAllNode();
+                string A = TaggedTemplatesCsvMatcher.FindAllMatches(HintManager.state);
+                UnityEngine.Debug.Log(A);
+                if (A != "")
+                {
+                    ScoreImporter.musicXmlFilePath = Path.Combine(FluidSynthPaths.EmotionDir, A);
+                    ScoreImporter.ImportWithMusic21();
+                }
+            });
+        };
 
     }
-    [ContextMenu("XML => MIDI(micromamba)")]
 
     public void Score_Xml_MIDI() {
         #region MyRegion
@@ -135,9 +141,7 @@ public class MusicXmlEditorCaller : MonoBehaviour
         int LV4 =0;
         int EMO5= 0;
 
-
-        TaggedTemplatesCsvMatcher.returnCSV(
-            Answer ,OutCSV,out LV4,out EMO5);
+        TaggedTemplatesCsvMatcher.returnCSV( Answer ,OutCSV,out LV4,out EMO5);
         _moniter.EmoTextChenge(result.MaxM, result.MinO,LV4,EMO5);
     }
 
@@ -154,14 +158,18 @@ public class MusicXmlEditorCaller : MonoBehaviour
         return (valueM, valueO);
     }
 
-    public void ClearAllNode(RectTransform parent)
+    public void ClearAllNode()
     {
-        if (parent == null) return;
-
-        for (int i = parent.childCount - 1; i >= 0; i--)
+        foreach (RectTransform t in StafeRend.partRoots.Values)
         {
-            Destroy(parent.GetChild(i).gameObject);
+            if (t == null) continue;
+
+            for (int i = t.childCount - 1; i >= 0; i--)
+            {
+                Destroy(t.GetChild(i).gameObject);
+            }
         }
+
         nodes._nodes.Clear();
     }
     public string Find_Xml()

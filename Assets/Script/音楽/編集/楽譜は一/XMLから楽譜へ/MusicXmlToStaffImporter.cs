@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 using System.Linq;
 
@@ -37,7 +36,7 @@ public class MusicXmlToStaffImporter : MonoBehaviour
         var payload = JsonUtility.FromJson<ScoreEventsPayload>(json);
         var events = payload.events.Select(ToScoreEvent).ToList();
 
-        var coord = new StaffCoordinateConverter(staffRect, payload.beatsPerBar, pixelsPerBar, scaleSteps);
+        //var coord = new StaffCoordinateConverter(staffRect, payload.beatsPerBar, pixelsPerBar, scaleSteps);
         var applier = new ScoreEventApplier(nodeCheak, staffRenderer,coord);
 
         int placed = 0;

@@ -1,21 +1,18 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.SocialPlatforms.Impl;
 
 [DefaultExecutionOrder(-100)]
 public class GameManager : MonoBehaviour
 {
-    [Header("生成テンプレート")]
     public static GameManager Instance { get; private set; }
     [SerializeField] public  MapDataSO questMap;
     [SerializeField] private CharacterGenerator characterGenerator;
     [SerializeField] public MiniMapVisualConfig CellView;
-    [SerializeField] private UIManager uiManager;
+    [SerializeField] private CharaUIManager uiManager;
     [SerializeField] private GameObject characterPrefab;
     [SerializeField] private Transform characterParent;
-    [SerializeField] public int characterCount = 4;
+    [SerializeField] public PartyManager PartyManager;
     #region     テスト
     public BGCategoryListSO BGReqListSO { get; set; }
     public BGCategoryListSO BGRandListSO {  get; set; }
@@ -24,7 +21,7 @@ public class GameManager : MonoBehaviour
     public int MapGrid {  get; set; }
     #endregion
     private MapGenerator mapGenerator;
-    [HideInInspector] public List<Character> _currentParty = new();
+    //[HideInInspector] public List<Character> _currentParty = new();
     private List<EventData> _eventDatas = new List<EventData>();
     [SerializeField] private TestManeger Test;
     private MiniMapBuilder miniMapBuilder;
@@ -32,7 +29,7 @@ public class GameManager : MonoBehaviour
     public event Action<Vector2Int> OnPlayerIconSet;
 
     #region PlayerCell
-    private Vector2Int _playerCell = new Vector2Int(0, 0);
+    private Vector2Int _playerCell = new Vector2Int(5,5);
     public Vector2Int PlayerCell
     {
         get => _playerCell;
@@ -50,10 +47,6 @@ public class GameManager : MonoBehaviour
     }
     #endregion
 
-    private void Awake()
-    {
-
-    }
     void Start()
     {
         mapGenerator = GetComponent<MapGenerator>();
@@ -73,7 +66,7 @@ public class GameManager : MonoBehaviour
         #endregion
 
         GenerateParty();           // キャラを生成
-        uiManager.AssignCharacters(_currentParty);  // UIに割り当て
+        uiManager.AssignCharacters(PartyManager.Runtime.Members);  // UIに割り当て
         mapGenerator.MapGenerate(questMap,BGReqListSO,BGRandListSO,EVReqLsitSO,EVRandLsitSO,MapGrid);
         OnPlayerIconSet?.Invoke(PlayerCell);
         miniMapBuilder.SetupMap();
@@ -83,45 +76,23 @@ public class GameManager : MonoBehaviour
     }
     public void EndMission()
     {
-        foreach (var c in _currentParty) Destroy(c.gameObject);
+        //foreach (var c in PartyManager.Runtime.Members) Destroy(c.gameObject);
 
-        _currentParty.Clear();
+        PartyManager.Runtime.Members.Clear();
 
         Debug.Log("ミッション終了");
     }
     private void ClearPreviousMission()
     {
-        if (_currentParty.Count > 0) EndMission();
+        if (PartyManager.Runtime.Members.Count > 0) EndMission();
     }
     private void GenerateParty()
     {
-        _currentParty.Clear();
-        characterGenerator.ResetNameCounts(); // 漢数字リセット（新ミッション開始）
-        CharacterRuntimeData runtime ;
-        for (int i = 0; i < characterCount; i++)
+        PartyManager.Runtime.Members.Clear();
+        characterGenerator.ResetNameCounts();   // 漢数字リセット（新ミッション開始）
+        for (int i = 0; i < PartyManager.Runtime.PartyMemberNum; i++)
         {
-            runtime = characterGenerator.GenerateRandomCharacter();
-            if (runtime == null) continue;
-
-            // 1. プレハブを生成（ヒエラルキーに配置）
-            GameObject go = Instantiate(characterPrefab, characterParent);
-
-            // 2. Character スクリプトを取得
-            Character chara = go.GetComponent<Character>();
-            if (chara != null)
-            {
-                chara.runtime = runtime;
-
-                _currentParty.Add(chara);
-            }
-
-            #region Nullチェック
-            if (chara == null)
-            {
-                Debug.LogError("Character プレハブに Character.cs が付いていません！");
-                continue;
-            }
-            #endregion
+            PartyManager.AddMember(characterGenerator.GenerateRandomCharacter());
         }
     }
 

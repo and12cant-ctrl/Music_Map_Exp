@@ -1,28 +1,28 @@
 {
   "thresholds": {
     "motion": {
-      "q1": 0.33,
-      "q2": 0.66,
       "t1": 0.0,
-      "t2": 0.0
+      "t2": 0.0,
+      "q1": 0.33,
+      "q2": 0.66
     },
     "density": {
-      "q1": 0.33,
-      "q2": 0.66,
       "t1": 0.35,
-      "t2": 0.35
+      "t2": 0.35,
+      "q1": 0.33,
+      "q2": 0.66
     },
     "order": {
-      "q1": 0.33,
-      "q2": 0.66,
       "t1": 0.25,
-      "t2": 0.25
+      "t2": 0.25,
+      "q1": 0.33,
+      "q2": 0.66
     },
     "rhythm": {
-      "q1": 0.33,
-      "q2": 0.66,
       "t1": 0.55,
-      "t2": 0.55
+      "t2": 0.55,
+      "q1": 0.33,
+      "q2": 0.66
     }
   },
   "norm_params": {
@@ -103,10 +103,11 @@
     "rest_ratio_time",
     "syncopation_score"
   ],
+  "tag_meta_used": "G:\\Unity\\Product\\Music_Map_Exp\\MusicData\\CSV\\Hint\\thresholds_4axis.json",
   "notes": {
     "axis_scores_range": "0..1",
     "pc_concentration": "max(pc_0..11)-mean(pc_0..11)",
     "normalization": "robust minmax by quantiles (2%..98%), then clip 0..1",
-    "band_mode_when_generating": "rank"
+    "band_mode_when_generating": "fixed_by_tag_meta"
   }
 }

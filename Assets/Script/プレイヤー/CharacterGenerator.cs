@@ -19,37 +19,38 @@ public class CharacterGenerator : ScriptableObject
             return null;
         }
 
+        CharacterRuntimeData charaRuntime = new CharacterRuntimeData(charaTemplates[Random.Range(0, charaTemplates.Count)]);
+
         // 1. テンプレートをランダム選択
-        var baseData = charaTemplates[Random.Range(0, charaTemplates.Count)];
         // 2. ランタイムデータを生成
-        var runtime = new CharacterRuntimeData(baseData);
+
 
         // 2. 名前使用回数を確認
-        if (!nameCountDict.ContainsKey(baseData._jobName))
+        if (!nameCountDict.ContainsKey(charaRuntime.baseData._jobName))
         {
-            nameCountDict[baseData._jobName] = 0;
+            nameCountDict[charaRuntime.baseData._jobName] = 0;
         }
-        int count = nameCountDict[baseData._jobName];
-        nameCountDict[baseData._jobName]++;
+        int count = nameCountDict[charaRuntime.baseData._jobName];
+        nameCountDict[charaRuntime.baseData._jobName]++;
 
         // 3. 漢数字付きの名前を生成
         string suffix = count < kanjiNumbers.Length ? kanjiNumbers[count] : $"({count + 1})";
-        string newName = $"{baseData._jobName}-{suffix}";
+        string newName = $"{charaRuntime.baseData._jobName}-{suffix}";
 
         #region 4.ステータス補正
         int hpOffset = Random.Range(-10, 11);
-        int newMaxHP = Mathf.Max(1, baseData._defoMaxHP + hpOffset);
+        int newMaxHP = Mathf.Max(1, charaRuntime.baseData._defoMaxHP + hpOffset);
         int newST = Random.Range(-2, 2);
-        int newMaxAPI = Mathf.Max(1,baseData._defoApi+newST);
-        runtime.currentMaxHP = newMaxHP;
-        runtime.currentHP = runtime.currentMaxHP;
-        runtime.curAPI = newMaxAPI;
-        #endregion
+        int newMaxAPI = Mathf.Max(1,charaRuntime.baseData ._defApi+newST);
+        charaRuntime.currentMaxHP = newMaxHP;
+        charaRuntime.currentHP = charaRuntime.currentMaxHP;
+        charaRuntime.curApi = newMaxAPI;
+        #endregion      
 
-        runtime.charaName = newName;
-        runtime.currentHP = newMaxHP;
+        charaRuntime.charaName = newName;
+        charaRuntime.currentHP = newMaxHP;
 
-        return runtime;
+        return charaRuntime;
     }
 
     public void ResetNameCounts()

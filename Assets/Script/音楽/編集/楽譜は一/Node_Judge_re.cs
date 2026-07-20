@@ -12,8 +12,9 @@ public class Node_judge_re : MonoBehaviour, IPointerClickHandler
 
     [Header("Logic")]
     [SerializeField] private Node_Place nodeCheak;
-    [SerializeField] private SimpleStaffRenderer staffRenderer;
-    [SerializeField]private StaffCoordinateConverter _coord;
+    [SerializeField] public SimpleStaffRenderer staffRenderer;
+    [SerializeField] public StaffCoordinateConverter _coord;
+    [SerializeField] public TabOverLayCloser _closer;
 
     [Header("Score Settings")]
     public float beat = 4.0f;
@@ -72,7 +73,7 @@ public class Node_judge_re : MonoBehaviour, IPointerClickHandler
         if (!converter.TryConvert(eventData, part, voice, out var scoreEvent))
             return;
 
-        string nodeName = "1";
+        string nodeName = $"{scoreEvent.bar}_{scoreEvent.pitch}_{scoreEvent.start}_{scoreEvent.duration}";
         switch (editMode)
         {
             case EditMode.Place:
@@ -84,6 +85,7 @@ public class Node_judge_re : MonoBehaviour, IPointerClickHandler
                 break;
         }
     }
+    #region enum‘g
     public enum LengthNode
     {
         Harf, One, Two, All
@@ -96,4 +98,6 @@ public class Node_judge_re : MonoBehaviour, IPointerClickHandler
     {
         Place, Delete, All
     }
+    #endregion
+
 }

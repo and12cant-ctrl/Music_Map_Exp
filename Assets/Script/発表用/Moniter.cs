@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.UI;
 
 public class Moniter : MonoBehaviour
 {
@@ -12,9 +13,25 @@ public class Moniter : MonoBehaviour
     [SerializeField] private TMP_Text MaxEmo;
     [SerializeField] private MusicXmlEditorCaller Happyou;
     [SerializeField] private AnswerSet Ans;
+    [SerializeField] private GameObject AnsBut;
+    [SerializeField] private GameObject Toggle;
+    [SerializeField] private Button Close;
+    [SerializeField] public TabOverLayCloser TabClose;
     void Start()
     {
+        Button AnsButton =AnsBut.GetComponent<Button>();
+        AnsButton.onClick.AddListener(() =>
+        {
+            Toggle.SetActive(true);
+            AnsBut.SetActive(false);
+            TabClose.CloseCurrentTab();
+        });
+        Close.onClick.AddListener(() =>
+        {
+            Toggle.SetActive(false);
 
+            AnsBut.SetActive(true );
+        });
         MaxEmo.text = "-";
         MinEmo.text = "-";
         Score.text = "-";

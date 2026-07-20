@@ -7,21 +7,19 @@ using UnityEngine;
 public class Xml_to_MIDI : MonoBehaviour
 {
     [HideInInspector]
-    string projectRoot = FluidSynthPaths.ProjectRoot;
-    public string micromambaExe = FluidSynthPaths.micromambaExe;
-    public string mambaRootDir = FluidSynthPaths.micromambaroot;
-    public string envName = "unitypy";
+    private string projectRoot => FluidSynthPaths.ProjectRoot;
+    public string micromambaExe => FluidSynthPaths.micromambaExe;
+    public string mambaRootDir => FluidSynthPaths.micromambaroot;
+    public string envName => "unitypy";
+    public string scriptargs => "adwadwa ";
+    public string scriptPath => Path.Combine(FluidSynthPaths.scriptPy, "Xml_to_Midi.py");
+    public string inputXml => Path.Combine(FluidSynthPaths.ScoresDir, "edited_score_MAIN.xml");
+    public string outputMid => Path.Combine(FluidSynthPaths.ScoresDir,  "edited_score_MAIN.mid");
 
-    public string scriptargs = "adwadwa ";
+    public bool projectRelativeForIO => true;  
+    public bool logPaths => true;
 
-    public string scriptPath = Path.Combine(FluidSynthPaths.scriptPy,"Xml_to_Midi.py");
-    public string inputXml =Path.Combine( FluidSynthPaths.ScoresDir,"edited_score_MAIN.xml");
-    public string outputMid = Path.Combine(FluidSynthPaths.ScoresDir,"edited_score_MAIN.mid");
-
-    public bool projectRelativeForIO = true;  // 入出力 path をプロジェクト相対で解決
-    public bool logPaths = true;
-
-    public int waitTimeoutMs = 30000;
+    public int waitTimeoutMs => 30000;
 
 
     [ContextMenu("XML => MIDI(micromamba)")]

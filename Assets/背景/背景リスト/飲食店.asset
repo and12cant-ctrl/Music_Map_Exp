@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: "\u98F2\u98DF\u5E97"
   m_EditorClassIdentifier: Assembly-CSharp::BackgroundCategory
   bgCategoryName: 
-  previewColor: {r: 0, g: 0, b: 0, a: 0}
+  previewColor: {r: 1, g: 0.4117647, b: 0.7058824, a: 1}
   bgDatas:
   - id: "\u663C"
     displayName: 

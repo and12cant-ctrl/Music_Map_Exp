@@ -1,74 +1,64 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using static Node_judge_re;
 
 public class RythomSelect : MonoBehaviour
 {
     [SerializeField] private Node_judge_re Edi_Score;
-    [SerializeField] private TabOverLayCloser TabClose;
     [SerializeField] private Button OpenTab;
     [SerializeField] private GameObject RhyhomTab;
-    [SerializeField] private Button btnHarf;
-    [SerializeField] private Button btnOne;
-    [SerializeField] private Button btnTwo;
-    [SerializeField] private Button btnAll;
+    [SerializeField] private List<Toggle> toggles = new();
     private int sizeY = 10;
     private float LenNo = 0.5f;
     void Start()
     {
         OpenTab.onClick.AddListener(() =>
         {
-            TabClose.OpenTab(RhyhomTab);
+            Edi_Score._closer.OpenTab(RhyhomTab);
         });
-        #region ‰¹•„‰ü•Ï
-        btnHarf.onClick.AddListener(() =>
-        {
-            NodeLen(LengthNode.Harf);
-        });
-        btnOne.onClick.AddListener(() =>
-        {
-            NodeLen(LengthNode.One);
-        });
-        btnTwo.onClick.AddListener(() =>
-        {
-            NodeLen(LengthNode.Two);
 
-        });
-        btnAll.onClick.AddListener(() =>
+        for (int i = 0; i < toggles.Count; i++)
         {
-            NodeLen(LengthNode.All);
-        });
-        #endregion
+            int index = i;
+            Toggle toggle = toggles[i];
+            if (toggle == null) continue;
+
+            toggle.onValueChanged.AddListener(isOn =>
+            {
+                NodeLen(index);
+
+               Edi_Score._closer.CloseCurrentTab();
+            });
+        }
         ChangeImage(Edi_Score.NodePrehab, 1);
-
     }
-    void NodeLen(LengthNode leng)
+    
+
+    void NodeLen(int leng)
     {
         switch (leng)
         {
-            case LengthNode.Harf:
+            case 0:
                 ChangeImage(Edi_Score.NodePrehab,1);
                 LenNo = 0.5f;
-                TabClose.CloseCurrentTab();
+
                 break;
-            case LengthNode.One:
+            case 1:
                 ChangeImage(Edi_Score.NodePrehab,2);
                 LenNo = 1f;
-                TabClose.CloseCurrentTab();
                 break;
-            case LengthNode.Two:
+            case 2:
                 ChangeImage(Edi_Score.NodePrehab, 4);
                 LenNo = 2f;
-                TabClose.CloseCurrentTab();
                 break;
-            case LengthNode.All:
+            case 3:
                 ChangeImage(Edi_Score.NodePrehab, 8);
                 LenNo = Edi_Score.beat;
-                TabClose.CloseCurrentTab();
                 break;
         }
         Edi_Score.nodeLength = LenNo;
     }
+
     public void ChangeImage(RectTransform rt, int n)
     {
         if (rt == null) return;
@@ -77,8 +67,16 @@ public class RythomSelect : MonoBehaviour
         var img = rt.GetComponentInChildren<Image>();
         if (img != null)
         {
-            img.rectTransform.sizeDelta =new Vector2(60 * n,sizeY);
-;        }
+            //Debug.Log("Tes");
+            //img.rectTransform.sizeDelta =new Vector2(60 * n,sizeY);
+            //Debug.Log("img name = " + img.name);
+            //Debug.Log("img size before = " + img.rectTransform.sizeDelta);
+
+            img.rectTransform.sizeDelta = new Vector2(60 * n, sizeY);
+
+            //Debug.Log("img size after = " + img.rectTransform.sizeDelta);
+            //Debug.Log("rt size after = " + rt.sizeDelta);
+        }
     }
 
 }

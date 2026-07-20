@@ -27,6 +27,7 @@ public class Music21ScoreImporter : MonoBehaviour
 {
     [Header("Scene refs")]
     [SerializeField] private RectTransform staffRect;
+    [SerializeField] private Node_judge_re _Judge_Re;
     [SerializeField] private Node_Place nodeCheak;
     [SerializeField] private SimpleStaffRenderer staffRenderer;
     private string pythonExePath = Path.Combine(FluidSynthPaths.micromambaroot, "envs", "unitypy","python.exe");
@@ -111,8 +112,8 @@ public class Music21ScoreImporter : MonoBehaviour
         }
 
         //  beatsPerBar ‚Í PythonŒ‹‰Ê‚ğÌ—piƒYƒŒ–h~j
-        var coord = new StaffCoordinateConverter(staffRect, payload.beatsPerBar, pixelsPerBar, scaleSteps);
-        var applier = new ScoreEventApplier(nodeCheak, staffRenderer,coord);
+        //var coord = new StaffCoordinateConverter(staffRect, payload.beatsPerBar, pixelsPerBar, scaleSteps);
+        var applier = new ScoreEventApplier(nodeCheak, staffRenderer,_Judge_Re._coord);
 
         int placed = 0;
         int minBar = payload.events.Min(E => E.bar);

@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 [Serializable]
-public class Node 
+public class NodeMapView 
 {
     public float _duration;     //何拍続くか
     public Part _Part;          //誰のパートか
@@ -10,7 +10,7 @@ public class Node
     public int _bar;            //何小節目か
     public voice _voice;
 
-    public bool OverlapsIgnoreVoice(Node other)
+    public bool OverlapsIgnoreVoice(NodeMapView other)
     {
         if (_Part != other._Part) return false;
         if (_pitch != other._pitch) return false;

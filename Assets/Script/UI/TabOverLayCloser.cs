@@ -5,9 +5,8 @@ public class TabOverLayCloser : MonoBehaviour
 {
     [SerializeField] private Button overlayButton;
 
-    // 今、オーバーレイの下で開いているタブ
     private GameObject currentTab;
-
+    private bool comonTab = false;
     void Awake()
     {
         gameObject.SetActive(false);
@@ -22,13 +21,14 @@ public class TabOverLayCloser : MonoBehaviour
     public void OpenTab(GameObject tabRoot)
     {
         if (tabRoot == null) return;
-
+        if(comonTab)currentTab.SetActive(false);
         currentTab = tabRoot;
 
         // タブ本体を開く
         currentTab.SetActive(true);
         // 背景オーバーレイを表示
         gameObject.SetActive(true);
+        comonTab = true;
     }
 
     public void CloseCurrentTab()
@@ -40,5 +40,6 @@ public class TabOverLayCloser : MonoBehaviour
         }
 
         gameObject.SetActive(false);
+        comonTab = false;
     }
 }

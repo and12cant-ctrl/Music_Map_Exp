@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -5,32 +6,29 @@ public class BarSelect : MonoBehaviour
 {
     [SerializeField] private Node_judge_re Edi_Score;
     [SerializeField] private RectTransform score;
-    [SerializeField] private Button btnOne;
-    [SerializeField] private Button btnTwo;
-    [SerializeField] private Button btnThree;
-    [SerializeField] private Button btnFour;
-    void Start()
+    [SerializeField] private List<Toggle> toggles = new();
+    private int ScoreWidth = -330;
+    private void Awake()
     {
-        btnOne.onClick.AddListener(() =>
+        for (int i = 0; i < toggles.Count; i++)
         {
-            Barsele(1);
-        });
-        btnTwo.onClick.AddListener(() =>
-        {
-            Barsele(2);
-        });
-        btnThree.onClick.AddListener(() =>
-        {
-            Barsele(3);
-        });
-        btnFour.onClick.AddListener(() =>
-        {
-            Barsele(4);
-        });
+            int index = i;
+            Toggle toggle = toggles[i];
+            if (toggle == null) continue;
+
+            toggle.onValueChanged.AddListener(isOn =>
+            {
+                Debug.Log(index);
+                Barsele(index);
+     
+            });
+        }
     }
+
     void Barsele(int Bar)
     {
+
         Edi_Score.currentBar = Bar;
-        score.anchoredPosition = new Vector2 ((Bar - 1 )* -330,5);
+        score.anchoredPosition = new Vector2 ((Bar)* ScoreWidth,0);
     }
 }

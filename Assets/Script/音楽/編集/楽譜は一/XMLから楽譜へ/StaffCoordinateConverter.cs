@@ -53,12 +53,12 @@ public sealed class StaffCoordinateConverter
         ny = Mathf.Clamp01(ny);
 
         // 0..1 を scaleSteps 分割したグリッドにスナップ
-        // 例 scaleSteps=20 -> 0, 1/20, 2/20, ... 19/20
         float step = 1f / _scaleSteps;
-        float snapped = Mathf.Round(ny / step) * step;
 
-        // 1.0に行くとクリック側で弾いてた（snappedX>=1 return）等と似た事故が起きるので安全に抑える
-        return Mathf.Clamp(snapped, 0f, 1f - step);
+        float snapped = Mathf.Round(ny / step) * step;
+        Debug.Log($"step = {step},_scaleSteps = {_scaleSteps},snapped = {snapped}");
+        //return Mathf.Clamp(snapped, 0f, 1f - step);
+        return Mathf.Clamp(snapped, 0f, 1f);
     }
 
     /// <summary>

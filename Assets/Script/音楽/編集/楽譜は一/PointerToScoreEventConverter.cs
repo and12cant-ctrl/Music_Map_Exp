@@ -7,7 +7,7 @@ using static Node_judge_re;
 
 public static class PitchRange
 {
-    // G2..F5（あなたの固定音域）
+    // G2..F5（固定音域）
     public const int MinMidi = 43; // G2
     public const int MaxMidi = 77; // F5
 
@@ -29,20 +29,11 @@ public sealed class PointerToScoreEventConverter
     private readonly string[] _gcode;         // A..G
 
     public PointerToScoreEventConverter(
-        RectTransform staffRect,
-        Canvas canvas,
-        Camera uiCamera,
-        float beatsPerBar,
-        int scaleSteps,
-        float nodeLength,
-        int currentBar,
-        float pixelsPerBar,
-        harfNode halfNode,
-        string[] gcode)
+        RectTransform staffRect,Canvas canvas,Camera uiCamera,
+        float beatsPerBar,int scaleSteps,float nodeLength,int currentBar,
+        float pixelsPerBar,harfNode halfNode,string[] gcode)
     {
-        _staffRect = staffRect;
-        _canvas = canvas;
-        _uiCamera = uiCamera;
+        _staffRect = staffRect;_canvas = canvas;_uiCamera = uiCamera;
 
         _beatsPerBar = beatsPerBar;
         _scaleSteps = Mathf.Max(1, scaleSteps);
@@ -79,13 +70,22 @@ public sealed class PointerToScoreEventConverter
             Mathf.Clamp(localPoint.x, 0, size.x),
             Mathf.Clamp(localPoint.y, 0, size.y));
 
+
+        float cellHeight = size.y / _scaleSteps;
+        int rowIndex = (int)((clamped.y ) / cellHeight);
+        //Debug.Log($"EXbeat_ {clamped.y}/{cellHeight} = {rowIndex}");
+
+        float cellwidth = size.x / (_beatsPerBar*2);
+        int ColumIndex = (int)((clamped.x) / cellwidth);
+        //Debug.Log($"EXBar_ {clamped.x}/{cellwidth} = {ColumIndex}");
+
         // 正規化 0..1
         float nx = Mathf.InverseLerp(0, size.x, clamped.x);
         float ny = Mathf.InverseLerp(0, size.y, clamped.y);
 
         float snappedX = Normalize(nodes, nx);
-        int midi = NormalizedYToMidi(ny, PitchRange.MinMidi, PitchRange.MaxMidi);
-        string pitch = MidiToPitchString(midi, _halfNode);
+
+        string pitch = MidiToPitchString(rowIndex, _halfNode);
 
         float snappedY = Normalize(scales, ny);
         if (snappedX >= 1f) return false;
@@ -98,7 +98,7 @@ public sealed class PointerToScoreEventConverter
         float globalBeat = (_currentBar - 1) * _beatsPerBar + beatInBar;
 
         int bar = Mathf.FloorToInt(globalBeat / _beatsPerBar) + 1;
-        float start = globalBeat - (bar - 1) * _beatsPerBar;   
+        float start = globalBeat - (bar - 1) * _beatsPerBar;
 
         eScore = new ScoreEvent
         {
@@ -148,11 +148,18 @@ public sealed class PointerToScoreEventConverter
         {
             "C","C#","D","D#","E","F","F#","G","G#","A","A#","B"
         };
+        string[] namesNSharp =
+        {
+            "G","A","B","C","D","E","F",
+        };
 
-        int note = ((midi % 12) + 12) % 12;
-        int octave = (midi / 12) - 1;
+        int CodeNum = namesNSharp.Length;
+        int note = ((midi % CodeNum) + 12) % 12;
+        int EXnote = midi % CodeNum;
+        int octave = (midi / CodeNum) - 1;
+        int EXoctave = ((midi+4) / CodeNum) + 2;
 
-        string name = namesSharp[note];
+        string name = namesNSharp[EXnote];
 
         if (accidental == harfNode.Flat)
         {
@@ -170,6 +177,6 @@ public sealed class PointerToScoreEventConverter
             // #を付けたくない」等があるならここを分岐
         }
 
-        return $"{name}{octave}";
+        return $"{name}{EXoctave}";
     }
 }

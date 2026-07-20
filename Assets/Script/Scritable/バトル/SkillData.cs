@@ -5,7 +5,8 @@ public class SkillData : ScriptableObject
 {
     public string skillName;
     public string description;
-    public int spCost;
-    public int power;
-
+    public int PlayStack;
+    public CardType Type;
+    public int SPEfecct;
 }
+

@@ -34,7 +34,6 @@ public class MusicXMLStart : MonoBehaviour
     public void Start()
     {
         #region 一回きり
-        Debug.Log("koko");
         //string[] emotionCsvs =
         //{
         //    Path.Combine(FluidSynthPaths.CSVDir, "trust.csv"),
