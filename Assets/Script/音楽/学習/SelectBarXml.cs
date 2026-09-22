@@ -1,8 +1,6 @@
-using System.Diagnostics;
+Ôªøusing System.Diagnostics;
 using System.IO;
-using System.Text;
 using UnityEngine;
-using UnityEngine.DedicatedServer;
 using UnityEngine.UI;
 
 [System.Serializable]
@@ -13,7 +11,6 @@ public class ExtractResponse
     public int savedCount;
     public string[] outputFiles;
 }
-
 [System.Serializable]
 public class ExtractCommand
 {
@@ -42,16 +39,19 @@ public class SelectBarXml: MonoBehaviour
     public void RunExtract()
     {
         string projectRoot = FluidSynthPaths.ProjectRoot;
-        string micromambaExe = FluidSynthPaths.micromambaExe;
         string scriptPath = Path.Combine(FluidSynthPaths.scriptPy, "extract_lmd_phrases.py");
 
         string inputRoot = Path.Combine(FluidSynthPaths.MusicDataroot, "LMD_clean");
         string outputDir = Path.Combine(FluidSynthPaths.MusicDataroot, "Output");
 
         string[] MusicerName = Directory.GetDirectories(inputRoot);
-        string arguments =
-            $"run -r \"{FluidSynthPaths.micromambaroot}\" -n unitypy python \"{scriptPath}\"";
-       
+        var daemon = MidiDaemonClient.Instance;
+        if (daemon == null || !daemon.IsRunning)
+        {
+            UnityEngine.Debug.LogError("MidiDaemonClient is not running.");
+            return;
+        }
+
         foreach (string FolderName in MusicerName) {
             string[] ForderName = Directory.GetDirectories(FolderName);
 
@@ -69,15 +69,12 @@ public class SelectBarXml: MonoBehaviour
 
                 string json = JsonUtility.ToJson(cmdObj);
 
-                var r = PythonReturn.RunWithStdin(
-                    exePath: micromambaExe,
-                    arguments: arguments,
+                var r = daemon.RunPythonScript(
+                    scriptPath,
                     stdinText: json,
-                    timeoutMs: 120_000,                 // ïKóvÇ»ÇÁêLÇŒÇ∑
-                    encoding: Encoding.UTF8
-                );
+                    timeoutMs: 120_000);
 
-                #region JSONÉpÅ[ÉX
+                #region JSON„Éë„Éº„Çπ
                 PythonReturn.PyLog.LogStdout(r.Stdout, contextTag: "PY", contextInfo: midiPath);
                 PythonReturn.PyLog.LogStderr(r.Stderr, contextTag: "PY", contextInfo: midiPath);
 

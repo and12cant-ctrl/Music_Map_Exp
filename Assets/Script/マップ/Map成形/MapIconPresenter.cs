@@ -77,6 +77,16 @@ public class MapIconPresenter : MonoBehaviour
         if (put.mini) Destroy(put.mini.gameObject);
         _icons.Remove(id);
     }
+    public void ClearIcons()
+    {
+        foreach (var pair in _icons.Values)
+        {
+            if (pair.full) { pair.full.gameObject.SetActive(false); Destroy(pair.full.gameObject); }
+            if (pair.mini) { pair.mini.gameObject.SetActive(false); Destroy(pair.mini.gameObject); }
+        }
+        _icons.Clear();
+    }
+
     public void SyncMiniWindow(int viewLeft, int viewTop)
     {
         // IconLayer ‚ð RawImage ‚Ì uvRect ˆÚ“®‚Æ‹tŒü‚«‚ÉƒVƒtƒg

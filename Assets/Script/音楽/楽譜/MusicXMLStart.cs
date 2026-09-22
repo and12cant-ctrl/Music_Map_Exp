@@ -3,20 +3,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 
 public class MusicXMLStart : MonoBehaviour
 {
     string extractpy = Path.Combine(FluidSynthPaths.scriptPy, "extract_features.py");
-    string mambaRoot = Path.Combine(FluidSynthPaths.micromambaroot);
-    string mambaExe = Path.Combine(FluidSynthPaths.micromambaExe);
     string CSV = Path.Combine(FluidSynthPaths.CSVDir, "Hint", "Player_Extract.csv");
     string emo_lgbm = Path.Combine(FluidSynthPaths.GBMModelDir, "emotion_lgbm.txt");
     string emo_Json = Path.Combine(FluidSynthPaths.GBMModelDir, "emotion_lgbm_meta.json");
 
-    string mamba = FluidSynthPaths.micromambaExe;
     string scPy = Path.Combine(FluidSynthPaths.scriptPy, "tag_templates_4axis.py");
     #region MyRegion
     string trsut = Path.Combine(FluidSynthPaths.CSVDir, "trust.csv");
@@ -53,18 +49,17 @@ public class MusicXMLStart : MonoBehaviour
         // MusicXML → featuresRow
         // -----------------------------
 
-        string extractArgs =
-            $"run -r \"{mambaRoot}\" -n unitypy " +
-            $"python -u \"{extractpy}\" \"{musicXmlPath}\" --out_csv " +
-            $"\"{CSV}\" --root_dir {FluidSynthPaths.ProjectRoot} "+
-            $"--mode overwrite";
-
-        var featResult = PythonReturn.Run(
-            exePath: mambaExe,
-            arguments: extractArgs,
-            timeoutMs: 60_000,
-            encoding: Encoding.UTF8
-        );
+        var daemon = RequireDaemon();
+        var featResult = daemon.RunPythonScript(
+            extractpy,
+            new[]
+            {
+                musicXmlPath,
+                "--out_csv", CSV,
+                "--root_dir", FluidSynthPaths.ProjectRoot,
+                "--mode", "overwrite",
+            },
+            timeoutMs: 60_000);
 
         Debug.Log("[PY extract STDOUT]\n" + featResult.Stdout);
         Debug.Log("[PY extract STDERR]\n" + featResult.Stderr);
@@ -144,37 +139,35 @@ public class MusicXMLStart : MonoBehaviour
         //public static string MusicXML = Path.Combine(FluidSynthPaths.EmotionDir, "UnClass", "Chop-28-2_Intro", "Chop-28-2_INTRO_m1-4_ts4_4_E0.230_S0.875_MAIN.musicxml");
 
 
-        string AS = $"run -r {FluidSynthPaths.micromambaroot} -n unitypy " +
-            $"python -u \"{scPy}\" \"{InCSV}\" " +
-            $"--out_csv \"{outCSV}\" " +
-            $"--out_json \"{axis4}\" " +
-            $"--emo_model \"{emo_lgbm}\" " +
-            $"--emo_meta \"{emo_Json}\" ";
-        //MusicXMLStart.AnalyzeEmotionFromMusicXML(MusicXML,null,,"normal");
-        var featResult = PythonReturn.Run(
-            exePath: mamba,
-            arguments: AS,
-            timeoutMs: 60_000,
-            encoding: Encoding.UTF8
-        );
+        var featResult = RequireDaemon().RunPythonScript(
+            scPy,
+            new[]
+            {
+                InCSV,
+                "--out_csv", outCSV,
+                "--out_json", axis4,
+                "--emo_model", emo_lgbm,
+                "--emo_meta", emo_Json,
+            },
+            timeoutMs: 60_000);
+        EnsureSuccess(featResult, "tag_templates_4axis.py");
     }
 
     public void Extract_to_Tag_Ply(string outCSV, string InCSV)
     {
-        string AS = $"run -r {FluidSynthPaths.micromambaroot} -n unitypy " +
-            $"python -u \"{scPy}\" \"{InCSV}\" " +
-            $"--out_csv \"{outCSV}\" " +
-            $"--out_json \"{axis4}\" " +
-            $"--emo_model \"{emo_lgbm}\" " +
-            $"--emo_meta \"{emo_Json}\" " +
-            $"--tag_meta \"{axis4}\" ";
-        //MusicXMLStart.AnalyzeEmotionFromMusicXML(MusicXML,null,,"normal");
-        var featResult = PythonReturn.Run(
-            exePath: mamba,
-            arguments: AS,
-            timeoutMs: 60_000,
-            encoding: Encoding.UTF8
-        );
+        var featResult = RequireDaemon().RunPythonScript(
+            scPy,
+            new[]
+            {
+                InCSV,
+                "--out_csv", outCSV,
+                "--out_json", axis4,
+                "--emo_model", emo_lgbm,
+                "--emo_meta", emo_Json,
+                "--tag_meta", axis4,
+            },
+            timeoutMs: 60_000);
+        EnsureSuccess(featResult, "tag_templates_4axis.py");
     }
 
     public void MergeCsvFiles(string[] inputCsvs, string outputCsv)
@@ -219,6 +212,19 @@ public class MusicXMLStart : MonoBehaviour
         }
 
         Debug.Log($"CSV merged → {outputCsv}");
+    }
+
+    private static MidiDaemonClient RequireDaemon()
+    {
+        if (MidiDaemonClient.Instance == null || !MidiDaemonClient.Instance.IsRunning)
+            throw new InvalidOperationException("MidiDaemonClient is not running.");
+        return MidiDaemonClient.Instance;
+    }
+
+    private static void EnsureSuccess(PyRunResult result, string operation)
+    {
+        if (result.TimedOut || result.ExitCode != 0)
+            throw new Exception($"{operation} failed. exit={result.ExitCode}\n{result.Stderr}");
     }
     
 }

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,7 +10,17 @@ public class CardSlot : MonoBehaviour
     private List<CardDrag> cards = new List<CardDrag>();
     public CardDrag SlotInCard;
     private Image BC;
+    private bool isEventSlot;
     [SerializeField]private int SlotNum = 1;
+
+    public void ConfigureForEvent(CardType type, int amount)
+    {
+        isEventSlot = true;
+        acceptType = type;
+        SlotNum = amount;
+        onlyOneCard = false;
+        SlotInCard = null;
+    }
 
     private void Start()
     {
@@ -19,6 +28,7 @@ public class CardSlot : MonoBehaviour
     }
     private void Update()
     {
+        if (BC == null) return;
         if(onlyOneCard == true)
         {
             BC.color = Color.black;
@@ -30,6 +40,7 @@ public class CardSlot : MonoBehaviour
     }
     public void OnCardDropped(CardDrag card)
     {
+        if (SlotInCard == card && card != null) return;
         if (CanAccept(card))
         {
             Debug.Log("成功！");
@@ -40,8 +51,13 @@ public class CardSlot : MonoBehaviour
                 cardRect.SetParent(slotRect);
                 cardRect.anchorMin = slotRect.anchorMin; cardRect.anchorMax = slotRect.anchorMax;
                 cardRect.anchoredPosition = Vector2.zero;
+                if (isEventSlot)
+                {
+                    cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
+                    cardRect.anchoredPosition = new Vector2(0, 12);
+                }
                 SlotInCard = card;
-            if (SlotNum != 0 && card.TrueType != CardType.Chara)
+            if (SlotNum != 0 && (isEventSlot ? card.Type != CardType.Chara : card.TrueType != CardType.Chara))
             {
                 card.CloneCard(SlotNum);
             }
@@ -52,44 +68,13 @@ public class CardSlot : MonoBehaviour
             card.ReturnCharaPareet(); 
         }
     }
-    private bool CanAccept(CardDrag card)
+    public bool CanAccept(CardDrag card)
     {
-        bool rite = true;
-        if (SlotInCard != null)
-        {
-            Debug.Log("カード指定無し");
-            if (SlotInCard != card)
-            {
-                Debug.Log("指定カードでは無い");
-                rite = false;
-            }
-        }
-        else if (card.Type != acceptType)
-        {
-            Debug.Log("指定タイプではない");
-            rite = false;
-        }
-        else if (SlotNum != 0)
-        {
-            if (card._cardNum < SlotNum & card.TrueType != CardType.Chara)
-            {
-                rite = false;
-                Debug.Log(card._cardNum + SlotNum + "スキル回数が足りません");
-            }
-        }
-        else if (onlyOneCard != false)
-        {
-            Debug.Log("失敗46");
-            rite = false;
-        }
-        else if (transform.childCount > 1)
-        {
-            Debug.Log("既にカード入り");
-            rite = false;
-        }
-
-        Debug.Log("成功");
-        return rite;
+        if (card == null || card.EventLocked || card.Type != acceptType) return false;
+        if (SlotInCard != null && SlotInCard != card) return false;
+        if (onlyOneCard && SlotInCard != card) return false;
+        if (isEventSlot) return card.Type == CardType.Chara ? SlotNum == 1 : card._cardNum >= SlotNum;
+        return SlotNum == 0 || card.TrueType == CardType.Chara || card._cardNum >= SlotNum;
     }
     public void ReturnCard(CardDrag card)
     {

@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 863f96c4b108c2b4e92200581d9b934a, type: 3}
+  m_Name: NewEvent
+  m_EditorClassIdentifier: Assembly-CSharp::MusicMap.Events.EventDefinitionSO
+  persistentId: 74f1b9c1c9bd42588c100cc4678ddbb3
+  eventCode: EVENT_001
+  displayName: NewEvent
+  enabled: 1
+  category: 
+  categoryId: 944c9cd242454f64ad55907a68ea8fe0
+  categoryMigrationState: 1
+  tags: []
+  developerMemo: 
+  sortOrder: 0
+  priority: 0
+  appearance:
+    mapIcon: {fileID: 0}
+    mapColorKey: 
+    generateOnMap: 1
+    requiresUnlock: 0
+    requiredPlacements: 0
+    weight: 1
+    backgroundCategories: []
+    conditions: []
+  reservation:
+    triggerMode: 0
+    requiredPhaseCount: 1
+    reservationPresentation:
+      text: 
+      image: {fileID: 0}
+    cardSlots: []
+    requirements: []
+  execution:
+    executionType: 0
+    beforeJudge:
+      text: 
+      image: {fileID: 0}
+    judge:
+      useDice: 1
+      parameter: 2
+      diceCount: 1
+      diceSides: 6
+      target: 4
+      modifier: 0
+    externalKey: 
+  outcomes:
+  - outcomeCode: SUCCESS
+    isDefault: 0
+    conditions:
+    - kind: 1
+      parameter: 0
+      key: 
+      value: 0
+      flagValue: 1
+    presentation:
+      text: 
+      image: {fileID: 0}
+    effects: []
+    followUps: []
+  - outcomeCode: FAILURE
+    isDefault: 1
+    conditions: []
+    presentation:
+      text: 
+      image: {fileID: 0}
+    effects: []
+    followUps: []

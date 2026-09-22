@@ -14,9 +14,53 @@ public class MapGenerator : MonoBehaviour
     //int MapGrid = 5;
     BackgroundCategory BG;  //これにBackGroundListSOからランダムにcategoryを入れる
     EventData EV;
-    CreateEvent cre = new CreateEvent();
+    CreateEvent cre;
     System.Random rand = new System.Random();
-    public void MapGenerate(
+    public void MapGenerate(MapDataSO questMap, BGCategoryListSO requiredBgList,
+        BGCategoryListSO randamBgList, EventListSO requiredEvList, EventListSO randamEvList, int MapGridInt)
+    {
+        if (questMap == null || questMap.width <= 0 || questMap.height <= 0 || MapGridInt <= 0 ||
+            requiredBgList?.bGCategoryList == null || randamBgList?.bGCategoryList == null)
+        { Debug.LogError("[MapGenerator] Invalid map, block size, or background lists."); return; }
+
+        int blocksX = (questMap.width - 1) / MapGridInt + 1;
+        int blocksY = (questMap.height - 1) / MapGridInt + 1;
+        var backgrounds = requiredBgList.bGCategoryList.Where(b => b != null).ToList();
+        var randomBackgrounds = randamBgList.bGCategoryList.Where(b => b != null).ToArray();
+        if (backgrounds.Count < blocksX * blocksY && randomBackgrounds.Length == 0)
+        { Debug.LogError("[MapGenerator] Random background pool is empty."); return; }
+        while (backgrounds.Count < blocksX * blocksY)
+            backgrounds.Add(randomBackgrounds[rand.Next(randomBackgrounds.Length)]);
+        backgrounds = backgrounds.OrderBy(_ => rand.Next()).ToList();
+
+        var builder = GetComponent<MiniMapBuilder>();
+        bool rebuildView = builder != null && builder.IsBuilt;
+        var eventSystem = GetComponent<MusicMap.Events.EventSystemRoot>();
+        // There is deliberately no fallback to legacy event generation.
+        if (eventSystem == null || !eventSystem.PrepareNewMap(questMap))
+        { Debug.LogError("[MapGenerator] Connect EventSystemRoot and its catalog before generating a new map."); return; }
+
+        questMap.EnsureGrid();
+        // Background assignment does not depend on the Odin selection rectangle.
+        for (int y = 0; y < questMap.height; y++)
+            for (int x = 0; x < questMap.width; x++)
+            {
+                var background = backgrounds[(y / MapGridInt) * blocksX + x / MapGridInt];
+                questMap.mapGrid[x, y].bgCategory = background;
+                questMap.mapGrid[x, y].backgroundId = background.bgCategoryName;
+            }
+
+        var game = GetComponent<GameManager>();
+        var reserved = eventSystem.reserveBaseCell && game != null
+            ? new[] { game.BaseCell } : new Vector2Int[0];
+        MusicMap.Events.EventMapPlacement.Generate(eventSystem.Manager, questMap, MapGridInt, rand,
+            eventSystem.World, reserved);
+        if (rebuildView) builder.SetupMap();
+        foreach (var tab in GetComponentsInChildren<HakenTab>(true)) tab.RefreshCurrentCell();
+    }
+
+    // Retained for migration reference only. The runtime entry point never calls this method.
+    private void GenerateLegacyMap(
         MapDataSO questMap,
         BGCategoryListSO requiredBgList,
         BGCategoryListSO randamBgList,
@@ -26,6 +70,9 @@ public class MapGenerator : MonoBehaviour
         )
     {
         #region 変数生成
+        if (questMap == null || MapGridInt <= 0 || requiredBgList == null || randamBgList == null)
+        { Debug.LogError("[MapGenerator] Invalid map, block size, or background lists."); return; }
+        questMap.EnsureGrid();
         WidthCount = questMap.width / MapGridInt;
         HeightCount = questMap.height / MapGridInt;
         totalBlocks = WidthCount * HeightCount;
@@ -35,6 +82,8 @@ public class MapGenerator : MonoBehaviour
         List<BackgroundCategory> assignedBGs = requiredBgList.bGCategoryList.ToList();
 
         List<BackgroundCategory> randomBGPool = randamBgList.bGCategoryList;
+        if (assignedBGs.Count < totalBlocks && randomBGPool.Count == 0)
+        { Debug.LogError("[MapGenerator] Random background pool is empty."); return; }
         while (assignedBGs.Count < totalBlocks)
         {
             var randomCat = randomBGPool[rand.Next(randomBGPool.Count)];
@@ -47,6 +96,7 @@ public class MapGenerator : MonoBehaviour
         #region イベントランダム挿入
         //List<string> assignedEVs = requiredEvList.evCategoryList.Select(dog => dog.evCategoryName).ToList();
 
+        cre = new CreateEvent();
         List<EventData> assigenList = new List<EventData>();
         List<EventData> MainEv = new List<EventData>();
         CategoryNamer naming = new CategoryNamer();

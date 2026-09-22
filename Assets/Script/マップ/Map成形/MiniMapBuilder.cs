@@ -33,6 +33,7 @@ public class MiniMapBuilder : MonoBehaviour
     private Color borderColor = Color.white;
     private Texture2D _tex;
     private bool _built;
+    public bool IsBuilt => _built;
     public string pLString = "PLchara";
     public void SetupMap()
     {
@@ -45,10 +46,20 @@ public class MiniMapBuilder : MonoBehaviour
         ShowWindow(gm.PlayerCell.x, gm.PlayerCell.y);
         Debug.Log($"PLのセル{gm.PlayerCell.x}{gm.PlayerCell.y}");
         ShowFullMap(false);
+        gm.OnPlayerIconSet -= PlayerIconSet;
         gm.OnPlayerIconSet += PlayerIconSet;
     }
 
     #region map生成
+    public void ResetMapView()
+    {
+        if (gm != null) gm.OnPlayerIconSet -= PlayerIconSet;
+        GetComponent<MapIconPresenter>()?.ClearIcons();
+        if (_tex != null) Destroy(_tex);
+        _tex = null;
+        _built = false;
+    }
+
     private void BuildFullMapOnce()
     {
         if (_built) return;
@@ -61,7 +72,7 @@ public class MiniMapBuilder : MonoBehaviour
 
         winCell =viewSize * cellPx;
 
-        _tex = new Texture2D( texH , texW, TextureFormat.RGBA32, mipChain: false);
+        _tex = new Texture2D( texW , texH, TextureFormat.RGBA32, mipChain: false);
         _tex.filterMode = FilterMode.Point;      // 拡大縮小時ににじませない      
         _tex.wrapMode = TextureWrapMode.Clamp; // UVがはみ出した時に端を繰り返さない
 
@@ -77,7 +88,14 @@ public class MiniMapBuilder : MonoBehaviour
                 int startPosY = my * cellPx;
                 var tage = map.mapGrid[mx, my];
 
-                if (tage.EvData != null && tage.EvData.icon != null)
+                var system = gm.GetComponent<MusicMap.Events.EventSystemRoot>();
+                if (!string.IsNullOrEmpty(tage.eventInstanceId) && system?.Manager != null &&
+                    system.Manager.TryGetDefinition(tage.eventInstanceId, out var instance, out var definition, out _))
+                {
+                    if (definition.appearance.mapIcon != null)
+                        iconPlacer.CreateIcon(instance.instanceId, definition.appearance.mapIcon, mx, my);
+                }
+                else if (tage.EvData != null && tage.EvData.icon != null)
                 {
                     iconPlacer.CreateIcon(tage.EvData.id, tage.EvData.icon,mx,my);
                 }
@@ -236,6 +254,11 @@ public class MiniMapBuilder : MonoBehaviour
 
     string CellInt(int ix,int iy)
     {
+        var eventSystem = gm.GetComponent<MusicMap.Events.EventSystemRoot>();
+        var selectedCell = map.mapGrid[ix, iy];
+        if (!string.IsNullOrEmpty(selectedCell?.eventInstanceId) && eventSystem?.Manager != null &&
+            eventSystem.Manager.TryGetDefinition(selectedCell.eventInstanceId, out _, out var definition, out _) &&
+            !string.IsNullOrEmpty(definition.appearance.mapColorKey)) return definition.appearance.mapColorKey;
         string von = "";
         if (map.mapGrid[ix, iy] == null){
             von = "エリア外";

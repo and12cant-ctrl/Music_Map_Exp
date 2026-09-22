@@ -1,19 +1,17 @@
-
+ï»¿
 using System.IO;
-using System.Text;
 
 
 public static class Tagged_template
 {
-//    ² ’á   ’† ‚
-//“®‚« ‚È‚ß‚ç‚©    ‚Ù‚Ç‚æ‚­“®‚­ ‘å‚«‚­’µ‚Ë‚é
-//–§“x ‚Ü‚Î‚ç “K“x ‚¬‚Á‚µ‚è
-//’˜ •sˆÀ’è ‚â‚âB–† ˆÀ’è‚µ‚Ä‚¢‚é
-//ƒŠƒYƒ€ —h‚ê‚é ‚â‚âˆÀ’è ˆÀ’è‚µ‚Ä‚¢‚é
+//    è»¸ ä½   ä¸­ é«˜
+//å‹•ã ãªã‚ã‚‰ã‹    ã»ã©ã‚ˆãå‹•ã å¤§ããè·³ã­ã‚‹
+//å¯†åº¦ ã¾ã°ã‚‰ é©åº¦ ãã£ã—ã‚Š
+//ç§©åº ä¸å®‰å®š ã‚„ã‚„æ›–æ˜§ å®‰å®šã—ã¦ã„ã‚‹
+//ãƒªã‚ºãƒ  æºã‚Œã‚‹ ã‚„ã‚„å®‰å®š å®‰å®šã—ã¦ã„ã‚‹
     public static void Extract_to_Tag(string outCSV,string InCSV)
     {
 
-    string mamba = FluidSynthPaths.micromambaExe;
     string scPy = Path.Combine(FluidSynthPaths.scriptPy, "tag_templates_4axis.py");
     #region MyRegion
     string trsut = Path.Combine(FluidSynthPaths.CSVDir, "trust.csv");
@@ -28,20 +26,25 @@ public static class Tagged_template
     string modelPath = Path.Combine(FluidSynthPaths.GBMModelDir, "emotion_lgbm.txt");
     string metaPath = Path.Combine(FluidSynthPaths.GBMModelDir, "emotion_lgbm_meta.json");
 
-        string AS = $"run -r {FluidSynthPaths.micromambaroot} -n unitypy " +
-            $"python -u \"{scPy}\" \"{InCSV}\" " +
-            $"--out_csv \"{outCSV}\" " +
-            $"--out_json \"{Json}\" " +
-            $"--band_mode rank " +
-            $"--emo_model \"{modelPath}\" " +
-            $"--emo_meta \"{metaPath}\" ";
-    //MusicXMLStart.AnalyzeEmotionFromMusicXML(MusicXML,null,,"normal");
-    var featResult = PythonReturn.Run(
-        exePath: mamba,
-        arguments: AS,
-        timeoutMs: 60_000,
-        encoding: Encoding.UTF8
-    );
+        var daemon = MidiDaemonClient.Instance;
+        if (daemon == null || !daemon.IsRunning)
+            throw new System.InvalidOperationException("MidiDaemonClient is not running.");
+
+        var featResult = daemon.RunPythonScript(
+            scPy,
+            new[]
+            {
+                InCSV,
+                "--out_csv", outCSV,
+                "--out_json", Json,
+                "--band_mode", "rank",
+                "--emo_model", modelPath,
+                "--emo_meta", metaPath,
+            },
+            timeoutMs: 60_000);
+
+        if (featResult.TimedOut || featResult.ExitCode != 0)
+            throw new System.Exception($"tag_templates_4axis.py failed. exit={featResult.ExitCode}\n{featResult.Stderr}");
 
     }
 

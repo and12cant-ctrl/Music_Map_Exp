@@ -1,7 +1,5 @@
-using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UIElements;
 
 public class Node_judge_re : MonoBehaviour, IPointerClickHandler
 {

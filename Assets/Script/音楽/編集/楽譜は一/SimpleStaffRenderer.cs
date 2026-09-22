@@ -69,8 +69,12 @@ public sealed class SimpleStaffRenderer : MonoBehaviour, IStaffRenderer
     public void BringFrontPart(Part selected)
     {
         RectTransform t = SelPoket(selected);
-        if (t == null) return;
-        Debug.Log("Part‚ªNULL");
+        if (t == null)
+        {
+            Debug.Log("Part‚ªNULL‚Å‚È‚¢"); 
+            return;
+        }
+
         t.SetAsLastSibling();
     }
 

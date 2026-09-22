@@ -48,6 +48,7 @@ public class CardCharaManeger : MonoBehaviour
                     obj.TrueType = CardType.Equip;
                     break;
             }
+            obj.BindEventCard(chara.runtimeId + "/" + num);
             obj.Iconimage.sprite = chara.Icon;
             obj.parentSlotRect = slots[num].transform as RectTransform;
             obj.DragLayer = this.transform as RectTransform;

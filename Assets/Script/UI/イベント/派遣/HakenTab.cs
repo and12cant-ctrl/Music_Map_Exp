@@ -12,6 +12,7 @@ public class HakenTab : MonoBehaviour
     [SerializeField] private GameObject Tab;
     [SerializeField] private GameObject boord; 
     private GameManager gm;
+    private MusicMap.Events.EventSystemRoot eventSystem;
     private Button buttonObj;
     private bool tabIn = false;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -21,11 +22,36 @@ public class HakenTab : MonoBehaviour
         buttonObj = Tab.GetComponent<Button>();
         gm.OnPlayerIconSet += HakenTabView;
         gm.OnPlayerIconSet += HakenTabOut;
+        eventSystem = gm.GetComponent<MusicMap.Events.EventSystemRoot>();
+        if (eventSystem?.Manager != null) eventSystem.Manager.Changed += OnEventChanged;
+        HakenTabView(gm.PlayerCell);
+        HakenTabOut(gm.PlayerCell);
+    }
+
+    public void RefreshCurrentCell()
+    {
+        // Start has not run yet during initial map generation.
+        if (gm == null || buttonObj == null) return;
+        HakenTabView(gm.PlayerCell);
+        HakenTabOut(gm.PlayerCell);
     }
 
     void HakenTabView(Vector2Int PL)
     {
         MapCell PL2Int = gm.questMap.mapGrid[PL.x, PL.y];
+        if (PL2Int != null && !string.IsNullOrEmpty(PL2Int.eventInstanceId))
+        {
+            Tab.SetActive(true);
+            tabIn = true;
+            buttonObj.onClick.RemoveAllListeners();
+            buttonObj.onClick.AddListener(() =>
+            {
+                var system = gm.GetComponent<MusicMap.Events.EventSystemRoot>();
+                if (system?.MapController == null) Debug.LogError("[HakenTab] EventSystemRoot is not initialized.");
+                else system.MapController.Select(PL2Int);
+            });
+            return;
+        }
         if (PL2Int == null||PL2Int.EvData == null) return;
         Tab.SetActive(true);
         tabIn=(true);
@@ -74,10 +100,25 @@ public class HakenTab : MonoBehaviour
         Tab.SetActive(false);
     }
 
+    private void OnEventChanged(MusicMap.Events.EventInstance instance)
+    {
+        if (instance.cellPosition != gm.PlayerCell) return;
+        HakenTabView(gm.PlayerCell);
+        HakenTabOut(gm.PlayerCell);
+    }
+
+    private void OnDestroy()
+    {
+        if (gm == null) return;
+        gm.OnPlayerIconSet -= HakenTabView;
+        gm.OnPlayerIconSet -= HakenTabOut;
+        if (eventSystem?.Manager != null) eventSystem.Manager.Changed -= OnEventChanged;
+    }
+
     void HakenTabOut(Vector2Int PL)
     {
         MapCell PL2Int = gm.questMap.mapGrid[PL.x, PL.y];
-        if (tabIn == true && PL2Int.EvData == null) 
+        if (tabIn && (PL2Int == null || (PL2Int.EvData == null && string.IsNullOrEmpty(PL2Int.eventInstanceId))))
         {
             Tab.SetActive(false);
             boord.SetActive(false);

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using UnityEngine;
@@ -18,7 +17,7 @@ public class EditCommand
 public class MusicXmlEditorCaller : MonoBehaviour
 {
     [SerializeField] private Node_Place nodes;
-    [SerializeField] private MidiPlayer midiPlayer;
+    [SerializeField] private MidiDaemonClient midiDaemon;
     [SerializeField] private Xml_to_MIDI xml_to_MIDI;
     [SerializeField] private MusicXMLStart XMLStart;
     [SerializeField] private Button Judge;
@@ -65,7 +64,6 @@ public class MusicXmlEditorCaller : MonoBehaviour
         string ans = sb.ToString();
         #endregion
 
-        string pythonPath = Path.Combine(FluidSynthPaths.micromambaroot, "envs/unitypy/python.exe");
         string scriptPath = Path.Combine(FluidSynthPaths.scriptPy, "edit_score_json.py");
         string inputXml = Path.Combine(FluidSynthPaths.ScoresDir, "empty_score.xml");
         string outputXml = Path.Combine(FluidSynthPaths.ScoresDir, "edited_score_MAIN.xml");
@@ -84,53 +82,35 @@ public class MusicXmlEditorCaller : MonoBehaviour
         string json = JsonUtility.ToJson(cmd);
         #endregion
 
-        #region Pythonプロセス起動
-        var psi = new ProcessStartInfo
+        if (midiDaemon == null)
         {
-            FileName = pythonPath,
-            Arguments = $"\"{scriptPath}\"",
-            WorkingDirectory = Path.GetDirectoryName(scriptPath),
-            UseShellExecute = false,
-            RedirectStandardInput = true,   //Unity=>Python
-            RedirectStandardOutput = true,  //Python=>Unity
-            RedirectStandardError = true,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
-            CreateNoWindow = true,
-        };
-        #endregion
-        try
-        {
-            #region JSONを送信し、出力を受け取る
-            using var p = Process.Start(psi);
-            using (var sw = new StreamWriter(p.StandardInput.BaseStream, new UTF8Encoding(false)))
-            {
-                sw.Write(json);     //Unity=>Pythonへ送信
-            }
-            //using var p = Process.Start(psi);
-            if (p == null)
-            {
-                UnityEngine.Debug.LogError("Process.Start が null を返しました。pythonPath / scriptPath を確認してください。");
-                return;
-            }
-
-            string stdout = p.StandardOutput.ReadToEnd();     //Python=>Unity
-            string stderr = p.StandardError.ReadToEnd();      //エラーキャッチ
-            p.WaitForExit();
-            #endregion
-            UnityEngine.Debug.Log($"[Python STDOUT]\n{stdout}");
-            if (!string.IsNullOrWhiteSpace(stderr))
-                UnityEngine.Debug.LogWarning($"[Python STDERR]\n{stderr}");
-
+            UnityEngine.Debug.LogError("[MusicXML] MidiDaemonClientが設定されていません。");
+            return;
         }
-        catch (Exception ex)
+
+        var editResult = midiDaemon.RunPythonScript(
+            scriptPath,
+            stdinText: json,
+            timeoutMs: 120_000);
+
+        if (editResult.TimedOut || editResult.ExitCode != 0)
         {
-            UnityEngine.Debug.LogError(ex);
+            UnityEngine.Debug.LogError($"[MusicXML] edit_score_json.py failed. exit={editResult.ExitCode}\n{editResult.Stderr}");
+            return;
         }
+
+        UnityEngine.Debug.Log($"[Python STDOUT]\n{editResult.Stdout}");
+        if (!string.IsNullOrWhiteSpace(editResult.Stderr))
+            UnityEngine.Debug.LogWarning($"[Python STDERR]\n{editResult.Stderr}");
 
         XMLStart.AnalyzeMusicXML(outputXml);
         xml_to_MIDI.RunVeny();
-        midiPlayer.MidiStart();
+        if (!PlayGeneratedMidi())
+        {
+            return;
+        }
+
+        //midiPlayer.MidiStart();
         XMLStart.Extract_to_Tag_Ply(OutCSV, InCSV);
 
         var result = GetValue(OutCSV);
@@ -139,7 +119,7 @@ public class MusicXmlEditorCaller : MonoBehaviour
         int EMO5= 0;
 
         TaggedTemplatesCsvMatcher.returnCSV( Answer ,OutCSV,out LV4,out EMO5);
-        _moniter.EmoTextChenge(result.MaxM, result.MinO,LV4,EMO5);
+        //_moniter.EmoTextChenge(result.MaxM, result.MinO,LV4,EMO5);
     }
 
     public (string MaxM, string MinO)GetValue(string csvPath)
@@ -173,5 +153,50 @@ public class MusicXmlEditorCaller : MonoBehaviour
     {
         string a = "";
         return a;
+    }
+
+    private bool PlayGeneratedMidi()
+    {
+        if (midiDaemon == null)
+        {
+            UnityEngine.Debug.LogError(
+                "[MusicXML] MidiDaemonClientが設定されていません。"
+            );
+            return false;
+        }
+
+        if (!midiDaemon.IsInitialized)
+        {
+            string detail = string.IsNullOrEmpty(midiDaemon.InitializationError)
+                ? "FluidSynthの初期化完了を待っています。"
+                : midiDaemon.InitializationError;
+            UnityEngine.Debug.LogError(
+                $"[MusicXML] MIDIを再生できません: {detail}"
+            );
+            return false;
+        }
+
+        string midiPath = Path.GetFullPath(
+            xml_to_MIDI.outputMid
+        );
+
+        if (!File.Exists(midiPath))
+        {
+            UnityEngine.Debug.LogError(
+                $"[MusicXML] 生成されたMIDIが見つかりません: {midiPath}"
+            );
+            return false;
+        }
+
+        midiDaemon.PlayMid(
+            midiPath,
+            "editor_preview"
+        );
+
+        UnityEngine.Debug.Log(
+            $"[MusicXML] 常駐デーモンへ再生を要求しました: {midiPath}"
+        );
+
+        return true;
     }
 }

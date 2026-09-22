@@ -14,6 +14,7 @@ public class MapCell
 
     //public static EventListSO mapEVListSO;
     public EventData EvData;
+    public string eventInstanceId;
     public static BGCategoryListSO mapBGListSO;
 
     public GameObject MapCellPre;

@@ -5,6 +5,10 @@ using UnityEngine.UI;
 
 public class CardDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
+    private string eventCardId;
+    public string EventCardId => string.IsNullOrEmpty(eventCardId) ? eventCardId = System.Guid.NewGuid().ToString("N") : eventCardId;
+    public bool EventLocked { get; set; }
+    public void BindEventCard(string id) { eventCardId = id; }
     public RectTransform DragLayer;
     //public string Name = "unko";
     private Image color;
@@ -22,7 +26,7 @@ public class CardDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         {
             if (CardNum == value) return;
             CardNum = value;
-            Num.text = CardNum.ToString();
+            if (Num != null) Num.text = CardNum.ToString();
         }
     }
 
@@ -51,16 +55,20 @@ public class CardDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
     #region カードドラッグ処理
     public void OnBeginDrag(PointerEventData eventData)
     {
+        if (EventLocked) return;
+        var previousSlot = transform.parent != null ? transform.parent.GetComponent<CardSlot>() : null;
+        if (previousSlot != null && previousSlot.SlotInCard == this) previousSlot.SlotInCard = null;
         canvasGroup.blocksRaycasts = false;     //ドラッグ中RayCastを受けない
         transform.SetAsLastSibling();
         transform.SetParent(DragLayer, true);
     }
     public void OnDrag(PointerEventData eventData)
     {
-        FollowMouse(eventData);
+        if (!EventLocked) FollowMouse(eventData);
     }
     public void OnEndDrag(PointerEventData eventData)
     {
+        if (EventLocked) return;
         canvasGroup.blocksRaycasts = true;
 
         // マウスを離した先にあるUIを取得
@@ -82,32 +90,34 @@ public class CardDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
 
     public void ReturnCharaPareet()
     {
-        if (parentSlotRect.transform.childCount > 1)
+        var previousSlot = transform.parent != null ? transform.parent.GetComponent<CardSlot>() : null;
+        if (previousSlot != null && previousSlot.SlotInCard == this) previousSlot.SlotInCard = null;
+        if (parentSlotRect == null) { Debug.LogError("[CardDrag] Original card slot is missing."); return; }
+        foreach (var other in parentSlotRect.GetComponentsInChildren<CardDrag>())
         {
-            CardDrag card = parentSlotRect.GetComponentInChildren<CardDrag>();
-
-            Debug.Log($"{card._cardNum}+{_cardNum}hakai");
-            card._cardNum =card._cardNum + _cardNum;
-            Destroy(gameObject);
-
-        }else
-        {
-            rect.SetParent(parentSlotRect, false);
-            rect.localPosition = Vector3.zero;
+            if (other != this && other.EventCardId == EventCardId && Type != CardType.Chara)
+            {
+                other._cardNum += _cardNum;
+                _cardNum = 0;
+                gameObject.SetActive(false);
+                Destroy(gameObject);
+                return;
+            }
         }
+        if (rect == null) rect = GetComponent<RectTransform>();
+        rect.SetParent(parentSlotRect, false);
+        rect.localPosition = Vector3.zero;
     }
 
     public void CloneCard(int amount = 0)
     {
-        _cardNum = _cardNum - amount;
-        Debug.Log($"クローン{_cardNum}");
-        GameObject clone = Instantiate(gameObject,parentSlotRect);
+        if (amount <= 0 || amount >= _cardNum || parentSlotRect == null) return;
+        _cardNum -= amount;
+        GameObject clone = Instantiate(gameObject, parentSlotRect);
+        clone.GetComponent<CardDrag>().BindEventCard(EventCardId);
         clone.transform.localPosition = Vector3.zero;
         _cardNum = amount;
-        Debug.Log($"ho{_cardNum}");
-
     }
-
     private void Colorbind(int Def)
     {
         Color Excolors = Color.black;
