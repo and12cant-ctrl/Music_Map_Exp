@@ -10,5 +10,5 @@ public class PartyRuntime
 
     public int Gold;
     public int Turn;
-    public int PartyMemberNum;
+    public int PartyMemberNum = 3;
 }

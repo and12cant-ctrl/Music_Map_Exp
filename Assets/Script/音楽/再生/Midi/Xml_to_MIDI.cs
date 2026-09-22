@@ -1,7 +1,5 @@
-using System;
-using System.Diagnostics;
+ï»¿using System;
 using System.IO;
-using System.Text;
 using UnityEngine;
 
 public class Xml_to_MIDI : MonoBehaviour
@@ -26,82 +24,35 @@ public class Xml_to_MIDI : MonoBehaviour
     public void RunVeny()
     {
         #region NullTest
-        string exeAbs =Path.GetFullPath(Path.Combine(projectRoot,micromambaExe));
-        string rootAbs =Path.GetFullPath( Path.Combine(projectRoot,mambaRootDir));
         string scriptAbs = Path.GetFullPath(Path.Combine(projectRoot,scriptPath));
         string inAbs = Path.GetFullPath(Path.Combine(projectRoot, inputXml));
         string outAbs = Path.GetFullPath(Path.Combine(projectRoot , outputMid));
 
-        if (!File.Exists(exeAbs)) {UnityEngine.Debug.LogError($"[convert] micromamba.exe ‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ: {exeAbs}"); return; }
-        if (!Directory.Exists(rootAbs)) { UnityEngine.Debug.LogError($"[convert] mamba_root ‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñBæ‚Éƒu[ƒgƒXƒgƒ‰ƒbƒv‚µ‚Ä‚­‚¾‚³‚¢: {rootAbs}"); return; }
-        if (!File.Exists(scriptAbs)) { UnityEngine.Debug.LogError($"[convert] ƒXƒNƒŠƒvƒg‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ: {scriptAbs}"); return; }
-        if (!File.Exists(inAbs)) { UnityEngine.Debug.LogError($"[convert] “ü—ÍXML‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ: {inAbs}"); return; }
+        if (!File.Exists(scriptAbs)) { UnityEngine.Debug.LogError($"[convert] ã‚¹ã‚¯ãƒªãƒ—ãƒˆãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“: {scriptAbs}"); return; }
+        if (!File.Exists(inAbs)) { UnityEngine.Debug.LogError($"[convert] å…¥åŠ›XMLãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“: {inAbs}"); return; }
 
         #endregion
 
-        #region micromamba‚É“n‚·•¶š—ñ‚ğ\’z
-
-        var argsBuilder = new StringBuilder();
-        argsBuilder.Append($"run -r \"{rootAbs}\" -n {envName} python \"{scriptAbs}\" \"{inAbs}\"");
-        if (!string.IsNullOrWhiteSpace(outAbs)) argsBuilder.Append($" \"{outAbs}\"");
-        string args = argsBuilder.ToString();
-        #endregion
-
-        var psi = new ProcessStartInfo
+        var daemon = MidiDaemonClient.Instance;
+        if (daemon == null || !daemon.IsRunning)
         {
-            FileName = exeAbs,
-            Arguments = args,
-            WorkingDirectory = projectRoot,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
-        };
-
-        try
-        {
-            using var p = Process.Start(psi);
-
-            string stdOut = p.StandardOutput.ReadToEnd();
-            string stdErr = p.StandardError.ReadToEnd();
-            if (p == null) { UnityEngine.Debug.LogError("[convert] ƒvƒƒZƒX‹N“®‚É¸”s"); return; }
-            
-            bool exited;
-            if (waitTimeoutMs > 0)
-            {
-                exited = p.WaitForExit(waitTimeoutMs);
-            }
-            else
-            {
-                p.WaitForExit();
-                exited = true;
-            }
-
-            if (!exited)
-            {
-                try { p.Kill(); } catch { }
-                UnityEngine.Debug.LogError($"[convert] ¸”s (ExitCode={p.ExitCode})\n--- STDERR ---\n{stdErr}\n--- STDOUT ---\n{stdOut}");
-                return;
-            }
-
-            if (p.ExitCode != 0)
-                UnityEngine.Debug.Log($"[convert]¸”s:\n{stdErr}\n{stdOut}");
-
-            string expectedOut = outAbs;
-            if (string.IsNullOrWhiteSpace(expectedOut))
-            {
-                var inferred = Path.ChangeExtension(inAbs, ".mid");
-                expectedOut = inferred;
-            }
-            //if (File.Exists(expectedOut)) UnityEngine.Debug.Log($"[convert] o—Í‚ğŠm”F: {expectedOut}");
-            //else UnityEngine.Debug.LogWarning($"[convert] ExitCode=0 ‚Å‚·‚ªo—ÍMIDI‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ: {expectedOut}");
+            UnityEngine.Debug.LogError("[convert] MidiDaemonClientãŒèµ·å‹•ã—ã¦ã„ã¾ã›ã‚“ã€‚");
+            return;
         }
-        catch (Exception e)
+
+        var result = daemon.RunPythonScript(
+            scriptAbs,
+            new[] { inAbs, outAbs },
+            timeoutMs: waitTimeoutMs > 0 ? waitTimeoutMs : 120_000);
+
+        if (result.TimedOut || result.ExitCode != 0)
         {
-           UnityEngine.Debug.LogError($"[venv] —áŠO: {e.GetType().Name}\n{e.Message}\n{e.StackTrace}");
+            UnityEngine.Debug.LogError($"[convert] å¤±æ•— (ExitCode={result.ExitCode})\n--- STDERR ---\n{result.Stderr}\n--- STDOUT ---\n{result.Stdout}");
+            return;
         }
+
+        if (!File.Exists(outAbs))
+            UnityEngine.Debug.LogWarning($"[convert] ExitCode=0 ã§ã™ãŒå‡ºåŠ›MIDIãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“: {outAbs}");
     }
 
 

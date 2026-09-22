@@ -2,7 +2,9 @@ using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using System;
 using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using System.Linq;
 
 
@@ -82,6 +84,7 @@ public class MapDataSO : SerializedScriptableObject
     }
 
     // セル表示方法をカスタマイズ
+#if UNITY_EDITOR
     private static MapCell DrawCell(Rect rect, MapCell cell)
     {
         if (cell == null)cell = new MapCell();
@@ -144,6 +147,7 @@ public class MapDataSO : SerializedScriptableObject
         return cell;
     }
 
+#endif
     public void ApplyBackground(Vector2Int Start,Vector2Int End,BackgroundCategory bgCate)
     {
         if (!selectionStart.HasValue || !selectionEnd.HasValue )

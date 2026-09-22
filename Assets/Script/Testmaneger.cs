@@ -23,7 +23,7 @@ public class TestManeger : MonoBehaviour
             $"{gameManager.EVRandLsitSO}," +
             $"{gameManager.MapGrid}");
 
-        gameManager.PartyManager.Runtime.PartyMemberNum = 3;    //‚à‚µ‚TˆÈã‚¾‚Á‚½‚çH
+        //gameManager.PartyManager.Runtime.PartyMemberNum = 3;    //‚à‚µ‚TˆÈã‚¾‚Á‚½‚çH
 
     }
 

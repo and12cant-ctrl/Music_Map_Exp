@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -46,21 +46,16 @@ public class CSVwriter : MonoBehaviour
                     string mode = first ? "overwrite" : "append";
                     first = false;
 
-                    string arguments =
-                    $"run -r \"{FluidSynthPaths.micromambaroot}\" " +
-                    $"-n unitypy " +
-                    $"python -u \"{CsvPy}\" " +
-                    $"\"{EmoXmls}\" --out_csv \"{outCsv}\" " +
-                    $"--root_dir \"{FluidSynthPaths.EmotionDir}\" "+
-                    $"--mode {mode}";
-
-                    var r = PythonReturn.RunWithStdin(
-                        exePath: FluidSynthPaths.micromambaExe,
-                        arguments: arguments,
-                        stdinText: null,
-                        timeoutMs: 120_000,
-                        encoding: Encoding.UTF8
-                    );
+                    var r = RequireDaemon().RunPythonScript(
+                        CsvPy,
+                        new[]
+                        {
+                            EmoXmls,
+                            "--out_csv", outCsv,
+                            "--root_dir", FluidSynthPaths.EmotionDir,
+                            "--mode", mode,
+                        },
+                        timeoutMs: 120_000);
 
                     //string csvPath = Path.Combine(Application.persistentDataPath, "features.csv");
                     PythonReturn.PyLog.LogStderr(r.Stderr, contextTag: "PY", contextInfo: EmoXmls);
@@ -94,18 +89,11 @@ public class CSVwriter : MonoBehaviour
 
         string json = JsonConvert.SerializeObject(root,Formatting.Indented);
         //Debug.Log("[JSON TO PY]\n" + json);
-        string arguments =
-                $"run -r \"{FluidSynthPaths.micromambaroot}\" " +
-                $"-n unitypy " +
-                $"python -u \"{trainPy}\" --stdin";
-
-        var r = PythonReturn.RunWithStdin(
-            exePath: FluidSynthPaths.micromambaExe,
-            arguments: arguments,
+        var r = RequireDaemon().RunPythonScript(
+            trainPy,
+            new[] { "--stdin" },
             stdinText: json,
-            timeoutMs: 120_000,
-            encoding: Encoding.UTF8
-        );
+            timeoutMs: 120_000);
 
         //string csvPath = Path.Combine(Application.persistentDataPath, "features.csv");
         PythonReturn.PyLog.LogStdout(r.Stdout, contextTag: "PY");
@@ -119,6 +107,13 @@ public class CSVwriter : MonoBehaviour
 
         string header = string.Join(",", FINAL_COLUMNS);
         File.WriteAllText(csvPath, header + "\n", new UTF8Encoding(false));
+    }
+
+    private static MidiDaemonClient RequireDaemon()
+    {
+        if (MidiDaemonClient.Instance == null || !MidiDaemonClient.Instance.IsRunning)
+            throw new System.InvalidOperationException("MidiDaemonClient is not running.");
+        return MidiDaemonClient.Instance;
     }
 
     static string[] LoadColumns(string columnsJsonPath)

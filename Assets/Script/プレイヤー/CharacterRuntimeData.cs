@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class CharacterRuntimeData 
 {
+    public string runtimeId = System.Guid.NewGuid().ToString("N");
     public CharaData baseData;
     public string charaName;
     public Sprite Icon;

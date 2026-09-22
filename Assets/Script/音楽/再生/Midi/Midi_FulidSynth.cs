@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using UnityEngine;
-using System.Collections;
 using UnityEngine.UI;
-using System.Threading.Tasks;
 
 public class Midi_FulidSynth : MonoBehaviour
 {
@@ -18,8 +15,6 @@ public class Midi_FulidSynth : MonoBehaviour
     public string MidiFile => Path.Combine(FluidSynthPaths.ScoresDir,midi);
     public string Pyscripts => Path.Combine(FluidSynthPaths.scriptPy,"midi_fluidsynth.py");
 
-    private Process _proc;
-    private Coroutine _loopWatcher;
     public Button playButton;
     private bool _isRunning;
     private MusicXmlEditorCaller xmlChenge;
@@ -41,57 +36,24 @@ public class Midi_FulidSynth : MonoBehaviour
             Play();
         });
     }
-    public async void Play()
+    public void Play()
     {
         if (_isRunning) return;
         _isRunning = true;
         try
         {
-
-            var args = $"run -r \"{FluidSynthPaths.micromambaroot}\" -n unitypy python \"{Pyscripts}\" --root \"{FluidSynthPaths.ProjectRoot}\"";
-            var psi = new ProcessStartInfo
+            var daemon = MidiDaemonClient.Instance;
+            if (daemon == null || !daemon.IsRunning)
             {
-                FileName = FluidSynthPaths.micromambaExe,
-                Arguments = args,
-                WorkingDirectory = FluidSynthPaths.ProjectRoot,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            };
-
-            psi.EnvironmentVariables["PROJECT_ROOT"] = FluidSynthPaths.ProjectRoot;
-            psi.EnvironmentVariables["MIDI_FILENAME"] = MidiFile;
-
-            var proc = new Process();
-            proc.StartInfo = psi;
-            proc.EnableRaisingEvents = true;
-
-            #region 結果出力
-            proc.OutputDataReceived += (s, e) =>
+                UnityEngine.Debug.LogError("MidiDaemonClient is not running.");
+                return;
+            }
+            if (!File.Exists(MidiFile))
             {
-                //if (!string.IsNullOrEmpty(e.Data)) UnityEngine.Debug.Log($"[PYTHON OUT] {e.Data}");
-            };
-            proc.ErrorDataReceived += (s, e) =>
-            {
-                if (!string.IsNullOrEmpty(e.Data))
-                    UnityEngine.Debug.LogWarning($"[PYTHON ERR] {e.Data}");
-            };
-
-            proc.Exited += (s, e) =>
-            {
-                //UnityEngine.Debug.Log($"[PYTHON EXIT] code={proc.ExitCode}");
-                proc.Dispose();
-            };
-
-            #endregion
-
-            proc.Start();
-            proc.BeginOutputReadLine();
-            proc.BeginErrorReadLine();
-            await Task.Run(() => proc.WaitForExit());
-            //UnityEngine.Debug.Log($"[PY EXIT] code={proc.ExitCode}");
-
+                UnityEngine.Debug.LogError("MIDI file was not found: " + MidiFile);
+                return;
+            }
+            daemon.PlayMid(MidiFile, "legacy_fluid_synth");
         }
         finally
         {
@@ -102,26 +64,8 @@ public class Midi_FulidSynth : MonoBehaviour
 
     public void Stop()
     {
-        if (_loopWatcher != null)
-        {
-            StopCoroutine(_loopWatcher);
-            _loopWatcher = null;
-        }
-
-        if (_proc != null && !_proc.HasExited)
-        {
-            try
-            {
-                _proc.Kill();
-            }
-            catch { /* ignore */ }
-        }
-
-        if (_proc != null)
-        {
-            _proc.Dispose();
-            _proc = null;
-        }
+        MidiDaemonClient.Instance?.StopMid();
+        _isRunning = false;
     }
 
     public void SetMidiAndPlay(string newMidiRelativePath)
@@ -133,24 +77,5 @@ public class Midi_FulidSynth : MonoBehaviour
     public void SetGain(float newGain)
     {
         gain = Mathf.Clamp(newGain, 0f, 5f);
-        // 反映には再起動が必要（外部プロセスのため）
-        if (_proc != null && !_proc.HasExited)
-        {
-            Play();
-        }
-    }
-    IEnumerator WatchAndLoop()
-    {
-        while (true)
-        {
-            if (_proc == null) yield break;
-            if (_proc.HasExited)
-            {
-                // 再生終了 → 再起動でループ
-                Play();
-                yield break; // 再起動側で新しく WatchAndLoop が張られる
-            }
-            yield return new WaitForSeconds(0.25f);
-        }
     }
 }

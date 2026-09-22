@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+ï»¿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,13 +9,12 @@ using UnityEngine;
 public class ScoreEventDto
 {
     public string part;   // "A".."D"
-    public string voice;  // "Up"i¡‚ÍŒÅ’èj
+    public string voice;  // "Up"ï¼ˆä»Šã¯å›ºå®šï¼‰
     public string pitch;  // "C#4" or "REST"
     public float duration;
     public int bar;
     public float start;
 }
-
 [Serializable]
 public class ScoreEventsPayload
 {
@@ -30,8 +29,6 @@ public class Music21ScoreImporter : MonoBehaviour
     [SerializeField] private Node_judge_re _Judge_Re;
     [SerializeField] private Node_Place nodeCheak;
     [SerializeField] private SimpleStaffRenderer staffRenderer;
-    private string pythonExePath = Path.Combine(FluidSynthPaths.micromambaroot, "envs", "unitypy","python.exe");
-
     private string scriptPath = Path.Combine(FluidSynthPaths.scriptPy, "music21_to_scoreevents.py");
 
      private float pixelsPerBar = 330f;
@@ -58,12 +55,6 @@ public class Music21ScoreImporter : MonoBehaviour
             return;
         }
 
-        if (string.IsNullOrEmpty(pythonExePath) || !File.Exists(pythonExePath))
-        {
-            Debug.LogError($"pythonExePath not found: {pythonExePath}");
-            return;
-        }
-
         if (string.IsNullOrEmpty(scriptPath) || !File.Exists(scriptPath))
         {
             Debug.LogError($"scriptPath not found: {scriptPath}");
@@ -72,9 +63,17 @@ public class Music21ScoreImporter : MonoBehaviour
 
         #endregion
 
-        // python script.py music.xml
-        string args = $"\"{scriptPath}\" \"{musicXmlFilePath}\"";
-        var r = PythonReturn.Run(pythonExePath, args, timeoutMs: 120_000);
+        var daemon = MidiDaemonClient.Instance;
+        if (daemon == null || !daemon.IsRunning)
+        {
+            Debug.LogError("MidiDaemonClient is not running.");
+            return;
+        }
+
+        var r = daemon.RunPythonScript(
+            scriptPath,
+            new[] { musicXmlFilePath },
+            timeoutMs: 120_000);
 
         if (r.TimedOut)
         {
@@ -90,7 +89,7 @@ public class Music21ScoreImporter : MonoBehaviour
         }
         if (!string.IsNullOrWhiteSpace(r.Stderr))
         {
-            // Œx‚ªstderr‚Éo‚é‚±‚Æ‚ª‚ ‚éi•K—v‚È‚çƒƒOj
+            // è­¦å‘ŠãŒstderrã«å‡ºã‚‹ã“ã¨ãŒã‚ã‚‹ï¼ˆå¿…è¦ãªã‚‰ãƒ­ã‚°ï¼‰
             PythonReturn.PyLog.LogStderr(r.Stderr, "M21", "NonEmptyStderr");
         }
 
@@ -111,7 +110,7 @@ public class Music21ScoreImporter : MonoBehaviour
             return;
         }
 
-        //  beatsPerBar ‚Í PythonŒ‹‰Ê‚ğÌ—piƒYƒŒ–h~j
+        //  beatsPerBar ã¯ Pythonçµæœã‚’æ¡ç”¨ï¼ˆã‚ºãƒ¬é˜²æ­¢ï¼‰
         //var coord = new StaffCoordinateConverter(staffRect, payload.beatsPerBar, pixelsPerBar, scaleSteps);
         var applier = new ScoreEventApplier(nodeCheak, staffRenderer,_Judge_Re._coord);
 
@@ -124,7 +123,7 @@ public class Music21ScoreImporter : MonoBehaviour
             var e = new ScoreEvent
             {
                 part = Enum.Parse<Part>(d.part),
-                voice = Enum.Parse<voice>(d.voice), // ¡‚Í "Up" ŒÅ’è
+                voice = Enum.Parse<voice>(d.voice), // ä»Šã¯ "Up" å›ºå®š
                 pitch = d.pitch,
                 duration = d.duration,
                 bar = d.bar - minBar +1,

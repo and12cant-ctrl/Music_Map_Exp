@@ -14,8 +14,11 @@ public class MoveReader : MonoBehaviour
     public void OnMove(InputValue value)
     {
         if( !canMove) return;
+        if (gm != null && gm.GetComponent<MusicMap.Events.EventSystemRoot>()?.BlocksMovement == true) return;
 
         Vector2 moveInput = value.Get<Vector2>();
+        if (moveInput.sqrMagnitude < 0.01f) return;
+
         Vector2Int dir = Vector2Int.zero;
         if (Mathf.Abs(moveInput.x) > Mathf.Abs(moveInput.y))
         {
@@ -45,7 +48,14 @@ public class MoveReader : MonoBehaviour
     private IEnumerator WaitTime(Vector2Int move)
     {
         canMove = false;
+        Vector2Int previousCell = gm.PlayerCell;
         gm.PlayerCell += move;
+
+        if (gm.PlayerCell != previousCell)
+        {
+            gm.TimeManager.ConsumeTime(1);
+        }
+
         yield return new WaitForSeconds(0.5f);
         canMove = true;
     }

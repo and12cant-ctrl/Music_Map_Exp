@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 003b8e83656f42d4b13eed047ae309df, type: 3}
+  m_Name: "\u30A4\u30D9\u30F3\u30C8\u30AB\u30C6\u30B4\u30EA"
+  m_EditorClassIdentifier: Assembly-CSharp::MusicMap.Events.EventCategoryCatalogSO
+  categories:
+  - id: a3af37e86bbd4d9c8f8d346fab552af8
+    displayName: "\u98F2\u98DF\u5E97"
+    description: 
+    sortOrder: 0
+    isDeprecated: 0
+  - id: 944c9cd242454f64ad55907a68ea8fe0
+    displayName: "\u795E\u793E"
+    description: 
+    sortOrder: 0
+    isDeprecated: 0

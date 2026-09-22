@@ -1,41 +1,27 @@
-
+ï»¿
 using System.Collections;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 using UnityEngine.UI;
-public class EmoJson
-{
-    public string MusicXML;
-    public string Soundfont;
-    public string fluidsynth;
-    public string outputFolder;
-}
-
 public class EmoSortMIDI : MonoBehaviour
 {
-    private string Sf2Path = FluidSynthPaths.SoundFontFile;
     private string pyScript = Path.Combine(FluidSynthPaths.scriptPy, "Xml_to_Midi.py");
-    private string envName = "unitypy";
     private string XmlPath = "";
     private string XmlFolder = Path.Combine(FluidSynthPaths.MusicDataroot,"Output");
-    private string fluidExe = FluidSynthPaths.FluidSynthExe;
     private string XMLName = "";
     private string UnkownDir = Path.Combine(FluidSynthPaths.MusicDataroot, "temporary");
-    private bool finished = false;
     private string KeyWord = "_FULL";
     private string ScondryName = "";
-    #region Š´î
+    #region æ„Ÿæƒ…
     private string sadDir = Path.Combine(FluidSynthPaths.EmotionDir, "sad");
     private string fearDir = Path.Combine(FluidSynthPaths.EmotionDir, "fear");
     private string trustDir = Path.Combine(FluidSynthPaths.EmotionDir, "trust");
     private string anxietyDir = Path.Combine(FluidSynthPaths.EmotionDir, "anxiety");
     private string unClassDir = Path.Combine(FluidSynthPaths.EmotionDir, "UnClass");
     #endregion
-    #region ƒ{ƒ^ƒ“
+    #region ãƒœã‚¿ãƒ³
     [SerializeField] private Button btnSad;
     [SerializeField] private Button btnFear;
     [SerializeField] private Button btnTrust;
@@ -51,7 +37,7 @@ public class EmoSortMIDI : MonoBehaviour
         string ExXML = Path.Combine(XmlFolder,
             "bach-invention-01",
             "bach-invention-01_m16-19_ts4_4_E0.570_S0.643_001.musicxml");
-        #region ƒ{ƒ^ƒ“İ’è
+        #region ãƒœã‚¿ãƒ³è¨­å®š
         btnSad.onClick.AddListener(() =>
         {
             JudgeXml(Path.Combine(FluidSynthPaths.EmotionDir, "sad"));
@@ -105,7 +91,7 @@ public class EmoSortMIDI : MonoBehaviour
 
                     XMLName = str;
                     XmlPath = Path.Combine(TRYfolderPath, Fullfile);
-                    PlayXml(XmlPath, Sf2Path);
+                    PlayXml(XmlPath);
 
                     yield return new WaitUntil(() => isPressed);
                     isPressed = false;
@@ -115,83 +101,40 @@ public class EmoSortMIDI : MonoBehaviour
     }
 
 
-    void PlayXml(string xml,string sf2)
+    void PlayXml(string xml)
     {
-        var cmd = new EmoJson
+        string outputMidi = Path.Combine(UnkownDir, Path.GetFileNameWithoutExtension(xml) + ".mid");
+        var daemon = MidiDaemonClient.Instance;
+        if (daemon == null || !daemon.IsRunning)
         {
-            MusicXML = xml,
-            Soundfont = sf2,
-            fluidsynth = fluidExe,
-            outputFolder = UnkownDir,
-        };
-        string json = JsonUtility.ToJson(cmd);
-        var args = $"run -r \"{FluidSynthPaths.micromambaroot}\" -n {envName} " +
-                   $"python -X utf8 -u \"{pyScript}\"";
-        var psi = new ProcessStartInfo
-        {
-            FileName = FluidSynthPaths.micromambaExe,
-            Arguments = args,
+            UnityEngine.Debug.LogError("MidiDaemonClient is not running.");
+            return;
+        }
 
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            RedirectStandardInput = true,
-            CreateNoWindow = true,
+        var result = daemon.RunPythonScript(
+            pyScript,
+            new[] { xml, outputMidi },
+            timeoutMs: 120_000);
 
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
-        };
-
-        StringBuilder stdoutBuf = new StringBuilder();
-        StringBuilder stderrBuf = new StringBuilder();
-        Process _proc = new Process { StartInfo = psi, EnableRaisingEvents = true };
-
-        _proc.OutputDataReceived += (s, e) =>
-        {
-            if (e.Data == null) return;
-            UnityEngine.Debug.Log("[PY] " + e.Data);
-            stdoutBuf.AppendLine(e.Data);
-        };
-        _proc.ErrorDataReceived += (s, e) =>
-        {
-            if (e.Data == null) return;
-            UnityEngine.Debug.LogError("[PY ERR] " + e.Data);
-            stderrBuf.AppendLine(e.Data);
-        };
-        _proc.Exited += (s, e) =>
-        {
-            finished = true;
-        };
-        UnityEngine. Debug.Log("start");
-        _proc.Start();
-        _proc.BeginOutputReadLine();
-        _proc.BeginErrorReadLine();
-
-        _proc.StandardInput.Write(json);
-        _proc.StandardInput.Close();
-
-        //_proc.CancelOutputRead();
-        //_proc.CancelErrorRead();
-
-        if (stdoutBuf.Length > 0)UnityEngine. Debug.Log("[PY STDOUT]" + stdoutBuf.ToString());
-        if (stderrBuf.Length > 0) UnityEngine.Debug.LogError("[PY STDERR]\n" + stderrBuf.ToString());
-        
-        //_proc.Dispose();
+        if (result.TimedOut || result.ExitCode != 0)
+            UnityEngine.Debug.LogError($"XML to MIDI failed. exit={result.ExitCode}");
+        if (!string.IsNullOrWhiteSpace(result.Stdout)) UnityEngine.Debug.Log("[PY STDOUT]" + result.Stdout);
+        if (!string.IsNullOrWhiteSpace(result.Stderr)) UnityEngine.Debug.LogError("[PY STDERR]\n" + result.Stderr);
     }
 
     void JudgeXml(string FolderName)
     {
         string folder = Path.Combine(FolderName,$"{ScondryName}_{Path.GetFileName(XMLName)}");
         if (XmlPath == "") return;
-        UnityEngine.Debug.Log($"Œ³‚ÌêŠ{XMLName}\nˆÚ‚·êŠ{folder}");
+        UnityEngine.Debug.Log($"å…ƒã®å ´æ‰€{XMLName}\nç§»ã™å ´æ‰€{folder}");
         Directory.Move(XMLName, folder);
         if (File.Exists(folder))
         {
-            UnityEngine. Debug.Log("Œ©‚Â‚©‚è‚Ü‚µ‚½: " + folder);
+            UnityEngine. Debug.Log("è¦‹ã¤ã‹ã‚Šã¾ã—ãŸ: " + folder);
         }
         else
         {
-            UnityEngine.Debug.Log("Œ©‚Â‚©‚è‚Ü‚¹‚ñ");
+            UnityEngine.Debug.Log("è¦‹ã¤ã‹ã‚Šã¾ã›ã‚“");
         }
 
         isPressed = true;

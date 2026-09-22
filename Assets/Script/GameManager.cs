@@ -13,6 +13,14 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject characterPrefab;
     [SerializeField] private Transform characterParent;
     [SerializeField] public PartyManager PartyManager;
+    [Header("Mission Time")]
+    [SerializeField, Min(1)] private int missionStartDate = 1;
+    [SerializeField, Min(1)] private int missionDeadline = 7;
+    [SerializeField] private Vector2Int baseCell = new Vector2Int(5, 5);
+    [SerializeField] private TimeManager timeManager;
+
+    public TimeManager TimeManager => timeManager;
+    public Vector2Int BaseCell => baseCell;
     #region     テスト
     public BGCategoryListSO BGReqListSO { get; set; }
     public BGCategoryListSO BGRandListSO {  get; set; }
@@ -35,10 +43,16 @@ public class GameManager : MonoBehaviour
         get => _playerCell;
         set
         {
-            int maxX = Mathf.Clamp(value.x, 0, MapGrid * 3);
-            int maxY = Mathf.Clamp(value.y, 0, MapGrid * 3);
+            int maxX = questMap?.mapGrid != null
+                ? questMap.mapGrid.GetLength(0) - 1
+                : Mathf.Max(0, MapGrid * 3 - 1);
+            int maxY = questMap?.mapGrid != null
+                ? questMap.mapGrid.GetLength(1) - 1
+                : Mathf.Max(0, MapGrid * 3 - 1);
 
-            Vector2Int clamped = new Vector2Int(maxX, maxY);
+            Vector2Int clamped = new Vector2Int(
+                Mathf.Clamp(value.x, 0, maxX),
+                Mathf.Clamp(value.y, 0, maxY));
 
             if (_playerCell == clamped) return;
             _playerCell = clamped;
@@ -46,6 +60,23 @@ public class GameManager : MonoBehaviour
         }
     }
     #endregion
+
+    private void Awake()
+    {
+        Instance = this;
+
+        if (timeManager == null)
+        {
+            timeManager = GetComponent<TimeManager>();
+        }
+
+        if (timeManager == null)
+        {
+            timeManager = gameObject.AddComponent<TimeManager>();
+        }
+
+        timeManager.OnPeriodStarted += ReturnPlayerToBase;
+    }
 
     void Start()
     {
@@ -68,12 +99,12 @@ public class GameManager : MonoBehaviour
         GenerateParty();           // キャラを生成
         uiManager.AssignCharacters(PartyManager.Runtime.Members);  // UIに割り当て
         mapGenerator.MapGenerate(questMap,BGReqListSO,BGRandListSO,EVReqLsitSO,EVRandLsitSO,MapGrid);
+        timeManager.Setup(missionStartDate, missionDeadline);
         OnPlayerIconSet?.Invoke(PlayerCell);
         miniMapBuilder.SetupMap();
     }
-    void Update()
-    {
-    }
+    void Update(){}
+
     public void EndMission()
     {
         //foreach (var c in PartyManager.Runtime.Members) Destroy(c.gameObject);
@@ -93,6 +124,24 @@ public class GameManager : MonoBehaviour
         for (int i = 0; i < PartyManager.Runtime.PartyMemberNum; i++)
         {
             PartyManager.AddMember(characterGenerator.GenerateRandomCharacter());
+        }
+    }
+
+    private void ReturnPlayerToBase(TimePeriod period)
+    {
+        PlayerCell = baseCell;
+    }
+
+    private void OnDestroy()
+    {
+        if (timeManager != null)
+        {
+            timeManager.OnPeriodStarted -= ReturnPlayerToBase;
+        }
+
+        if (Instance == this)
+        {
+            Instance = null;
         }
     }
 
