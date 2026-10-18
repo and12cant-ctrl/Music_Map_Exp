@@ -13,5 +13,4 @@ MonoBehaviour:
   m_Name: "\u795E\u793E\u30B5\u30F3\u30D7\u30EB\u30A4\u30D9\u30F3\u30C8\u30AB\u30BF\u30ED\u30B0"
   m_EditorClassIdentifier: Assembly-CSharp::MusicMap.Events.EventCatalogSO
   categoryCatalog: {fileID: 11400000, guid: 6904af1ae4b6b7742b64279ef0889280, type: 2}
-  definitions:
-  - {fileID: 11400000, guid: a926769d2bda63e4c852681d6784307b, type: 2}
+  definitions: []

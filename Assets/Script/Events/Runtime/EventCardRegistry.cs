@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace MusicMap.Events
 {
-    public sealed class EventCardRegistry : IEventCardSource
+    public sealed class EventCardRegistry : IEventCardSource, IEventParticipantSource, IEventHistoryCardSource
     {
         private readonly PartyManager party;
         public EventCardRegistry(PartyManager party) { this.party = party; }
@@ -16,7 +16,7 @@ namespace MusicMap.Events
             var card = Cards().FirstOrDefault(c => c.EventCardId == cardId);
             type = card != null ? card.Type : CardType.Chara;
             // Clones share a source identity. Only one event can reserve that source at a time.
-            amount = card == null ? 0 : card.Type == CardType.Chara ? 1 : Cards().Where(c => c.EventCardId == cardId).Sum(c => c._cardNum);
+            amount = card == null ? 0 : card.Type == CardType.Chara || card.Type == CardType.Facility ? 1 : Cards().Where(c => c.EventCardId == cardId).Sum(c => c._cardNum);
             return card != null;
         }
 
@@ -36,10 +36,32 @@ namespace MusicMap.Events
             return true;
         }
 
+        public IEnumerable<string> Participants(IReadOnlyList<string> ids) => AssignedCharacters(ids).Select(c => c.runtimeId);
+        public IEnumerable<string> Characters(CharaData definition) => party?.Runtime?.Members.Where(c => c != null && c.baseData == definition).Select(c => c.runtimeId) ?? Enumerable.Empty<string>();
+        public bool TryCharacter(string id, EventParameter parameter, out int value)
+        {
+            var member = party?.Runtime?.Members.FirstOrDefault(c => c != null && c.runtimeId == id);
+            value = member == null ? 0 : GetParameter(member, parameter); return member != null;
+        }
+        public string FindCard(UnityEngine.Object target)
+        {
+            if (target == null) return null;
+            if (target is CharaData character)
+            {
+                var ids = Characters(character).ToArray();
+                return Cards().Where(c => !c.EventLocked && ids.Any(id => c.EventCardId.StartsWith(id + "/", StringComparison.Ordinal))).OrderBy(c => c.EventCardId, StringComparer.Ordinal).FirstOrDefault()?.EventCardId;
+            }
+            return Cards().Where(c => !c.EventLocked && c.GetComponent<EventCardIdentity>()?.definition == target).OrderBy(c => c.EventCardId, StringComparer.Ordinal).FirstOrDefault()?.EventCardId;
+        }
+
         public void RefreshLocks(EventManager manager)
         {
             foreach (var card in Cards()) card.EventLocked = manager?.IsCardAssigned(card.EventCardId) == true;
         }
+
+        public string FindCharacterCard(string characterId) => Cards()
+            .Where(c => c.Type == CardType.Chara && !c.EventLocked && !string.IsNullOrEmpty(characterId) && c.EventCardId.StartsWith(characterId + "/", StringComparison.Ordinal))
+            .OrderBy(c => c.EventCardId, StringComparer.Ordinal).FirstOrDefault()?.EventCardId;
 
         public static int GetParameter(CharacterRuntimeData character, EventParameter parameter)
         {

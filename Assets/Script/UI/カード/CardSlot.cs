@@ -11,6 +11,7 @@ public class CardSlot : MonoBehaviour
     public CardDrag SlotInCard;
     private Image BC;
     private bool isEventSlot;
+    public bool EventAutomatic { get; set; }
     [SerializeField]private int SlotNum = 1;
 
     public void ConfigureForEvent(CardType type, int amount)
@@ -57,7 +58,7 @@ public class CardSlot : MonoBehaviour
                     cardRect.anchoredPosition = new Vector2(0, 12);
                 }
                 SlotInCard = card;
-            if (SlotNum != 0 && (isEventSlot ? card.Type != CardType.Chara : card.TrueType != CardType.Chara))
+            if (SlotNum != 0 && (isEventSlot ? card.Type != CardType.Chara && card.Type != CardType.Facility : card.TrueType != CardType.Chara))
             {
                 card.CloneCard(SlotNum);
             }
@@ -70,10 +71,10 @@ public class CardSlot : MonoBehaviour
     }
     public bool CanAccept(CardDrag card)
     {
-        if (card == null || card.EventLocked || card.Type != acceptType) return false;
+        if (EventAutomatic || card == null || card.EventLocked || card.Type != acceptType) return false;
         if (SlotInCard != null && SlotInCard != card) return false;
         if (onlyOneCard && SlotInCard != card) return false;
-        if (isEventSlot) return card.Type == CardType.Chara ? SlotNum == 1 : card._cardNum >= SlotNum;
+        if (isEventSlot) return card.Type == CardType.Chara || card.Type == CardType.Facility ? SlotNum == 1 : card._cardNum >= SlotNum;
         return SlotNum == 0 || card.TrueType == CardType.Chara || card._cardNum >= SlotNum;
     }
     public void ReturnCard(CardDrag card)

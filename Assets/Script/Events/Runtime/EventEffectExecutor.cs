@@ -15,6 +15,18 @@ namespace MusicMap.Events
             IEventWorldState world, Func<EventExecutionType, IEventExecutionHandler> handlers)
         { this.manager = manager; this.party = party; this.cards = cards; this.world = world; this.handlers = handlers; }
 
+        public bool TryApplyOutcome(EventDefinitionSO definition, EventInstance instance, EventOutcomeDefinition outcome,
+            string operationId, Action<bool, string> completion, out string error)
+        {
+            if (instance.appliedEffectCount < outcome.effects.Count)
+                return TryApply(definition, instance, outcome.effects[instance.appliedEffectCount], operationId, completion, out error);
+            var effect = outcome.typedEffects[instance.appliedEffectCount - outcome.effects.Count];
+            if (effect == null) return EventManager.Fail("Missing typed effect.", out error);
+            bool success = effect.Apply(new EventEffectContext { manager = manager, definition = definition, instance = instance, executor = this, party = party, operationId = operationId }, out error);
+            if (success) completion(true, null);
+            return success;
+        }
+
         // A successful step advances the journal in EventRunner. A failed step stays retryable.
         public bool TryApply(EventDefinitionSO definition, EventInstance instance, EventEffect effect,
             string operationId, Action<bool, string> completion, out string error)
@@ -54,6 +66,7 @@ namespace MusicMap.Events
                             for (int count = 0; count < effect.amount; count++) party.AddEquip(effect.equip); break;
                         case EventEffectKind.GrantHint:
                             if (effect.hint == null || effect.amount < 1 || effect.amount > 10000) return EventManager.Fail("Hint reward or amount is invalid.", out error);
+                            if (!string.IsNullOrEmpty(effect.hint.PersistentId)) manager.Progress.GrantHint(effect.hint.PersistentId, 1);
                             for (int count = 0; count < effect.amount; count++) party.AddHint(effect.hint); break;
                         case EventEffectKind.ChangeParameter:
                             var characters = cards?.AssignedCharacters(instance.assignedCardIds).ToArray();

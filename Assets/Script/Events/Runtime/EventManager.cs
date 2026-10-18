@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace MusicMap.Events
 {
-    public sealed class EventManager
+    public sealed partial class EventManager
     {
         private readonly Dictionary<string, EventInstance> instances = new Dictionary<string, EventInstance>(StringComparer.Ordinal);
         private readonly HashSet<string> unlocked = new HashSet<string>(StringComparer.Ordinal);
@@ -32,23 +32,29 @@ namespace MusicMap.Events
             return !string.IsNullOrEmpty(id) && instances.TryGetValue(id, out instance);
         }
 
-        public EventInstance Spawn(EventDefinitionSO definition, Vector2Int position)
+        public EventInstance Spawn(EventDefinitionSO definition, Vector2Int position, string sourceEventInstanceId = null)
         {
             if (definition == null || !definition.enabled || !Catalog.TryGetById(definition.PersistentId, out var found) || found != definition)
                 return SpawnError("Definition is disabled, missing, or ambiguous in the catalog.");
-            if (definition.reservation == null || definition.execution == null || definition.outcomes == null)
+            if (definition.reservation == null || definition.execution == null || definition.EffectiveOutcomes == null)
                 return SpawnError("Definition is missing reservation, execution, or outcomes.");
             if (map != null && (!TryCell(position, out var cell) || !string.IsNullOrEmpty(cell.eventInstanceId) || cell.EvData != null))
                 return SpawnError($"Cell {position} is invalid or already contains an event.");
+            if (!CanAppear(definition)) return null;
+            if (definition.useExtendedLifecycle && (definition.extension.deadlinePhaseCount < 0 || (long)CurrentPhase + definition.extension.deadlinePhaseCount > int.MaxValue)) return SpawnError("Invalid deadline.");
             var instance = new EventInstance
             {
                 instanceId = Guid.NewGuid().ToString("N"), definitionId = definition.PersistentId,
+                sourceEventInstanceId = sourceEventInstanceId,
                 cellPosition = position, status = EventStatus.Available,
                 randomSeed = BitConverter.ToInt32(Guid.NewGuid().ToByteArray(), 0)
             };
+            instance.appearedPhase = CurrentPhase;
+            instance.deadlinePhase = definition.useExtendedLifecycle ? CurrentPhase + definition.extension.deadlinePhaseCount : -1;
             instances.Add(instance.instanceId, instance);
             if (map != null && TryCell(position, out var target)) target.eventInstanceId = instance.instanceId;
-            Changed?.Invoke(instance);
+            if (instance.deadlinePhase == CurrentPhase) Expire(instance);
+            else Changed?.Invoke(instance);
             return instance;
         }
 
@@ -59,12 +65,15 @@ namespace MusicMap.Events
             error = null;
             if (!TryGetDefinition(id, out var instance, out var definition, out error)) return false;
             if (instance.status != EventStatus.Available) return Fail("Event is not Available.", out error);
+            if (definition.useExtendedLifecycle) return StartExtended(instance, definition, cardIds, currentPhase, out error);
             if (!definition.enabled || definition.execution.executionType != EventExecutionType.Narrative || definition.reservation == null || definition.reservation.triggerMode != EventTriggerMode.Scheduled || definition.reservation.requiredPhaseCount <= 0)
                 return Fail("Only Scheduled events with a positive phase count can be reserved.", out error);
             if (currentPhase != CurrentPhase || currentPhase > int.MaxValue - definition.reservation.requiredPhaseCount)
                 return Fail("Current phase is stale or overflows executePhase.", out error);
             if (!ValidateCards(definition, cardIds, out error)) return false;
             instance.assignedCardIds = new List<string>(cardIds);
+            instance.slotAssignments = CaptureSlots(definition, cardIds);
+            instance.participantIds = (cards as IEventParticipantSource)?.Participants(cardIds).Distinct().ToList() ?? new List<string>();
             instance.reservedPhase = currentPhase;
             instance.executePhase = currentPhase + definition.reservation.requiredPhaseCount;
             instance.status = EventStatus.Reserved;
@@ -85,7 +94,7 @@ namespace MusicMap.Events
                 var id = ids[index];
                 if (string.IsNullOrEmpty(id))
                 {
-                    if (slot.required) return Fail($"Slot {index + 1} requires a card.", out error);
+                    if (definition.useExtendedLifecycle ? slot.slotType == SlotType.Required || slot.slotType == SlotType.Involved : slot.required) return Fail($"Slot {index + 1} requires a card.", out error);
                     continue;
                 }
                 if (!unique.Add(id) || IsCardAssigned(id)) return Fail($"Card '{id}' is already assigned.", out error);
@@ -119,6 +128,8 @@ namespace MusicMap.Events
         {
             if (phase < CurrentPhase) { Debug.LogError("[EventManager] Phase cannot move backwards; restore a matching save instead."); return; }
             CurrentPhase = phase;
+            foreach (var available in instances.Values.Where(i => i.status == EventStatus.Available && i.deadlinePhase >= 0 && i.deadlinePhase <= phase).ToArray()) Expire(available);
+            ProcessFollowUps();
             foreach (var instance in instances.Values.ToArray())
                 if (instance.status == EventStatus.Reserved && instance.executePhase <= phase)
                 {
@@ -130,6 +141,7 @@ namespace MusicMap.Events
         public bool RequestImmediate(string id, out string error)
         {
             if (!TryGetDefinition(id, out var instance, out var definition, out error)) return false;
+            if (definition.useExtendedLifecycle) return Reserve(id, Array.Empty<string>(), CurrentPhase, out error);
             if (definition.reservation == null || definition.reservation.triggerMode != EventTriggerMode.Immediate || definition.reservation.requiredPhaseCount != 0)
                 return Fail("Immediate events must have zero required phases.", out error);
             if (!definition.enabled || definition.reservation.cardSlots == null || definition.reservation.cardSlots.Count != 0 || definition.reservation.requirements == null || definition.reservation.requirements.Count != 0)
@@ -153,6 +165,7 @@ namespace MusicMap.Events
         internal void Notify(EventInstance instance) => Changed?.Invoke(instance);
         internal void Resolve(EventInstance instance)
         {
+            RecordHistory(instance);
             instance.status = EventStatus.Resolved;
             instance.lastError = null;
             ClearCell(instance);
@@ -187,7 +200,7 @@ namespace MusicMap.Events
             bool replacesParent = parent.status == EventStatus.Running && TryCell(position, out var parentCell) && parentCell.eventInstanceId == parent.instanceId;
             if (!replacesParent && !FindFreeCell(position, out position)) return Fail("No free map cell for the follow-up event.", out error);
             if (replacesParent) ClearCell(parent);
-            var child = Spawn(definition, position);
+            var child = Spawn(definition, position, parent.instanceId);
             if (child == null)
             {
                 if (replacesParent && TryCell(position, out var originalCell)) { originalCell.eventInstanceId = parent.instanceId; parent.occupiesCell = true; }
@@ -236,6 +249,8 @@ namespace MusicMap.Events
 
         public EventSaveData CreateSaveData() => new EventSaveData
         {
+            version = 3,
+            progress = Progress.Copy(),
             currentPhase = CurrentPhase,
             instances = instances.Values.OrderBy(i => i.instanceId, StringComparer.Ordinal).Select(i => i.Copy()).ToList(),
             unlockedDefinitionIds = unlocked.OrderBy(id => id, StringComparer.Ordinal).ToList()
@@ -244,8 +259,10 @@ namespace MusicMap.Events
         public List<string> Restore(EventSaveData data)
         {
             var errors = new List<string>();
-            if (data == null || data.version != 1 || data.currentPhase < 0 || data.instances == null)
+            if (data == null || (data.version < 1 || data.version > 3) || data.currentPhase < 0 || data.instances == null)
             { errors.Add("Unsupported or invalid event save; current state was preserved."); return errors; }
+            if (data.version >= 2 && (data.progress == null || !data.progress.IsValid()))
+            { errors.Add("Invalid event progress; current state was preserved."); return errors; }
             var restored = new Dictionary<string, EventInstance>(StringComparer.Ordinal);
             var positions = new HashSet<Vector2Int>();
             var assigned = new HashSet<string>(StringComparer.Ordinal);
@@ -254,25 +271,27 @@ namespace MusicMap.Events
                 if (saved == null || string.IsNullOrEmpty(saved.instanceId) || restored.ContainsKey(saved.instanceId))
                 { errors.Add($"Null or duplicate instanceId '{saved?.instanceId}'. Entry skipped."); continue; }
                 var instance = saved.Copy();
+                if (data.version == 1) instance.deadlinePhase = -1;
                 restored.Add(instance.instanceId, instance);
                 string problem = null;
+                if (!EventSlotAssignment.IsValid(saved.slotAssignments)) problem = "Invalid saved Slot assignments.";
                 if (!Catalog.TryGetById(instance.definitionId, out var definition)) problem = $"Missing definitionId '{instance.definitionId}'.";
                 else if (!Enum.IsDefined(typeof(EventStatus), instance.status)) problem = "Invalid event status.";
-                else if (definition.reservation?.cardSlots == null || definition.execution == null || definition.outcomes == null) problem = "Incomplete event definition.";
+                else if (definition.reservation?.cardSlots == null || definition.execution == null || definition.EffectiveOutcomes == null) problem = "Incomplete event definition.";
                 else if (instance.appliedEffectCount < 0 || instance.appliedFollowUpCount < 0) problem = "Invalid result cursor.";
                 bool active = instance.status != EventStatus.Resolved && instance.status != EventStatus.Cancelled;
                 if (problem == null && active && instance.occupiesCell && map != null && (!TryCell(instance.cellPosition, out _) || positions.Contains(instance.cellPosition))) problem = "Invalid or duplicate map cell.";
                 if (problem == null && active && instance.status != EventStatus.Available)
                 {
                     var nonEmptyIds = instance.assignedCardIds.Where(id => !string.IsNullOrEmpty(id)).ToArray();
-                    if (instance.assignedCardIds.Count != definition.reservation.cardSlots.Count) problem = "Saved card slot count differs from the definition.";
+                    if (instance.resolvedOutcomeCode != "EXPIRED" && instance.assignedCardIds.Count != definition.reservation.cardSlots.Count) problem = "Saved card slot count differs from the definition.";
                     else if (nonEmptyIds.Distinct(StringComparer.Ordinal).Count() != nonEmptyIds.Length || nonEmptyIds.Any(id => assigned.Contains(id))) problem = "Card is assigned to multiple saved events.";
-                    else if (instance.status == EventStatus.Reserved && (definition.reservation.triggerMode != EventTriggerMode.Scheduled || instance.reservedPhase < 0 || instance.executePhase <= instance.reservedPhase)) problem = "Invalid saved reservation.";
+                    else if (instance.status == EventStatus.Reserved && ((!definition.useExtendedLifecycle && definition.reservation.triggerMode != EventTriggerMode.Scheduled) || instance.reservedPhase < 0 || instance.executePhase <= instance.reservedPhase)) problem = "Invalid saved reservation.";
                     else if (!instance.hasJudgement && (instance.appliedEffectCount > 0 || instance.appliedFollowUpCount > 0 || !string.IsNullOrEmpty(instance.resolvedOutcomeCode))) problem = "Result cursor exists without a completed judgement.";
                     else if (instance.hasJudgement)
                     {
-                        var outcome = definition.outcomes.FirstOrDefault(o => o != null && o.outcomeCode == instance.resolvedOutcomeCode);
-                        if (outcome?.effects == null || outcome.followUps == null || instance.appliedEffectCount > outcome.effects.Count || instance.appliedFollowUpCount > outcome.followUps.Count) problem = "Saved outcome no longer matches the definition.";
+                        var outcome = definition.EffectiveOutcomes.FirstOrDefault(o => o != null && o.outcomeCode == instance.resolvedOutcomeCode);
+                        if (outcome?.effects == null || outcome.followUps == null || instance.appliedEffectCount > outcome.EffectCount || instance.appliedFollowUpCount > outcome.followUps.Count) problem = "Saved outcome no longer matches the definition.";
                     }
                 }
                 if (problem != null)
@@ -294,6 +313,7 @@ namespace MusicMap.Events
             instances.Clear();
             unlocked.Clear();
             foreach (var id in data.unlockedDefinitionIds ?? new List<string>()) if (Catalog.TryGetById(id, out _)) unlocked.Add(id);
+            Progress = data.version >= 2 && data.progress != null ? data.progress.Copy() : new EventProgress();
             CurrentPhase = data.currentPhase;
             foreach (var item in restored)
             {

@@ -62,7 +62,7 @@ namespace MusicMap.Events
             if (!manager.TryGetDefinition(next.instanceId, out _, out var definition, out var error)) { Report(next, error); return; }
             if (definition.execution == null || definition.reservation == null) { Report(next, "Event execution/reservation definition is missing."); return; }
             var handler = definition.execution.executionType == EventExecutionType.Narrative ? null : handlers?.Invoke(definition.execution.executionType);
-            if (definition.execution.executionType == EventExecutionType.Narrative && !CanPresentNarrative)
+            if (definition.execution.executionType == EventExecutionType.Narrative && !CanPresentNarrative && next.resolvedOutcomeCode != "EXPIRED")
             { Report(next, "ExecutionView is not connected. Select the event again after connecting it."); return; }
             if (definition.execution.executionType != EventExecutionType.Narrative && handler == null)
             { Report(next, $"{definition.execution.executionType} handler is not connected. Event remains Ready."); return; }
@@ -71,6 +71,7 @@ namespace MusicMap.Events
             next.status = EventStatus.Running;
             next.lastError = null;
             manager.Notify(next);
+            if (next.resolvedOutcomeCode == "EXPIRED") { ApplyNext(); return; }
             if (definition.execution.executionType == EventExecutionType.Narrative)
             {
                 var outcome = GetStoredOutcome();
@@ -95,8 +96,8 @@ namespace MusicMap.Events
                     Closed?.Invoke();
                     return;
                 }
-                var outcome = definition.outcomes?.FirstOrDefault(o => o != null && o.outcomeCode == outcomeCode)
-                    ?? definition.outcomes?.FirstOrDefault(o => o != null && o.isDefault);
+                var outcome = definition.EffectiveOutcomes?.FirstOrDefault(o => o != null && o.outcomeCode == outcomeCode)
+                    ?? definition.EffectiveOutcomes?.FirstOrDefault(o => o != null && o.isDefault);
                 if (outcome == null) { Report(next, "External execution has no valid default outcome."); return; }
                 next.resolvedOutcomeCode = outcome.outcomeCode;
                 next.hasJudgement = true;
@@ -139,8 +140,8 @@ namespace MusicMap.Events
                 Current.judgeSucceeded = Current.judgeTotal >= judge.target;
                 Current.hasJudgement = true;
                 var context = new EventContext { instance = Current, cards = cards, world = world };
-                var outcome = currentDefinition.outcomes?.FirstOrDefault(o => o != null && !o.isDefault && context.Matches(o.conditions))
-                    ?? currentDefinition.outcomes?.FirstOrDefault(o => o != null && o.isDefault);
+                var outcome = currentDefinition.useExtendedLifecycle ? currentDefinition.EffectiveOutcomes.FirstOrDefault(o => o != null && o.outcomeCode == (Current.judgeSucceeded ? "SUCCESS" : "FAILURE")) : currentDefinition.EffectiveOutcomes?.FirstOrDefault(o => o != null && !o.isDefault && context.Matches(o.conditions))
+                    ?? currentDefinition.EffectiveOutcomes?.FirstOrDefault(o => o != null && o.isDefault);
                 if (outcome == null)
                 {
                     Current.hasJudgement = false;
@@ -155,22 +156,23 @@ namespace MusicMap.Events
             ApplyNext();
         }
 
-        private EventOutcomeDefinition GetStoredOutcome() => currentDefinition?.outcomes?.FirstOrDefault(o => o != null && o.outcomeCode == Current?.resolvedOutcomeCode);
+        private EventOutcomeDefinition GetStoredOutcome() => currentDefinition?.EffectiveOutcomes?.FirstOrDefault(o => o != null && o.outcomeCode == Current?.resolvedOutcomeCode);
 
         private void ApplyNext()
         {
             var instance = Current;
             var outcome = GetStoredOutcome();
+            manager.CalculateHintLevel(instance, currentDefinition);
             if (outcome == null || outcome.effects == null || outcome.followUps == null) { Report(instance, "Saved outcome or result lists are missing from the definition."); return; }
-            if (instance.appliedEffectCount > outcome.effects.Count || instance.appliedFollowUpCount > outcome.followUps.Count)
+            if (instance.appliedEffectCount > outcome.EffectCount || instance.appliedFollowUpCount > outcome.followUps.Count)
             { Report(instance, "Result definition changed since save; result cursor cannot be resumed."); return; }
-            if (instance.appliedEffectCount < outcome.effects.Count)
+            if (instance.appliedEffectCount < outcome.EffectCount)
             {
                 if (effects == null) { Report(instance, "EventEffectExecutor is not connected."); return; }
                 operationPending = true;
                 int token = generation;
                 bool completed = false;
-                bool started = effects.TryApply(currentDefinition, instance, outcome.effects[instance.appliedEffectCount],
+                bool started = effects.TryApplyOutcome(currentDefinition, instance, outcome,
                     instance.instanceId + ":effect:" + instance.appliedEffectCount, (success, message) =>
                     {
                         if (completed || token != generation || Current != instance) return;
@@ -185,15 +187,18 @@ namespace MusicMap.Events
                 if (!started && !completed) { operationPending = false; Report(instance, error); }
                 return;
             }
+            if (currentDefinition.useExtendedLifecycle) manager.RecordHistory(instance);
             while (instance.appliedFollowUpCount < outcome.followUps.Count)
             {
                 var followUp = outcome.followUps[instance.appliedFollowUpCount];
                 if (followUp == null) { Report(instance, "Null follow-up."); return; }
-                if (!manager.StartFollowUp(instance, followUp.definition, followUp.startMode, out var error)) { Report(instance, error); return; }
+                string error;
+                if (!(currentDefinition.useExtendedLifecycle ? manager.ScheduleFollowUp(instance, followUp, out error) : manager.StartFollowUp(instance, followUp.definition, followUp.startMode, out error))) { Report(instance, error); return; }
                 instance.appliedFollowUpCount++;
                 manager.Notify(instance);
             }
             manager.Resolve(instance);
+            manager.ProcessFollowUps();
             Current = null;
             currentDefinition = null;
             Closed?.Invoke();

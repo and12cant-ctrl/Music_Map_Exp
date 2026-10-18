@@ -557,12 +557,30 @@ namespace MusicMap.Events.Editor
     internal class EventDefinitionInlineEditor : OdinEditor
     {
         internal EventCatalogSO CatalogOverride { get; set; }
+        private Sirenix.OdinInspector.Editor.PropertyTree expansionTree;
+        private EventDefinitionSO expansionTarget;
         public override void OnInspectorGUI()
         {
-            EventCategorySelectorGUI.Draw((EventDefinitionSO)target, CatalogOverride);
+            var definition = (EventDefinitionSO)target;
+            EventCategorySelectorGUI.Draw(definition, CatalogOverride);
             EditorGUILayout.Space();
+            if (definition.useExtendedLifecycle && definition.extension != null)
+            {
+                Undo.RecordObject(definition, "Edit extended event");
+                EditorGUI.BeginChangeCheck();
+                definition.useExtendedLifecycle = EditorGUILayout.Toggle("拡張ライフサイクル", definition.useExtendedLifecycle);
+                if (expansionTree == null || expansionTarget != definition)
+                {
+                    expansionTree?.Dispose(); expansionTarget = definition;
+                    expansionTree = Sirenix.OdinInspector.Editor.PropertyTree.Create(new EventExpansionEditorModel(definition, CatalogOverride));
+                }
+                expansionTree.Draw(false);
+                if (EditorGUI.EndChangeCheck()) EditorUtility.SetDirty(definition);
+                return;
+            }
             base.OnInspectorGUI();
         }
+        protected override void OnDisable() { expansionTree?.Dispose(); expansionTree = null; base.OnDisable(); }
     }
 
     [CustomEditor(typeof(EventDefinitionSO))]

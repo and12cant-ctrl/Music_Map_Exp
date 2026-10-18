@@ -28,7 +28,7 @@ namespace MusicMap.Events
             var context = new EventContext { world = world };
             var candidates = manager.Catalog.GetEnabled().Where(d => d.appearance != null && d.appearance.generateOnMap
                 && (!d.appearance.requiresUnlock || manager.IsUnlocked(d.PersistentId))
-                && context.Matches(d.appearance.conditions)).ToArray();
+                && manager.CanAppear(d) && context.Matches(d.appearance.conditions)).ToArray();
 
             // Match required slots before spawning. Reassign planned cells if a broad-condition
             // event would consume the only cell eligible for another required event.

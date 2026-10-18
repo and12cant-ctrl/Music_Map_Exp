@@ -176,7 +176,7 @@ public class CardDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
 
 public enum CardType
 {
-    Chara,Skill,Equip,Money
+    Chara,Skill,Equip,Money,Facility,Item
 }
 public enum MoneyTipe
 {

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace MusicMap.Events
 {
-    public enum EventIssueSeverity { Warning, Error }
+    public enum EventIssueSeverity { Warning, Error, Info }
     public sealed class EventValidationIssue
     {
         public EventIssueSeverity severity;
@@ -45,6 +45,7 @@ namespace MusicMap.Events
                 CheckCategory(definition);
                 if (definition.appearance == null || definition.reservation == null || definition.execution == null)
                 { Add(definition, "Appearance/reservation/execution section is null."); continue; }
+                if (definition.useExtendedLifecycle) { issues.AddRange(EventExpansionValidator.Validate(definition, catalog)); continue; }
                 var reservation = definition.reservation;
                 if (reservation.triggerMode == EventTriggerMode.Scheduled && reservation.requiredPhaseCount <= 0) Add(definition, "Scheduled requires requiredPhaseCount > 0.");
                 if (reservation.triggerMode == EventTriggerMode.Immediate && reservation.requiredPhaseCount != 0) Add(definition, "Immediate requires requiredPhaseCount == 0.");
@@ -144,12 +145,14 @@ namespace MusicMap.Events
 
         private static IEnumerable<EventDefinitionSO> Edges(EventDefinitionSO definition, bool immediateOnly)
         {
-            if (definition?.outcomes == null) yield break;
-            if (immediateOnly && definition.reservation?.triggerMode != EventTriggerMode.Immediate) yield break;
-            foreach (var outcome in definition.outcomes.Where(o => o != null))
+            if (definition?.EffectiveOutcomes == null) yield break;
+            if (immediateOnly && (definition.useExtendedLifecycle ? definition.extension.deadlinePhaseCount != 0 : definition.reservation?.triggerMode != EventTriggerMode.Immediate)) yield break;
+            foreach (var outcome in definition.EffectiveOutcomes.Where(o => o != null))
             {
                 foreach (var followUp in outcome.followUps ?? new List<EventFollowUp>())
-                    if (followUp?.definition != null && (!immediateOnly || followUp.startMode == EventFollowUpMode.Reserve && followUp.definition.reservation?.triggerMode == EventTriggerMode.Immediate)) yield return followUp.definition;
+                    if (followUp?.definition != null && (!immediateOnly || (definition.useExtendedLifecycle
+                        ? followUp.delayPhaseCount == 0 && followUp.definition.useExtendedLifecycle && followUp.definition.extension?.deadlinePhaseCount == 0
+                        : followUp.startMode == EventFollowUpMode.Reserve && followUp.definition.reservation?.triggerMode == EventTriggerMode.Immediate))) yield return followUp.definition;
                 foreach (var effect in outcome.effects ?? new List<EventEffect>())
                     if (effect?.eventDefinition != null && (effect.kind == EventEffectKind.UnlockEvent || effect.kind == EventEffectKind.ReserveEvent)
                         && (!immediateOnly || effect.kind == EventEffectKind.ReserveEvent && effect.eventDefinition.reservation?.triggerMode == EventTriggerMode.Immediate)) yield return effect.eventDefinition;

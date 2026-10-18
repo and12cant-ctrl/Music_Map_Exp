@@ -18,7 +18,7 @@ namespace MusicMap.Events
             if (runner.Current != null) return Error("Another event is currently running.");
             if (instance.status == EventStatus.Ready) { reservation.Close(); runner.EnqueueReady(instance.instanceId); return true; }
             if (instance.status != EventStatus.Available) return Error($"Event '{instance.instanceId}' is {instance.status}.");
-            if (definition.reservation.triggerMode == EventTriggerMode.Scheduled) return reservation.Open(instance, definition);
+            if (definition.useExtendedLifecycle || definition.reservation.triggerMode == EventTriggerMode.Scheduled) return reservation.Open(instance, definition);
             reservation.Close();
             return manager.RequestImmediate(instance.instanceId, out error) || Error(error);
         }

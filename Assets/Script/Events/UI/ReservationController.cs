@@ -32,6 +32,10 @@ namespace MusicMap.Events
                     card.SetDragArea(view.dragLayer);
                 }
             current = instance;
+            if (definition.useExtendedLifecycle)
+                foreach (var slot in definition.reservation.cardSlots.Where(s => s.historyParticipant?.enabled == true))
+                    if (!manager.TryResolveHistoryParticipant(instance, slot.historyParticipant, out _, out var reason))
+                    { view.ShowMessage(reason); break; }
             return true;
         }
 

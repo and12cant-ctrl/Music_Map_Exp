@@ -45,9 +45,12 @@ namespace MusicMap.Events
     [Serializable]
     public sealed class CardSlotDefinition
     {
-        public string label;
+        public ParticipantSlotReference historyParticipant = new ParticipantSlotReference();
+        [Sirenix.OdinInspector.GUIColor(.7f,1,.7f)] public string label;
+        public SlotType slotType;
+        [Sirenix.OdinInspector.ShowIf("@slotType == SlotType.Involved")] public UnityEngine.Object involvedTarget;
         public CardType acceptedType = CardType.Chara;
-        public bool required = true;
+        [Tooltip("Legacy events only. Extended events use Slot Type.")] public bool required = true;
         [Min(1)] public int amount = 1;
     }
 
@@ -97,6 +100,8 @@ namespace MusicMap.Events
         public List<EventCondition> conditions = new List<EventCondition>();
         public EventPresentation presentation = new EventPresentation();
         public List<EventEffect> effects = new List<EventEffect>();
+        [SerializeReference, Sirenix.OdinInspector.ListDrawerSettings(ShowFoldout = true)] public List<OutcomeEffect> typedEffects = new List<OutcomeEffect>();
+        public int EffectCount => (effects?.Count ?? 0) + (typedEffects?.Count ?? 0);
         public List<EventFollowUp> followUps = new List<EventFollowUp>();
     }
 
@@ -104,7 +109,9 @@ namespace MusicMap.Events
     public sealed class EventFollowUp
     {
         public EventDefinitionSO definition;
-        public EventFollowUpMode startMode;
+        [Tooltip("Legacy events only. Extended events spawn after Delay Phase Count.")] public EventFollowUpMode startMode;
+        [Min(0)] public int delayPhaseCount;
+        public bool allowConcurrent;
     }
 
     [Serializable]

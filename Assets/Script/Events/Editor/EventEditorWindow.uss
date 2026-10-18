@@ -1,0 +1,85 @@
+.event-editor { padding-left: 5px; padding-right: 5px; padding-bottom: 5px; }
+.event-editor .event-group { margin-top: 8px; margin-bottom: 6px; padding-left: 4px; padding-right: 6px; border-left-width: 2px; border-left-color: rgb(83, 125, 156); }
+.event-editor .unity-button { min-height: 24px; margin-top: 3px; margin-bottom: 3px; }
+.event-editor .unity-help-box { margin-top: 6px; margin-bottom: 6px; flex-shrink: 0; }
+.event-editor .unity-help-box__text { white-space: normal; }
+.event-editor .unity-foldout__text { white-space: normal; }
+.event-editor .unity-base-field { margin-top: 3px; margin-bottom: 3px; }
+.event-editor .unity-base-field__label { min-width: 130px; max-width: 235px; white-space: normal; }
+
+/* Toolbar: one flexible input between three non-shrinking elements. */
+.event-editor .event-toolbar {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    height: auto;
+    min-height: 32px;
+    align-items: center;
+}
+.event-editor #event-catalog-label { flex-shrink: 0; white-space: nowrap; margin-right: 6px; }
+.event-editor #event-catalog {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
+    margin-right: 6px;
+}
+.event-editor #event-catalog .unity-base-field__input,
+.event-editor #event-catalog .unity-object-field__display {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+.event-editor #event-catalog .unity-object-field__object {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.event-editor .event-toolbar .unity-toolbar-button {
+    flex-shrink: 0;
+    min-width: 48px;
+    height: 26px;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+    white-space: nowrap;
+}
+
+/* Fit to the right pane, not the EditorWindow or the longest intrinsic text. */
+.event-editor .event-split { min-width: 0; min-height: 0; flex-shrink: 1; }
+.event-editor .event-right { flex-shrink: 1; flex-basis: 0; min-height: 0; }
+.event-editor .event-detail { flex-grow: 1; flex-shrink: 1; min-width: 0; min-height: 0; }
+.event-editor .event-detail > .unity-scroll-view__content-and-vertical-scroll-container { min-width: 0; }
+.event-editor .event-detail .unity-scroll-view__content-viewport { min-width: 0; }
+.event-editor .event-detail-content { width: 100%; min-width: 0; max-width: 100%; }
+.event-editor .event-detail-content > * { min-width: 0; max-width: 100%; flex-shrink: 0; }
+.event-editor .event-detail .event-group,
+.event-editor .event-detail .unity-foldout__content,
+.event-editor .event-detail .unity-property-field { min-width: 0; }
+.event-editor .event-detail .unity-foldout__toggle { min-width: 0; flex-shrink: 1; }
+.event-editor .event-detail .unity-foldout__text { min-width: 0; flex-shrink: 1; white-space: normal; }
+.event-editor .event-detail .unity-base-field { min-width: 0; flex-shrink: 1; }
+.event-editor .event-detail .unity-base-field__label { min-width: 0; flex-basis: 42%; flex-shrink: 1; white-space: normal; }
+.event-editor .event-detail .unity-base-field__input { min-width: 0; flex-shrink: 1; }
+.event-editor .event-detail .unity-base-popup-field__text,
+.event-editor .event-detail .unity-object-field__object {
+    min-width: 0;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.event-editor .event-detail .unity-help-box { min-width: 0; }
+.event-editor .event-detail .unity-help-box__text { min-width: 0; flex-grow: 1; flex-shrink: 1; white-space: normal; }
+.event-editor .event-detail .unity-button { min-width: 0; max-width: 100%; white-space: normal; }
+
+/* Preserve the graph's horizontal rows when wide; stack only narrow rows. */
+.event-editor .event-graph-row { flex-direction: row; min-width: 0; min-height: 90px; }
+.event-editor .event-graph-node { width: 180px; min-width: 0; flex-shrink: 1; white-space: normal; }
+.event-editor .event-graph-connector { flex-grow: 1; flex-shrink: 1; min-width: 0; min-height: 90px; }
+.event-editor .event-graph-row--narrow { flex-direction: column; }
+.event-editor .event-graph-row--narrow .event-graph-node { width: auto; min-height: 40px; }
+.event-editor .event-graph-row--narrow .event-graph-connector { flex-grow: 0; min-height: 70px; }

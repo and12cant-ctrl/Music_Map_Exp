@@ -18,7 +18,7 @@ public class HintSelectionManager : MonoBehaviour
 
     // 「None以外」の選択履歴（古い順 → 新しい順）
     private readonly List<HintKey> _pickedOrder = new();
-    private int LimmitFPS = 2;
+    private int LimmitFPS = 3;
 
     void Awake()
     {

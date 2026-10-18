@@ -27,6 +27,7 @@ namespace MusicMap.Events
         private GameManager game;
         private EventCardRegistry cards;
         private MapDataSO initializedMap;
+        private bool restoringLegacyHints;
 
         public bool Initialize(MapDataSO map)
         {
@@ -50,6 +51,7 @@ namespace MusicMap.Events
             Reservation = new ReservationController(Manager, reservationView);
             MapController = new MapEventController(Manager, Runner, Reservation);
             Manager.Changed += OnChanged;
+            Manager.Restored += SyncOwnedHints;
             if (scheduleView != null) scheduleView.CancelRequested += CancelReservation;
             if (executionView != null)
             {
@@ -91,13 +93,27 @@ namespace MusicMap.Events
         private void LateUpdate() { if (Manager != null) mapBuilt = true; }
 
         public EventSaveData CreateSaveData() => Manager?.CreateSaveData();
+        private void SyncOwnedHints()
+        {
+            if (game?.PartyManager?.Runtime == null) return;
+            var known = catalog.definitions.Where(d => d != null).SelectMany(d =>
+                (d.EffectiveOutcomes ?? Enumerable.Empty<EventOutcomeDefinition>()).Where(o => o != null).SelectMany(o =>
+                    (o.typedEffects ?? new System.Collections.Generic.List<OutcomeEffect>()).OfType<HintEffect>().Where(e => e.isFixedHint).Select(e => e.fixedHint)
+                    .Concat((o.effects ?? new System.Collections.Generic.List<EventEffect>()).Where(e => e != null && e.kind == EventEffectKind.GrantHint).Select(e => e.hint)))
+                .Concat(d.extension?.randomHintPool?.hints ?? Enumerable.Empty<HintData>())).Where(h => h != null).Distinct().ToArray();
+            var owned = game.PartyManager.Runtime.Hints;
+            if (restoringLegacyHints)
+                foreach (var hint in owned.Where(h => h != null && !string.IsNullOrEmpty(h.PersistentId))) Manager.Progress.GrantHint(hint.PersistentId, 1);
+            owned.RemoveAll(h => known.Contains(h) && Manager.Progress.HintLevel(h.PersistentId) == 0);
+            foreach (var hint in known) if (Manager.Progress.HintLevel(hint.PersistentId) > 0 && !owned.Contains(hint)) owned.Add(hint);
+        }
         public bool PrepareNewMap(MapDataSO map)
         {
             if (!Initialize(map)) return false;
             if (Runner.Current != null || Runner.IsOperationPending)
             { Debug.LogError("[EventSystemRoot] Finish the active event before generating a new map."); return false; }
             // Restore owns both the registry and cell IDs and notifies runner/reservation.
-            Restore(new EventSaveData { currentPhase = CurrentPhase() });
+            Restore(new EventSaveData { version = 2, currentPhase = CurrentPhase(), progress = Manager.Progress.Copy() });
             cards.RefreshLocks(Manager);
             RefreshSchedule();
             map.EnsureGrid();
@@ -127,7 +143,9 @@ namespace MusicMap.Events
             if (Runner.IsOperationPending) { Debug.LogError("[EventSystemRoot] Close the pending external operation before loading another save."); return; }
             if (data.currentPhase != CurrentPhase()) { Debug.LogError("[EventSystemRoot] Restore the matching TimeRuntimeData before events; phase mismatch."); return; }
             var oldIds = Manager.Instances.Select(i => i.instanceId).ToArray();
-            Manager.Restore(data);
+            restoringLegacyHints = data.version == 1;
+            try { Manager.Restore(data); }
+            finally { restoringLegacyHints = false; }
             var icons = GetComponent<MapIconPresenter>();
             foreach (var id in oldIds) if (!Manager.TryGet(id, out _) && icons != null) icons.RemoveIcon(id);
         }
@@ -139,7 +157,7 @@ namespace MusicMap.Events
                 game.OnPlayerIconSet -= OnPlayerMoved;
                 if (game.TimeManager != null) game.TimeManager.OnPeriodStarted -= OnPeriodStarted;
             }
-            if (Manager != null) Manager.Changed -= OnChanged;
+            if (Manager != null) { Manager.Changed -= OnChanged; Manager.Restored -= SyncOwnedHints; }
             if (scheduleView != null) scheduleView.CancelRequested -= CancelReservation;
             Reservation?.Dispose();
             Runner?.Dispose();

@@ -1,0 +1,214 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 863f96c4b108c2b4e92200581d9b934a, type: 3}
+  m_Name: PhaseSample
+  m_EditorClassIdentifier: Assembly-CSharp::MusicMap.Events.EventDefinitionSO
+  persistentId: d146f234a7cf4561b31c9ba8ebdd7c5f
+  useExtendedLifecycle: 1
+  extension:
+    conditions:
+    - query:
+        source: 2
+        character: {fileID: 0}
+        characterInstanceId: 
+        facility: {fileID: 0}
+        flag: {fileID: 11400000, guid: e0179cb60a304e844bd774e6cbbc6246, type: 2}
+        hint: {fileID: 0}
+        eventDefinition: {fileID: 0}
+        historyMode: 0
+        parameter: 2
+        comparison: 0
+        value: 0
+        boolValue: 0
+        phase: 0
+        outcome: 0
+    deadlinePhaseCount: 2
+    durationPhaseCount: 1
+    pointConditions:
+    - query:
+        source: 3
+        character: {fileID: 0}
+        characterInstanceId: 
+        facility: {fileID: 0}
+        flag: {fileID: 0}
+        hint: {fileID: 11400000, guid: 32368133d8719d94fad398844c3a5ca0, type: 2}
+        eventDefinition: {fileID: 0}
+        historyMode: 0
+        parameter: 2
+        comparison: 0
+        value: 0
+        boolValue: 1
+        phase: 0
+        outcome: 0
+      addPoint: 4
+    - query:
+        source: 4
+        character: {fileID: 0}
+        characterInstanceId: 
+        facility: {fileID: 0}
+        flag: {fileID: 0}
+        hint: {fileID: 0}
+        eventDefinition: {fileID: 0}
+        historyMode: 0
+        parameter: 2
+        comparison: 0
+        value: 0
+        boolValue: 1
+        phase: 0
+        outcome: 0
+      addPoint: 1
+    - query:
+        source: 4
+        character: {fileID: 0}
+        characterInstanceId: 
+        facility: {fileID: 0}
+        flag: {fileID: 0}
+        hint: {fileID: 0}
+        eventDefinition: {fileID: 0}
+        historyMode: 0
+        parameter: 2
+        comparison: 0
+        value: 0
+        boolValue: 1
+        phase: 0
+        outcome: 0
+      addPoint: 1
+    level2Points: 2
+    level3Points: 4
+    randomHintPool: {fileID: 11400000, guid: b057cefa80be2f743bdddfb530a074c9, type: 2}
+    success:
+      outcomeCode: SUCCESS
+      isDefault: 0
+      conditions: []
+      presentation:
+        text: "SUCCESS\uFF1A\u30D2\u30F3\u30C8\u7372\u5F97\u30021 Phase\u5F8C\u306B\u540C\u3058\u30A4\u30D9\u30F3\u30C8\u304C\u518D\u51FA\u73FE\u3057\u307E\u3059\u3002"
+        image: {fileID: 0}
+      effects: []
+      typedEffects:
+      - rid: 1480396811025252352
+      - rid: 1480396811025252353
+      followUps:
+      - definition: {fileID: 11400000}
+        startMode: 0
+        delayPhaseCount: 1
+        allowConcurrent: 0
+    failure:
+      outcomeCode: FAILURE
+      isDefault: 0
+      conditions: []
+      presentation:
+        text: "FAILURE\uFF1A\u30C6\u30B9\u30C8\u5931\u6557\u3002"
+        image: {fileID: 0}
+      effects: []
+      typedEffects: []
+      followUps: []
+    expired:
+      outcomeCode: EXPIRED
+      isDefault: 0
+      conditions: []
+      presentation:
+        text: "EXPIRED\uFF1AStart\u524D\u306B\u671F\u9650\u5207\u308C\u3002\u53C2\u52A0\u8005\u306A\u3057\u3002"
+        image: {fileID: 0}
+      effects: []
+      typedEffects: []
+      followUps: []
+  eventCode: EXTENSION_PHASE_SAMPLE
+  displayName: "\u62E1\u5F35\u30A4\u30D9\u30F3\u30C8\u52D5\u4F5C\u78BA\u8A8D"
+  enabled: 0
+  category: 
+  categoryId: 944c9cd242454f64ad55907a68ea8fe0
+  categoryMigrationState: 1
+  tags: []
+  developerMemo: "\u30C6\u30B9\u30C8\u7528\u3002\u6210\u529F\u5F8C1 Phase\u3067\u540C\u3058\u5B9A\u7FA9\u304C\u518D\u51FA\u73FE\u3002Start\u306B\u306F\u4EBA\u7269\u30AB\u30FC\u30C91\u679A\u3002\u65E2\u5B58\u306E\u672C\u756ACatalog\u3078\u81EA\u52D5\u767B\u9332\u3057\u307E\u305B\u3093\u3002"
+  sortOrder: 0
+  priority: 0
+  appearance:
+    mapIcon: {fileID: 21300000, guid: db9848e1c30b963449e0be88aee60f00, type: 3}
+    mapColorKey: 
+    generateOnMap: 1
+    requiresUnlock: 0
+    requiredPlacements: 1
+    weight: 1
+    backgroundCategories: []
+    conditions: []
+  reservation:
+    triggerMode: 0
+    requiredPhaseCount: 1
+    reservationPresentation:
+      text: "\u4EBA\u7269\u30AB\u30FC\u30C9\u3092\u914D\u7F6E\u3057\u3066 Start\u30021
+        Phase\u5F8C\u306B\u5224\u5B9A\u3057\u307E\u3059\u3002"
+      image: {fileID: 0}
+    cardSlots:
+    - historyParticipant:
+        enabled: 0
+        definition: {fileID: 0}
+        slotNumber: 1
+        source: 0
+        filterOutcome: 0
+        outcome: 0
+      label: "\u53C2\u52A0\u8005"
+      slotType: 0
+      involvedTarget: {fileID: 0}
+      acceptedType: 0
+      required: 1
+      amount: 1
+    requirements: []
+  execution:
+    executionType: 0
+    beforeJudge:
+      text: "\u53C2\u52A0\u8005\u3092\u78BA\u5B9A\u3057\u307E\u3057\u305F\u3002\u7D50\u679C\u3078\u9032\u307F\u307E\u3059\u3002"
+      image: {fileID: 0}
+    judge:
+      useDice: 0
+      parameter: 2
+      diceCount: 1
+      diceSides: 6
+      target: 0
+      modifier: 0
+    externalKey: 
+  outcomes:
+  - outcomeCode: SUCCESS
+    isDefault: 0
+    conditions:
+    - kind: 1
+      parameter: 0
+      key: 
+      value: 0
+      flagValue: 1
+    presentation:
+      text: 
+      image: {fileID: 0}
+    effects: []
+    typedEffects: []
+    followUps: []
+  - outcomeCode: FAILURE
+    isDefault: 1
+    conditions: []
+    presentation:
+      text: 
+      image: {fileID: 0}
+    effects: []
+    typedEffects: []
+    followUps: []
+  references:
+    version: 2
+    RefIds:
+    - rid: 1480396811025252352
+      type: {class: HintEffect, ns: MusicMap.Events, asm: Assembly-CSharp}
+      data:
+        isFixedHint: 1
+        fixedHint: {fileID: 11400000, guid: 32368133d8719d94fad398844c3a5ca0, type: 2}
+    - rid: 1480396811025252353
+      type: {class: FlagEffect, ns: MusicMap.Events, asm: Assembly-CSharp}
+      data:
+        flag: {fileID: 11400000, guid: dab18c043833b0e4397fe5873ce50d43, type: 2}
+        value: 1

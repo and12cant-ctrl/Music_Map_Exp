@@ -8,8 +8,11 @@ namespace MusicMap.Events
     [CreateAssetMenu(menuName = "Events/Event Definition")]
     public sealed class EventDefinitionSO : ScriptableObject
     {
-        [SerializeField, ReadOnly, TabGroup("基本")] private string persistentId;
+        [SerializeField, ReadOnly, TabGroup("基本")] private string persistentId = Guid.NewGuid().ToString("N");
         public string PersistentId => persistentId;
+        [TabGroup("Extension"), GUIColor(.8f,.8f,.8f)] public bool useExtendedLifecycle;
+        [TabGroup("Extension"), ShowIf(nameof(useExtendedLifecycle)), HideLabel] public EventExpansion extension = new EventExpansion();
+        public IEnumerable<EventOutcomeDefinition> EffectiveOutcomes => useExtendedLifecycle ? extension?.Outcomes : outcomes;
         [TabGroup("基本")] public string eventCode;
         [TabGroup("基本")] public string displayName;
         [TabGroup("基本")] public bool enabled = true;

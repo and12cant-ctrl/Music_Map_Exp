@@ -48,7 +48,7 @@ namespace MusicMap.Events
             if (title != null) title.text = definition.displayName;
             if (description != null) description.text = definition.reservation.reservationPresentation.text;
             if (background != null) { background.sprite = definition.reservation.reservationPresentation.image; background.enabled = background.sprite != null; }
-            if (requiredTime != null) requiredTime.text = $"実行まで {definition.reservation.requiredPhaseCount} 時間帯";
+            if (requiredTime != null) requiredTime.text = $"実行まで {(definition.useExtendedLifecycle ? definition.extension.durationPhaseCount : definition.reservation.requiredPhaseCount)} 時間帯";
             if (requirements != null) requirements.text = string.Join("\n", definition.reservation.requirements.Select(r => $"{r.parameter}: {r.minimum} 以上"));
             if (message != null) message.text = "";
             foreach (var slotDefinition in definition.reservation.cardSlots)
@@ -57,6 +57,7 @@ namespace MusicMap.Events
                 slot.gameObject.SetActive(true);
                 slot.name = string.IsNullOrEmpty(slotDefinition.label) ? slotDefinition.acceptedType.ToString() : slotDefinition.label;
                 slot.ConfigureForEvent(slotDefinition.acceptedType, slotDefinition.amount);
+                slot.EventAutomatic = definition.useExtendedLifecycle && slotDefinition.slotType == SlotType.Involved;
                 var label = new GameObject("EventSlotLabel", typeof(RectTransform)).AddComponent<TextMeshProUGUI>();
                 label.transform.SetParent(slot.transform, false);
                 label.rectTransform.anchorMin = Vector2.zero;
@@ -68,8 +69,10 @@ namespace MusicMap.Events
                 if (title != null) label.font = title.font;
                 label.raycastTarget = false;
                 label.text = $"{slot.name}\n×{slotDefinition.amount} {(slotDefinition.required ? "必須" : "任意")}";
+                if (definition.useExtendedLifecycle) label.text = slot.name + "\n" + slotDefinition.slotType + (slot.EventAutomatic ? "\n" + (slotDefinition.involvedTarget != null ? slotDefinition.involvedTarget.name : "Missing target") : "" );
                 slots.Add(slot);
             }
+            if (definition.useExtendedLifecycle && confirmButton != null) { var caption = confirmButton.GetComponentInChildren<TMP_Text>(); if (caption != null) caption.text = "Start"; }
             panel.SetActive(true);
             return true;
         }

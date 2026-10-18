@@ -1,5 +1,11 @@
 # Unity起動失敗の原因報告（ChatGPTへ貼り付け可能）
 
+## イベントシステム拡張後の追記
+
+今回の拡張検証では既存のUnity Editorプロセスが起動していないことを確認し、元プロジェクトを非表示のバッチモードで起動しました。Unity 6000.3.10f1で起動・コンパイル・Play Mode遷移を含む66件のテストが成功し、失敗は0件でした。実際のStartボタン、人物参加、昼夜切替、Hint／Flag付与、履歴、遅延FollowUp、保存復元、サンプルIDの再Importも確認しています。
+
+証拠は `Logs/EventExpansion/verified-results.xml` と `Logs/EventExpansion/verified-unity-tests.log` です。以前の「同じprojectPathを開いたEditorが存在する状態で別Editorを起動した」条件では今回は実行していません。以下は以前の失敗について、再現ログから確定した原因と対処の記録です。
+
 ## 結論
 
 Unityそのものが起動不能だったわけではありません。既にUnity Editorが開いている同じプロジェクトへ、テスト用の別Editorをバッチ起動したため、Unityの二重起動防止で終了しました。これは今回のイベント配置コードのコンパイルエラーが原因ではありません。

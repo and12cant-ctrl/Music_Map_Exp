@@ -1,6 +1,3 @@
 using UnityEngine;
-
-public class HintData : ScriptableObject
-{
-    
-}
+[CreateAssetMenu(menuName = "Events/Hint")]
+public class HintData : MusicMap.Events.EventIdentitySO { }
